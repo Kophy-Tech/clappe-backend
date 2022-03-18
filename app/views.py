@@ -86,16 +86,19 @@ def login(request):
 
 
 
+
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def logout(request):
-    access = JWT.objects.get(user_id=request.user.id)
-    access.delete()
+    context = {"message": "logout page"}
+    if request.method == "POST":
+        access = JWT.objects.get(user_id=request.user.id)
+        access.delete()
 
-    #the access token should be deleted from frontend
+        #the access token should be deleted from frontend
 
-    context = {'message': 'Logout successful'}
+        context = {'message': 'Logout successful'}
     return Response(context, status=status.HTTP_200_OK)
 
 
