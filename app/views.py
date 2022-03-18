@@ -86,7 +86,6 @@ def login(request):
 
 
 
-
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
@@ -117,34 +116,47 @@ def logout(request):
 def my_customer(request):
     
     all_customers = Customer.objects.filter(vendor=request.user)
-    serialized_customers = CustomerSerializer(all_customers, many=True)
-    context = {"customers": serialized_customers.data}
+    if len(all_customers) > 0:
+        serialized_customers = CustomerSerializer(all_customers, many=True)
+        context = {"customers": serialized_customers.data}
+        return Response(context, status=status.HTTP_200_OK)
+    else:
+        context = {"error": "You don't have any customer"}
+        return Response(context, status=status.HTTP_404_NOT_FOUND)
 
-    return Response(context, status=status.HTTP_200_OK)
+    
 
 
 
 
 
 
-@api_view(["POST"])
+@api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def customer(request):
-    form = CustomerCreateSerializer(data=request.data)
-    context = {}
 
-    if form.is_valid():
-        new_customer = form.save(request)
-        context['message'] = "successfull created"
-        context['customer'] = new_customer.first_name + ' ' + new_customer.last_name
+    if request.method == "POST":
+        form = CustomerCreateSerializer(data=request.data)
+        context = {}
 
-        return Response(context, status=status.HTTP_201_CREATED)
+        if form.is_valid():
+            new_customer = form.save(request)
+            context['message'] = "success"
+            context['customer'] = new_customer.first_name + ' ' + new_customer.last_name
 
+            return Response(context, status=status.HTTP_201_CREATED)
+
+        else:
+            context['errors'] = form.errors
+
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
-        context['errors'] = form.errors
+        context = {"message": "create customer page", "required fields": ["id", "first_name", "last_name", "business_name", "address", "email", "phone_number", "taxable", 
+                    "invoice_pref", "logo_path", "ship_to", "shipping_address", "billing_address", "notes", "status",
+                    "invoice_number", "amount"]}
+        return Response(context, status=status.HTTP_200_OK)
 
-        return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -176,7 +188,7 @@ def edit_customer(request, id):
 
         if form.is_valid():
             updated_customer = form.update(customer, form.validated_data)
-            context['message'] = "successfully updated"
+            context['message'] = "success"
             context['id'] = customer.id
             context['customer'] = updated_customer.first_name + ' ' + updated_customer.last_name
 
@@ -191,6 +203,6 @@ def edit_customer(request, id):
     if request.method == "DELETE":
         customer = Customer.objects.get(id=id)
         customer.delete()
-        context = {"message": "successfully deleted"}
+        context = {"message": "success"}
 
         return Response(context, status=status.HTTP_200_OK)
