@@ -11,6 +11,8 @@ class MyUsers(AbstractUser):
     phone_number = models.CharField("Phone number", max_length=24, null=True, blank=True)
     name_of_business = models.CharField("Name of business", max_length=500, null=True, blank=True)
 
+    USERNAME_FIELD = 'email'
+
     def __str__(self):
         return self.first_name + ' ' + self.last_name
 
