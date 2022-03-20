@@ -152,7 +152,7 @@ def customer(request):
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
-        context = {"message": "create customer page", "required fields": ["id", "first_name", "last_name", "business_name", "address", "email", "phone_number", "taxable", 
+        context = {"message": "create customer page", "required fields": ["first_name", "last_name", "business_name", "address", "email", "phone_number", "taxable", 
                     "invoice_pref", "logo_path", "ship_to", "shipping_address", "billing_address", "notes", "status",
                     "invoice_number", "amount"]}
         return Response(context, status=status.HTTP_200_OK)
