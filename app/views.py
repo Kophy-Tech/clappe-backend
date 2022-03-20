@@ -174,11 +174,17 @@ def edit_customer(request, id):
     context = {}
 
     if request.method == "GET":
-        customer = Customer.objects.get(id=id)
-        serialized_customer = CustomerSerializer(customer)
-        context['customer'] = serialized_customer.data
+        try:
+            customer = Customer.objects.get(id=id)
+            serialized_customer = CustomerSerializer(customer)
+            context['customer'] = serialized_customer.data
+            return Response(context, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            context['error'] = "Customer not found"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(context, status=status.HTTP_200_OK)
+        
 
 
     if request.method == "PUT":
