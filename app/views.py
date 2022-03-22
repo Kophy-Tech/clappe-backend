@@ -144,6 +144,7 @@ def customer(request):
             new_customer = form.save(request)
             context['message'] = "success"
             context['customer'] = new_customer.first_name + ' ' + new_customer.last_name
+            context['id'] = new_customer.id
 
             return Response(context, status=status.HTTP_201_CREATED)
 
