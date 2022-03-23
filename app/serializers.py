@@ -103,3 +103,11 @@ class CustomerSerializer(serializers.ModelSerializer):
         fields = ["id", "first_name", "last_name", "business_name", "address", "email", "phone_number", "taxable", 
                     "invoice_pref", "logo_path", "ship_to", "shipping_address", "billing_address", "notes", "status",
                     "invoice_number", "amount"]
+
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MyUsers
+        fields = ['first_name', 'last_name', 'email', 'phone_number']

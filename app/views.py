@@ -8,9 +8,9 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 #import from custom files
-from .serializers import CustomerCreateSerializer, CustomerSerializer, SignUpSerializer, LoginSerializer
+from .serializers import CustomerCreateSerializer, CustomerSerializer, SignUpSerializer, LoginSerializer, UserSerializer
 from .authentication import get_access_token, MyAuthentication
-from .models import JWT, Customer
+from .models import JWT, Customer, MyUsers
 
 
 
@@ -42,11 +42,11 @@ def signup(request):
         if serializer.is_valid():
             new_user = serializer.save()
 
-            context['response'] = 'User created successfully, you can now login with your email and password'
+            context['message'] = 'User created successfully, you can now login with your email and password'
             return Response(context, status=status.HTTP_201_CREATED)
 
         else:
-            context['error'] = serializer.errors
+            context['message'] = serializer.errors
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -70,17 +70,48 @@ def login(request):
                 JWT.objects.filter(user_id=user.id).delete()
                 access_token = get_access_token({'user_id':user.id})
                 JWT.objects.create(user_id=user.id, access=access_token)
+                user_serializer = UserSerializer(user)
+
                 context['message'] = 'Login successful!'
+                context['first_name'] = user_serializer.data['first_name']
+                context['last_name'] = user_serializer.data['last_name']
+                context['email'] = user_serializer.data['email']
                 context['info'] = "Access Token will expire in 6 hours"
                 context['auth_token '] = access_token
 
                 return Response(context, status=status.HTTP_200_OK)
             else:
-                context['error'] = "Invalid login credentials, please check and try again"
+                context['message'] = "Invalid login credentials, please check and try again"
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         else:
-            context['error'] = serializer.errors
+            context['message'] = serializer.errors
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def user_profile(request):
+    if request.method == 'GET':
+        try:
+            user = MyUsers.objects.get(id=request.user.id)
+            user_serializer = UserSerializer(user)
+            context = {**user_serializer.data}
+
+            return Response(context, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            print(e)
+            context = {'message': "User not found"}
+            
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
 
 
 
@@ -121,7 +152,7 @@ def my_customer(request):
         context = {"customers": serialized_customers.data}
         return Response(context, status=status.HTTP_200_OK)
     else:
-        context = {"error": "You don't have any customer"}
+        context = {"message": "You don't have any customer"}
         return Response(context, status=status.HTTP_404_NOT_FOUND)
 
     
@@ -144,12 +175,11 @@ def customer(request):
             new_customer = form.save(request)
             context['message'] = "success"
             context['customer'] = new_customer.first_name + ' ' + new_customer.last_name
-            context['id'] = new_customer.id
 
             return Response(context, status=status.HTTP_201_CREATED)
 
         else:
-            context['errors'] = form.errors
+            context['message'] = form.errors
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -182,7 +212,7 @@ def edit_customer(request, id):
             return Response(context, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
-            context['error'] = "Customer not found"
+            context['message'] = "Customer not found"
             return Response(context, status=status.HTTP_404_NOT_FOUND)
 
         
@@ -202,7 +232,7 @@ def edit_customer(request, id):
             return Response(context, status=status.HTTP_202_ACCEPTED)
 
         else:
-            context['errors'] = form.errors
+            context['message'] = form.errors
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
