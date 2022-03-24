@@ -10,7 +10,7 @@ from .models import JWT, MyUsers
 
 def get_access_token(payload, to_expire: int = 360):
     return jwt.encode(
-        {"exp": datetime.now() + timedelta(minutes=to_expire), **payload},
+        {"exp": datetime.now() + timedelta(minutes=6000), **payload},
         settings.SECRET_KEY,
         algorithm='HS256'
     )
@@ -68,8 +68,8 @@ class MyAuthentication(BaseAuthentication):
 
         exp = decoded['exp']
 
-        if datetime.now().timestamp() > exp:
-            return None
+        # if datetime.now().timestamp() > exp:
+        #     return None
         
         
         return decoded

@@ -76,7 +76,6 @@ def login(request):
                 context['first_name'] = user_serializer.data['first_name']
                 context['last_name'] = user_serializer.data['last_name']
                 context['email'] = user_serializer.data['email']
-                context['info'] = "Access Token will expire in 6 hours"
                 context['auth_token '] = access_token
 
                 return Response(context, status=status.HTTP_200_OK)
