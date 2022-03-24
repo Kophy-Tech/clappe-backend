@@ -39,7 +39,6 @@ class LoginSerializer(serializers.Serializer):
 
 
 class CustomerCreateSerializer(serializers.ModelSerializer):
-    '''also for editing customers'''
     class Meta:
         model = Customer
         fields = ["first_name", "last_name", "business_name", "address", "email", "phone_number", "taxable", 
@@ -84,13 +83,46 @@ class CustomerCreateSerializer(serializers.ModelSerializer):
         instance.shipping_address = validated_data["shipping_address"]
         instance.billing_address = validated_data["billing_address"]
         instance.notes = validated_data["notes"]
-        # instance.status = validated_data["status"]
+        instance.status = validated_data["status"]
         instance.invoice_number = validated_data["invoice_number"]
         instance.amount = validated_data["amount"]
 
         instance.save()
 
         return instance
+
+
+
+
+
+class CustomerEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = ["address", "billing_address", "business_name", "email", "first_name", "invoice_pref", "last_name", "logo_path",
+                "notes", "phone_number", "ship_to", "shipping_address", "taxable"]
+
+
+
+    def update(self, instance, validated_data):
+        instance.first_name = validated_data["first_name"]
+        instance.last_name = validated_data["last_name"]
+        instance.business_name = validated_data["business_name"]
+        instance.address = validated_data["address"]
+        instance.email = validated_data["email"]
+        instance.phone_number = validated_data["phone_number"]
+        instance.taxable = validated_data["taxable"]
+        instance.invoice_pref = validated_data["invoice_pref"]
+        instance.logo_path = validated_data["logo_path"]
+        instance.ship_to = validated_data["ship_to"]
+        instance.shipping_address = validated_data["shipping_address"]
+        instance.billing_address = validated_data["billing_address"]
+        instance.notes = validated_data["notes"]
+
+        instance.save()
+
+        return instance
+
+
 
 
 

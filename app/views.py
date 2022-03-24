@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 #import from custom files
-from .serializers import CustomerCreateSerializer, CustomerSerializer, SignUpSerializer, LoginSerializer, UserSerializer
+from .serializers import CustomerCreateSerializer, CustomerEditSerializer, CustomerSerializer, SignUpSerializer, LoginSerializer, UserSerializer
 from .authentication import get_access_token, MyAuthentication
 from .models import JWT, Customer, MyUsers
 
@@ -219,7 +219,7 @@ def edit_customer(request, id):
 
     if request.method == "PUT":
         customer = Customer.objects.get(id=id)
-        form = CustomerCreateSerializer(instance=customer, data=request.data)
+        form = CustomerEditSerializer(instance=customer, data=request.data)
         context = {}
 
         if form.is_valid():
