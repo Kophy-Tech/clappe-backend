@@ -42,8 +42,8 @@ class CustomerCreateSerializer(serializers.ModelSerializer):
     '''also for editing customers'''
     class Meta:
         model = Customer
-        fields = ["id", "first_name", "last_name", "business_name", "address", "email", "phone_number", "taxable", 
-                    "invoice_pref", "logo_path", "ship_to", "shipping_address", "billing_address", "notes", "status",
+        fields = ["first_name", "last_name", "business_name", "address", "email", "phone_number", "taxable", 
+                    "invoice_pref", "logo_path", "ship_to", "shipping_address", "billing_address", "notes",
                     "invoice_number", "amount"]
 
     def save(self, request):
@@ -84,7 +84,7 @@ class CustomerCreateSerializer(serializers.ModelSerializer):
         instance.shipping_address = validated_data["shipping_address"]
         instance.billing_address = validated_data["billing_address"]
         instance.notes = validated_data["notes"]
-        instance.status = validated_data["status"]
+        # instance.status = validated_data["status"]
         instance.invoice_number = validated_data["invoice_number"]
         instance.amount = validated_data["amount"]
 
