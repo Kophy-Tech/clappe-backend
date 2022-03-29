@@ -247,7 +247,7 @@ class PayEstimate(models.Model):
 
 
     def __str__(self):
-        return self.estimate.first_name + self.proforma.last_name
+        return self.estimate.first_name + self.estimate.last_name
 
 
 
