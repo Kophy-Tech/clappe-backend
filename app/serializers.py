@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Customer, MyUsers
+from .models import Customer, MyUsers, Invoice, ProformaInvoice, Estimate, PurchaseOrder, \
+                    PayInvoice, PayEstimate, PayProforma, PayPurchaseOrder
 
 
 
@@ -36,6 +37,19 @@ class LoginSerializer(serializers.Serializer):
 
 
 
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MyUsers
+        fields = ['first_name', 'last_name', 'email', 'phone_number']
+
+
+
+
+
+
+############################################### customer #############################################################################
 
 
 class CustomerCreateSerializer(serializers.ModelSerializer):
@@ -138,8 +152,544 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 
 
-class UserSerializer(serializers.ModelSerializer):
 
+
+
+
+
+
+############################################### invoice ####################################################################
+
+
+class InvoiceCreate(serializers.ModelSerializer):
     class Meta:
-        model = MyUsers
-        fields = ['first_name', 'last_name', 'email', 'phone_number']
+        model = Invoice
+        fields = [
+            "first_name","last_name","address","email","phone_number","taxable","invoice_pref","theme","invoice_number",
+            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","items_json",
+            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total"]
+
+
+    def save(self, request):
+
+        new_invoice = Invoice()
+        new_invoice.first_name = self.validated_data["first_name"]
+        new_invoice.last_name = self.validated_data["last_name"]
+        new_invoice.address = self.validated_data["address"]
+        new_invoice.email = self.validated_data["email"]
+        new_invoice.phone_number = self.validated_data["phone_number"]
+        new_invoice.taxable = self.validated_data["taxable"]
+        new_invoice.invoice_pref = self.validated_data["invoice_pref"]
+        new_invoice.theme = self.validated_data["theme"]
+        new_invoice.invoice_number = self.validated_data['invoice_number']
+        new_invoice.invoice_date = self.validated_data['invoice_date']
+        new_invoice.po_number = self.validated_data['po_number']
+        new_invoice.due_date = self.validated_data['due_date']
+
+        new_invoice.ship_to = self.validated_data["ship_to"]
+        new_invoice.shipping_address = self.validated_data["shipping_address"]
+        new_invoice.bill_to = self.validated_data["bill_to"]
+        new_invoice.billing_address = self.validated_data["billing_address"]
+        new_invoice.notes = self.validated_data["notes"]
+
+        new_invoice.items_json = self.validated_data['items_json']
+        new_invoice.item_total = self.validated_data["item_total"]
+        new_invoice.tax = self.validated_data["tax"]
+        new_invoice.add_charges = self.validated_data["add_charges"]
+        new_invoice.sub_total = self.validated_data["sub_total"]
+        new_invoice.discount_type = self.validated_data["discount_type"]
+        new_invoice.discount_amount = self.validated_data["discount_amount"]
+        new_invoice.grand_total = self.validated_data["grand_total"]
+        
+        new_invoice.vendor = request.user
+
+        new_invoice.save()
+
+        return new_invoice
+
+
+
+
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invoice
+        fields = [ "id",
+            "first_name","last_name","address","email","phone_number","taxable","invoice_pref","theme","invoice_number",
+            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","items_json",
+            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status"]
+
+
+
+
+
+class InvoiceEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invoice
+        fields = [
+            "first_name","last_name","address","email","phone_number","taxable","invoice_pref","theme","invoice_number",
+            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "items_json",
+            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status"]
+
+
+    def update(self, instance, validated_data):
+        instance.first_name = validated_data["first_name"]
+        instance.last_name = validated_data["last_name"]
+        instance.address = validated_data["address"]
+        instance.email = validated_data["email"]
+        instance.phone_number = validated_data["phone_number"]
+        instance.taxable = validated_data["taxable"]
+        instance.invoice_pref = validated_data["invoice_pref"]
+        instance.theme = validated_data["theme"]
+        instance.invoice_number = validated_data['invoice_number']
+        instance.invoice_date = validated_data['invoice_date']
+        instance.po_number = validated_data['po_number']
+        instance.due_date = validated_data['due_date']
+
+        instance.ship_to = validated_data["ship_to"]
+        instance.shipping_address = validated_data["shipping_address"]
+        instance.bill_to = validated_data["bill_to"]
+        instance.billing_address = validated_data["billing_address"]
+        instance.notes = validated_data["notes"]
+
+        instance.items_json = validated_data['items_json']
+        instance.item_total = validated_data["item_total"]
+        instance.tax = validated_data["tax"]
+        instance.add_charges = validated_data["add_charges"]
+        instance.sub_total = validated_data["sub_total"]
+        instance.discount_type = validated_data["discount_type"]
+        instance.discount_amount = validated_data["discount_amount"]
+        instance.grand_total = validated_data["grand_total"]
+
+
+        instance.save()
+
+        return instance
+
+
+
+class PayInvoiceSerializer(serializers.ModelSerializer):
+    invoice_id = serializers.IntegerField()
+    class Meta:
+        model = PayInvoice
+        fields = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "invoice_id"]
+
+
+    def save(self):
+
+        try:
+            invoice = Invoice.objects.get(id=self.validated_data['invoice_id'])
+        except Exception as e:
+            print(e)
+            return None
+        pay_invoice = PayInvoice()
+        pay_invoice.payment_type = self.validated_data["payment_type"]
+        pay_invoice.paid_date = self.validated_data["paid_date"]
+        pay_invoice.paid_amount = self.validated_data["paid_amount"]
+        pay_invoice.payment_method = self.validated_data["payment_method"]
+        pay_invoice.reference = self.validated_data["reference"]
+
+        invoice.status = "Paid"
+        invoice.save()
+        pay_invoice.invoice = invoice
+        
+
+        pay_invoice.save()
+
+        return pay_invoice
+
+
+
+
+
+
+
+
+
+
+######################################### proforma invoice #########################################################################
+
+class ProformaCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProformaInvoice
+        fields = [
+                "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "theme", 
+                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_json", 
+                    "item_total", "tax", "add_charges", "grand_total"]
+
+
+    def save(self, request):
+        new_proforma = ProformaInvoice()
+        new_proforma.first_name = self.validated_data["first_name"]
+        new_proforma.last_name = self.validated_data["last_name"]
+        new_proforma.address = self.validated_data["address"]
+        new_proforma.email = self.validated_data["email"]
+        new_proforma.phone_number = self.validated_data["phone_number"]
+        new_proforma.taxable = self.validated_data["taxable"]
+        new_proforma.invoice_pref = self.validated_data["invoice_pref"]
+        new_proforma.theme = self.validated_data["theme"]
+        new_proforma.invoice_number = self.validated_data["invoice_number"]
+        new_proforma.invoice_date = self.validated_data["invoice_date"]
+        new_proforma.po_number = self.validated_data["po_number"]
+        new_proforma.due_date = self.validated_data["due_date"]
+        new_proforma.notes = self.validated_data["notes"]
+        new_proforma.attachment_path = self.validated_data["attachment_path"]
+        new_proforma.items_json = self.validated_data["items_json"]
+        new_proforma.item_total = self.validated_data["item_total"]
+        new_proforma.tax = self.validated_data["tax"]
+        new_proforma.add_charges = self.validated_data["add_charges"]
+        new_proforma.grand_total = self.validated_data["grand_total"]
+
+        new_proforma.vendor = request.user
+
+        new_proforma.save()
+
+        return new_proforma
+
+
+
+class ProformerInvoiceSerailizer(serializers.ModelSerializer):
+    class Meta:
+        model = ProformaInvoice
+        fields = [
+                "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "theme", 
+                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_json", 
+                    "item_total", "tax", "add_charges", "grand_total", "status"]
+
+
+
+
+class ProformaEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProformaInvoice
+        fields = [
+                "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "theme", 
+                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_json", 
+                    "item_total", "tax", "add_charges", "grand_total", "status"]
+
+
+
+    def update(self, instance, validated_data):
+        instance.first_name = validated_data["first_name"]
+        instance.last_name = validated_data["last_name"]
+        instance.address = validated_data["address"]
+        instance.email = validated_data["email"]
+        instance.phone_number = validated_data["phone_number"]
+        instance.taxable = validated_data["taxable"]
+        instance.invoice_pref = validated_data["invoice_pref"]
+        instance.theme = validated_data["theme"]
+        instance.invoice_number = validated_data["invoice_number"]
+        instance.invoice_date = validated_data["invoice_date"]
+        instance.po_number = validated_data["po_number"]
+        instance.due_date = validated_data["due_date"]
+        instance.notes = validated_data["notes"]
+        instance.attachment_path = validated_data["attachment_path"]
+        instance.items_json = validated_data["items_json"]
+        instance.item_total = validated_data["item_total"]
+        instance.tax = validated_data["tax"]
+        instance.add_charges = validated_data["add_charges"]
+        instance.grand_total = validated_data["grand_total"]
+
+        instance.save()
+
+        return instance
+
+
+
+
+
+
+class PayProformaSerializer(serializers.ModelSerializer):
+    proforma_id = serializers.IntegerField()
+    class Meta:
+        model = PayProforma
+        fields = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "proforma_id"]
+
+
+    def save(self):
+
+        try:
+            proforma = ProformaInvoice.objects.get(id=self.validated_data['proforma_id'])
+        except Exception as e:
+            print(e)
+            return None
+
+        pay_proforma = PayProforma()
+        pay_proforma.payment_type = self.validated_data["payment_type"]
+        pay_proforma.paid_date = self.validated_data["paid_date"]
+        pay_proforma.paid_amount = self.validated_data["paid_amount"]
+        pay_proforma.payment_method = self.validated_data["payment_method"]
+        pay_proforma.reference = self.validated_data["reference"]
+
+        proforma.status = "Paid"
+        proforma.save()
+        pay_proforma.proforma = proforma
+        
+
+        pay_proforma.save()
+
+        return pay_proforma
+
+
+
+
+
+
+
+
+
+
+
+
+############################################## purchase order ########################################################################
+
+class PurchaseCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchaseOrder
+        fields = [
+                "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "theme", 
+                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_json", 
+                    "item_total", "tax", "add_charges", "grand_total"]
+
+
+    def save(self, request):
+        new_purchaseorder = PurchaseOrder()
+        new_purchaseorder.first_name = self.validated_data["first_name"]
+        new_purchaseorder.last_name = self.validated_data["last_name"]
+        new_purchaseorder.address = self.validated_data["address"]
+        new_purchaseorder.email = self.validated_data["email"]
+        new_purchaseorder.phone_number = self.validated_data["phone_number"]
+        new_purchaseorder.taxable = self.validated_data["taxable"]
+        new_purchaseorder.po_pref = self.validated_data["po_pref"]
+        new_purchaseorder.theme = self.validated_data["theme"]
+        new_purchaseorder.po_number = self.validated_data["po_number"]
+        new_purchaseorder.po_date = self.validated_data["po_date"]
+        new_purchaseorder.ship_to = self.validated_data["ship_to"]
+        new_purchaseorder.notes = self.validated_data["notes"]
+        new_purchaseorder.shipping_address = self.validated_data["shipping_address"]
+        new_purchaseorder.items_json = self.validated_data["items_json"]
+        new_purchaseorder.item_total = self.validated_data["item_total"]
+        new_purchaseorder.tax = self.validated_data["tax"]
+        new_purchaseorder.add_charges = self.validated_data["add_charges"]
+        new_purchaseorder.grand_total = self.validated_data["grand_total"]
+
+        new_purchaseorder.vendor = request.user
+
+        new_purchaseorder.save()
+
+        return new_purchaseorder
+
+
+
+class PurchaseOrderSerailizer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchaseOrder
+        fields = [
+                "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "theme", 
+                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_json", 
+                    "item_total", "tax", "add_charges", "grand_total",  "status"]
+
+
+
+
+class PurchaseEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchaseOrder
+        fields = [
+                "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "theme", 
+                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_json", 
+                    "item_total", "tax", "add_charges", "grand_total", "status"]
+
+
+
+    def update(self, instance, validated_data):
+        instance.first_name = validated_data["first_name"]
+        instance.last_name = validated_data["last_name"]
+        instance.address = validated_data["address"]
+        instance.email = validated_data["email"]
+        instance.phone_number = validated_data["phone_number"]
+        instance.taxable = validated_data["taxable"]
+        instance.po_pref = validated_data["po_pref"]
+        instance.theme = validated_data["theme"]
+        instance.po_number = validated_data["po_number"]
+        instance.po_date = validated_data["po_date"]
+        instance.notes = validated_data["notes"]
+        instance.items_json = validated_data["items_json"]
+        instance.item_total = validated_data["item_total"]
+        instance.tax = validated_data["tax"]
+        instance.add_charges = validated_data["add_charges"]
+        instance.grand_total = validated_data["grand_total"]
+
+        instance.save()
+
+        return instance
+
+
+
+
+
+
+class PayPurchaseSerializer(serializers.ModelSerializer):
+    purchase_id = serializers.IntegerField()
+    class Meta:
+        model = PayPurchaseOrder
+        fields = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "purchase_id"]
+
+
+    def save(self):
+
+        try:
+            purchase_order = PurchaseOrder.objects.get(id=self.validated_data['purchase_id'])
+        except Exception as e:
+            print(e)
+            return None
+
+        pay_purchase = PayPurchaseOrder()
+        pay_purchase.payment_type = self.validated_data["payment_type"]
+        pay_purchase.paid_date = self.validated_data["paid_date"]
+        pay_purchase.paid_amount = self.validated_data["paid_amount"]
+        pay_purchase.payment_method = self.validated_data["payment_method"]
+        pay_purchase.reference = self.validated_data["reference"]
+
+        purchase_order.status = "Paid"
+        purchase_order.save()
+        pay_purchase.purchase_order = purchase_order
+        
+
+        pay_purchase.save()
+
+        return pay_purchase
+
+
+
+
+
+
+
+############################################ estimate ########################################################################
+
+class EstimateCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Estimate
+        fields = [
+                "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
+                    "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
+                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total"]
+
+
+    def save(self, request):
+        new_estimate = Estimate()
+        new_estimate.first_name = self.validated_data["first_name"]
+        new_estimate.last_name = self.validated_data["last_name"]
+        new_estimate.address = self.validated_data["address"]
+        new_estimate.email = self.validated_data["email"]
+        new_estimate.phone_number = self.validated_data["phone_number"]
+        new_estimate.taxable = self.validated_data["taxable"]
+        new_estimate.estimate_pref = self.validated_data["estimate_pref"]
+        new_estimate.logo_path = self.validated_data["logo_path"]
+        new_estimate.estimate_number = self.validated_data["estimate_number"]
+        new_estimate.estimate_date = self.validated_data["estimate_date"]
+        new_estimate.ship_to = self.validated_data["ship_to"]
+        new_estimate.shipping_address = self.validated_data["shipping_address"]
+        new_estimate.bill_to = self.validated_data["bill_to"]
+        new_estimate.billing_address = self.validated_data["billing_address"]
+        new_estimate.notes = self.validated_data["notes"]
+        new_estimate.items_json = self.validated_data["items_json"]
+        new_estimate.item_total = self.validated_data["item_total"]
+        new_estimate.tax = self.validated_data["tax"]
+        new_estimate.add_charges = self.validated_data["add_charges"]
+        new_estimate.grand_total = self.validated_data["grand_total"]
+
+        new_estimate.vendor = request.user
+
+        new_estimate.save()
+
+        return new_estimate
+
+
+
+class EstimateSerailizer(serializers.ModelSerializer):
+    class Meta:
+        model = Estimate
+        fields = [
+                "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
+                    "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
+                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total", "status"]
+
+
+
+
+class EstimateEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Estimate
+        fields = [
+                "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
+                    "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
+                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total", "status"]
+
+
+
+    def update(self, instance, validated_data):
+        instance.first_name = validated_data["first_name"]
+        instance.last_name = validated_data["last_name"]
+        instance.address = validated_data["address"]
+        instance.email = validated_data["email"]
+        instance.phone_number = validated_data["phone_number"]
+        instance.taxable = validated_data["taxable"]
+        instance.estimate_pref = validated_data["estimate_pref"]
+        instance.logo_path = validated_data["logo_path"]
+        instance.estimate_number = validated_data["estimate_number"]
+        instance.estimate_date = validated_data["estimate_date"]
+        instance.ship_to = validated_data["ship_to"]
+        instance.shipping_address = validated_data["shipping_address"]
+        instance.bill_to = validated_data["bill_to"]
+        instance.billing_address = validated_data["billing_address"]
+        instance.notes = validated_data["notes"]
+        instance.items_json = validated_data["items_json"]
+        instance.item_total = validated_data["item_total"]
+        instance.tax = validated_data["tax"]
+        instance.add_charges = validated_data["add_charges"]
+        instance.grand_total = validated_data["grand_total"]
+
+        instance.save()
+
+        return instance
+
+
+
+
+
+
+class PayEstimateSerializer(serializers.ModelSerializer):
+    estimate_id = serializers.IntegerField()
+    class Meta:
+        model = PayEstimate
+        fields = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "estimate_id"]
+
+
+    def save(self):
+
+        try:
+            estimate = Estimate.objects.get(id=self.validated_data['estimate_id'])
+        except Exception as e:
+            print(e)
+            return None
+
+        pay_estimate = PayEstimate()
+        pay_estimate.payment_type = self.validated_data["payment_type"]
+        pay_estimate.paid_date = self.validated_data["paid_date"]
+        pay_estimate.paid_amount = self.validated_data["paid_amount"]
+        pay_estimate.payment_method = self.validated_data["payment_method"]
+        pay_estimate.reference = self.validated_data["reference"]
+
+        estimate.status = "Paid"
+        estimate.save()
+        pay_estimate.estimate = estimate
+        
+
+        pay_estimate.save()
+
+        return pay_estimate
+
+
+
