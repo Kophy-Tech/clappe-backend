@@ -11,7 +11,7 @@ class MyUsers(AbstractUser):
     name_of_business = models.CharField("Name of business", max_length=500, null=True, blank=True)
 
     def __str__(self):
-        return self.first_name + ' ' + self.last_name
+        return self.first_name + ' ' + self.last_name + '-' + self.username
 
 
 
