@@ -52,7 +52,7 @@ def signup(request):
             return Response(context, status=status.HTTP_201_CREATED)
 
         else:
-            context['message'] = serializer.errors
+            context = {**serializer.errors}
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -184,13 +184,14 @@ def customer(request):
             return Response(context, status=status.HTTP_201_CREATED)
 
         else:
-            context['message'] = form.errors
+            context = {**form.errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
         context = {"message": "create customer page", "required fields": ["first_name", "last_name", "business_name", "address", "email", "phone_number", "taxable", 
                     "invoice_pref", "logo_path", "ship_to", "shipping_address", "billing_address", "notes", "status",
                     "invoice_number", "amount"]}
+
         return Response(context, status=status.HTTP_200_OK)
 
 
@@ -237,7 +238,7 @@ def edit_customer(request, id):
             return Response(context, status=status.HTTP_200_OK)
 
         else:
-            context['message'] = form.errors
+            context = {**form.errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -343,7 +344,7 @@ def edit_invoice(request, id):
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
-                context['message'] = form.errors
+                context = {**form.errors}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -502,7 +503,7 @@ def edit_proforma(request, id):
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
-                context['message'] = form.errors
+                context = {**form.errors}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -656,7 +657,7 @@ def edit_purchaseorder(request, id):
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
-                context['message'] = form.errors
+                context = {**form.errors}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -820,7 +821,7 @@ def edit_estimate(request, id):
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
-                context['message'] = form.errors
+                context = {**form.errors}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         

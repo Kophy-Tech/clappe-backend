@@ -47,7 +47,8 @@ class MyAuthentication(BaseAuthentication):
 
         try:
             user_jwt = JWT.objects.get(user=decoded_data['user_id'])
-        except JWT.DoesNotExist:
+        except (JWT.DoesNotExist, TypeError) as e :
+            print(e)
             return None
 
         if user_jwt.access != token:
