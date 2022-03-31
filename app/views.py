@@ -53,7 +53,8 @@ def signup(request):
 
         else:
             errors = {**serializer.errors}
-            context = {k: v[0] for k, v in errors.items()}
+            errors_list = [k for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -91,7 +92,8 @@ def login(request):
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         else:
             errors = {**serializer.errors}
-            context = {k: v[0] for k, v in errors.items()}
+            errors_list = [k for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -187,7 +189,8 @@ def customer(request):
 
         else:
             errors = {**form.errors}
-            context = {k: v[0] for k, v in errors.items()}
+            errors_list = [k for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -242,7 +245,8 @@ def edit_customer(request, id):
 
         else:
             errors = {**form.errors}
-            context = {k: v[0] for k, v in errors.items()}
+            errors_list = [k for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -297,7 +301,8 @@ def create_invoice(request):
 
         else:
             errors = {**form.errors}
-            context = {k: v[0] for k, v in errors.items()}
+            errors_list = [k for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -350,7 +355,8 @@ def edit_invoice(request, id):
 
             else:
                 errors = {**form.errors}
-                context = {k: v[0] for k, v in errors.items()}
+                errors_list = [k for k in errors.values()]
+                context = {'message': errors_list[0], 'errors': errors_list}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -401,7 +407,8 @@ def pay_invoice(request):
 
         else:
             errors = {**form.errors}
-            context = {k: v[0] for k, v in errors.items()}
+            errors_list = [k for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -459,7 +466,8 @@ def create_proforma(request):
 
         else:
             errors = {**form.errors}
-            context = {k: v[0] for k, v in errors.items()}
+            errors_list = [k for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -512,7 +520,8 @@ def edit_proforma(request, id):
 
             else:
                 errors = {**form.errors}
-                context = {k: v[0] for k, v in errors.items()}
+                errors_list = [k for k in errors.values()]
+                context = {'message': errors_list[0], 'errors': errors_list}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -563,7 +572,8 @@ def pay_proforma(request):
 
         else:
             errors = {**form.errors}
-            context = {k: v[0] for k, v in errors.items()}
+            errors_list = [k for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -616,7 +626,8 @@ def create_purchaseorder(request):
 
         else:
             errors = {**form.errors}
-            context = {k: v[0] for k, v in errors.items()}
+            errors_list = [k for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -669,7 +680,8 @@ def edit_purchaseorder(request, id):
 
             else:
                 errors = {**form.errors}
-                context = {k: v[0] for k, v in errors.items()}
+                errors_list = [k for k in errors.values()]
+                context = {'message': errors_list[0], 'errors': errors_list}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -720,7 +732,8 @@ def pay_purchaseorder(request):
 
         else:
             errors = {**form.errors}
-            context = {k: v[0] for k, v in errors.items()}
+            errors_list = [k for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -783,7 +796,8 @@ def create_estimate(request):
 
         else:
             errors = {**form.errors}
-            context = {k: v[0] for k, v in errors.items()}
+            errors_list = [k for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -836,7 +850,8 @@ def edit_estimate(request, id):
 
             else:
                 errors = {**form.errors}
-                context = {k: v[0] for k, v in errors.items()}
+                errors_list = [k for k in errors.values()]
+                context = {'message': errors_list[0], 'errors': errors_list}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -887,7 +902,8 @@ def pay_estimate(request):
 
         else:
             errors = {**form.errors}
-            context = {k: v[0] for k, v in errors.items()}
+            errors_list = [k for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
