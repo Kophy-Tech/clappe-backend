@@ -52,7 +52,8 @@ def signup(request):
             return Response(context, status=status.HTTP_201_CREATED)
 
         else:
-            context = {**serializer.errors}
+            errors = {**serializer.errors}
+            context = {k: v[0] for k, v in errors.items()}
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -89,7 +90,8 @@ def login(request):
                 context['message'] = "Invalid login credentials, please check and try again"
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         else:
-            context = {**serializer.errors}
+            errors = {**serializer.errors}
+            context = {k: v[0] for k, v in errors.items()}
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -184,7 +186,8 @@ def customer(request):
             return Response(context, status=status.HTTP_201_CREATED)
 
         else:
-            context = {**form.errors}
+            errors = {**form.errors}
+            context = {k: v[0] for k, v in errors.items()}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -238,7 +241,8 @@ def edit_customer(request, id):
             return Response(context, status=status.HTTP_200_OK)
 
         else:
-            context = {**form.errors}
+            errors = {**form.errors}
+            context = {k: v[0] for k, v in errors.items()}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -292,7 +296,8 @@ def create_invoice(request):
             return Response(context, status=status.HTTP_200_OK)
 
         else:
-            context = {**form.errors}
+            errors = {**form.errors}
+            context = {k: v[0] for k, v in errors.items()}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -344,7 +349,8 @@ def edit_invoice(request, id):
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
-                context = {**form.errors}
+                errors = {**form.errors}
+                context = {k: v[0] for k, v in errors.items()}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -394,7 +400,8 @@ def pay_invoice(request):
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            context = {**form.errors}
+            errors = {**form.errors}
+            context = {k: v[0] for k, v in errors.items()}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -451,7 +458,8 @@ def create_proforma(request):
             return Response(context, status=status.HTTP_200_OK)
 
         else:
-            context = {**form.errors}
+            errors = {**form.errors}
+            context = {k: v[0] for k, v in errors.items()}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -503,7 +511,8 @@ def edit_proforma(request, id):
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
-                context = {**form.errors}
+                errors = {**form.errors}
+                context = {k: v[0] for k, v in errors.items()}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -553,7 +562,8 @@ def pay_proforma(request):
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            context = {**form.errors}
+            errors = {**form.errors}
+            context = {k: v[0] for k, v in errors.items()}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -605,7 +615,8 @@ def create_purchaseorder(request):
             return Response(context, status=status.HTTP_200_OK)
 
         else:
-            context = {**form.errors}
+            errors = {**form.errors}
+            context = {k: v[0] for k, v in errors.items()}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -657,7 +668,8 @@ def edit_purchaseorder(request, id):
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
-                context = {**form.errors}
+                errors = {**form.errors}
+                context = {k: v[0] for k, v in errors.items()}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -707,7 +719,8 @@ def pay_purchaseorder(request):
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            context = {**form.errors}
+            errors = {**form.errors}
+            context = {k: v[0] for k, v in errors.items()}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -769,7 +782,8 @@ def create_estimate(request):
             return Response(context, status=status.HTTP_200_OK)
 
         else:
-            context = {**form.errors}
+            errors = {**form.errors}
+            context = {k: v[0] for k, v in errors.items()}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -821,7 +835,8 @@ def edit_estimate(request, id):
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
-                context = {**form.errors}
+                errors = {**form.errors}
+                context = {k: v[0] for k, v in errors.items()}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -871,7 +886,8 @@ def pay_estimate(request):
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            context = {**form.errors}
+            errors = {**form.errors}
+            context = {k: v[0] for k, v in errors.items()}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
