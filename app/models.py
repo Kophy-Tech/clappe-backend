@@ -6,6 +6,7 @@ from django.contrib.auth.models import AbstractUser
 
 
 class MyUsers(AbstractUser):
+    username = models.CharField("Username", max_length=1024, null=True, unique=False, blank=True)
     email = models.EmailField("Email", max_length=100, unique=True)
     phone_number = models.CharField("Phone number", max_length=24, null=True, blank=True)
     name_of_business = models.CharField("Name of business", max_length=500, null=True, blank=True)
@@ -22,8 +23,8 @@ class Customer(models.Model):
     last_name = models.CharField("Last Name", max_length=50, blank=False, null=False)
     business_name = models.CharField("Business Name", max_length=70, null=False, blank=False)
     address = models.CharField("Address", max_length=500, null=False, blank=False)
-    email = models.EmailField("Email", max_length=50, null=False, blank=False, unique=True)
-    phone_number = models.CharField("Phone Number", max_length=15, null=False, blank=False, unique=True)
+    email = models.EmailField("Email", max_length=50, null=False, blank=False)
+    phone_number = models.CharField("Phone Number", max_length=15, null=False, blank=False)
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
     logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
@@ -272,7 +273,9 @@ class Item(models.Model):
     description = models.CharField("Item Description", max_length=2048, blank=True, null=True)
     cost_price = models.FloatField("Cost Price", blank=False, null=False)
     sales_price = models.FloatField("Sales Price", blank=False, null=False)
-    sales_tex = models.FloatField("Sales Tex", blank=False, null=False)
+    sales_tax = models.FloatField("Sales Tax", blank=False, null=False)
+
+    vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
 
 
     def __str__(self):

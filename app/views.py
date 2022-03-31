@@ -8,15 +8,15 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 #import from custom files
-from .serializers import CustomerCreateSerializer, CustomerEditSerializer, CustomerSerializer, EstimateCreateSerializer, EstimateEditSerializer, EstimateSerailizer, InvoiceEditSerializer, \
-                        InvoiceSerializer, PayEstimateSerializer, PayInvoiceSerializer, ProformaCreateSerializer, ProformaEditSerializer, \
+from .serializers import CreateItemSerializer, CustomerCreateSerializer, CustomerEditSerializer, CustomerSerializer, EstimateCreateSerializer, EstimateEditSerializer, EstimateSerailizer, InvoiceEditSerializer, \
+                        InvoiceSerializer, ItemSerializer, PayEstimateSerializer, PayInvoiceSerializer, ProformaCreateSerializer, ProformaEditSerializer, \
                         ProformerInvoiceSerailizer, SignUpSerializer, LoginSerializer, UserSerializer, InvoiceCreate,\
                         PayProformaSerializer, PurchaseCreateSerializer, PurchaseEditSerializer, PurchaseOrderSerailizer, \
                         PayPurchaseSerializer
 
 
 from .authentication import get_access_token, MyAuthentication
-from .models import JWT, Customer, Estimate, Invoice, MyUsers, ProformaInvoice, PurchaseOrder
+from .models import JWT, Customer, Estimate, Invoice, Item, MyUsers, ProformaInvoice, PurchaseOrder
 
 
 
@@ -52,7 +52,6 @@ def signup(request):
             return Response(context, status=status.HTTP_201_CREATED)
 
         else:
-            print(serializer.errors)
             errors = {**serializer.errors}
             errors_list = [k[0] for k in errors.values()]
             context = {'message': errors_list[0], 'errors': errors_list}
@@ -914,3 +913,131 @@ def pay_estimate(request):
         context['required_fields'] = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "estimate_id"]
 
         return Response(context, status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+
+
+################################################ items ##########################################################
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def all_items(request):
+    my_items = Item.objects.filter(vendor=request.user.id).all()
+    context = {}
+
+    if len(my_items) > 0:
+        items = ItemSerializer(my_items, many=True)
+        context = {"message": items.data}
+        return Response(context, status=status.HTTP_200_OK)
+
+    else:
+        context['message'] = "You don't have any items"
+        return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def create_item(request):
+
+    if request.method == "POST":
+        form = CreateItemSerializer(data=request.data)
+        context = {}
+
+        if form.is_valid():
+            new_item = form.save(request)
+            context['message'] = "success"
+            context['estimate'] = {"id": new_item.id, **form.data}
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            errors = {**form.errors}
+            errors_list = [k[0] for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
+
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        context = {"message": "create item page", "required fields": ["name", "description", "cost_price", "sales_price", "sales_tax"]}
+        return Response(context, status=status.HTTP_200_OK)
+
+
+
+
+
+@api_view(["GET", "PUT", "DELETE"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def edit_item(request, id):
+
+    context = {}
+
+    if request.method == "GET":
+        try:
+            item = Item.objects.get(id=id)
+            if item.vendor == request.user:
+                serialized_item = CreateItemSerializer(item)
+                context['message'] = serialized_item.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context['message'] = "You don't have access."
+                return Response(context, status=status.HTTP_401_UNAUTHORIZED)
+
+        except Exception as e:
+            print(e)
+            context['message'] = "Item not found"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    elif request.method == 'PUT':
+        try:
+            item = Item.objects.get(id=id)
+            form = CreateItemSerializer(instance=item, data=request.data)
+            context = {}
+
+            if form.is_valid():
+                updated_item = form.update(item)
+                context['message'] = "success"
+                context['item'] = {"id": updated_item.id, **form.data}
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                errors = {**form.errors}
+                errors_list = [k[0] for k in errors.values()]
+                context = {'message': errors_list[0], 'errors': errors_list}
+
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception as e:
+            print(e)
+            context = {'message' :"Item not found"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+    
+    elif request.method == "DELETE":
+        try:
+            item = Item.objects.get(id=id)
+            item.delete()
+            context = {"message": "Success"}
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(e)
+            context = {"message": "Item not found"}
+            
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+

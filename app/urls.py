@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import all_estimate, all_invoice, all_purchaseorder, create_estimate, create_invoice, create_purchaseorder, \
-                    edit_estimate, edit_invoice, edit_purchaseorder, home, pay_estimate, pay_invoice, pay_purchaseorder, \
+from .views import all_estimate, all_invoice, all_items, all_purchaseorder, create_estimate, create_invoice, create_item, create_purchaseorder, \
+                    edit_estimate, edit_invoice, edit_item, edit_purchaseorder, home, pay_estimate, pay_invoice, pay_purchaseorder, \
                     signup, login, logout, customer, edit_customer, my_customer, user_profile, create_proforma, edit_proforma, \
                     pay_proforma, all_proforma
 
@@ -46,5 +46,11 @@ urlpatterns = [
     path('estimate/all', all_estimate, name="all_estimate"),
     path("estimate/edit/<int:id>", edit_estimate, name="edit_estimate"),
     path("estimate/pay", pay_estimate, name="pay_estimate"),
+
+
+    # item urls
+    path("item/create", create_item, name="create_item"),
+    path('item/all', all_items, name="all_items"),
+    path("item/edit/<int:id>", edit_item, name="edit_item"),
 
 ]

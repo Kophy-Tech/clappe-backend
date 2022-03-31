@@ -1,6 +1,6 @@
 from typing import List
 from rest_framework import serializers
-from .models import Customer, MyUsers, Invoice, ProformaInvoice, Estimate, PurchaseOrder, \
+from .models import Customer, Item, MyUsers, Invoice, ProformaInvoice, Estimate, PurchaseOrder, \
                     PayInvoice, PayEstimate, PayProforma, PayPurchaseOrder
 
 
@@ -732,6 +732,57 @@ class PayEstimateSerializer(serializers.ModelSerializer):
         pay_estimate.save()
 
         return pay_estimate
+
+
+
+
+
+
+
+
+###################################################### items ########################################################
+
+class ItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Item
+        fields = ["id", "name", "description", "cost_price", "sales_price", "sales_tax"]
+
+
+
+
+class CreateItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Item
+        fields = ["name", "description", "cost_price", "sales_price", "sales_tax"]
+        extra_kwargs = my_error_function(fields)
+
+
+    
+    def save(self, request):
+        new_item = Item()
+        new_item.name = self.validated_data['name']
+        new_item.description = self.validated_data['description']
+        new_item.cost_price = self.validated_data['cost_price']
+        new_item.sales_price = self.validated_data['sales_price']
+        new_item.sales_tax = self.validated_data['sales_tax']
+
+        new_item.vendor = request.user
+
+        new_item.save()
+
+        return new_item
+
+
+    def update(self, instance):
+        instance.name = self.validated_data['name']
+        instance.description = self.validated_data['description']
+        instance.cost_price = self.validated_data['cost_price']
+        instance.sales_price = self.validated_data['sales_price']
+        instance.sales_tax = self.validated_data['sales_tax']
+
+        instance.save()
+
+        return instance
 
 
 
