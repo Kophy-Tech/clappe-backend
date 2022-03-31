@@ -1,6 +1,20 @@
+from typing import List
 from rest_framework import serializers
 from .models import Customer, MyUsers, Invoice, ProformaInvoice, Estimate, PurchaseOrder, \
                     PayInvoice, PayEstimate, PayProforma, PayPurchaseOrder
+
+
+
+
+
+def my_error_function(field_names: List):
+    total_error = {}
+
+    for field in field_names:
+        total_error[field] = {"error_messages": {"blank": f"{' '.join(field.split('_'))} is required."}}
+
+    return total_error
+
 
 
 
@@ -13,6 +27,7 @@ class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyUsers
         fields = ['first_name', 'last_name', 'password', 'email', 'phone_number']
+        extra_kwargs = my_error_function(fields)
 
     def save(self):
 
@@ -58,6 +73,10 @@ class CustomerCreateSerializer(serializers.ModelSerializer):
         fields = ["first_name", "last_name", "business_name", "address", "email", "phone_number", "taxable", 
                     "invoice_pref", "logo_path", "ship_to", "shipping_address", "billing_address", "notes",
                     "invoice_number", "amount"]
+
+        extra_kwargs = my_error_function(fields)
+
+
 
     def save(self, request):
         new_customer = Customer()
@@ -115,6 +134,8 @@ class CustomerEditSerializer(serializers.ModelSerializer):
         fields = ["address", "billing_address", "business_name", "email", "first_name", "invoice_pref", "last_name", "logo_path",
                 "notes", "phone_number", "ship_to", "shipping_address", "taxable"]
 
+        extra_kwargs = my_error_function(fields)
+
 
 
     def update(self, instance, validated_data):
@@ -168,6 +189,8 @@ class InvoiceCreate(serializers.ModelSerializer):
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","theme","invoice_number",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","items_json",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total"]
+
+        extra_kwargs = my_error_function(fields)
 
 
     def save(self, request):
@@ -223,6 +246,8 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
 
 
+
+
 class InvoiceEditSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
@@ -230,6 +255,8 @@ class InvoiceEditSerializer(serializers.ModelSerializer):
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","theme","invoice_number",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "items_json",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status"]
+
+        extra_kwargs = my_error_function(fields)
 
 
     def update(self, instance, validated_data):
@@ -273,6 +300,7 @@ class PayInvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = PayInvoice
         fields = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "invoice_id"]
+        extra_kwargs = my_error_function(fields)
 
 
     def save(self):
@@ -316,6 +344,8 @@ class ProformaCreateSerializer(serializers.ModelSerializer):
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "theme", 
                     "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_json", 
                     "item_total", "tax", "add_charges", "grand_total"]
+
+        extra_kwargs = my_error_function(fields)
 
 
     def save(self, request):
@@ -367,6 +397,8 @@ class ProformaEditSerializer(serializers.ModelSerializer):
                     "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_json", 
                     "item_total", "tax", "add_charges", "grand_total", "status"]
 
+        extra_kwargs = my_error_function(fields)
+
 
 
     def update(self, instance, validated_data):
@@ -404,6 +436,7 @@ class PayProformaSerializer(serializers.ModelSerializer):
     class Meta:
         model = PayProforma
         fields = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "proforma_id"]
+        extra_kwargs = my_error_function(fields)
 
 
     def save(self):
@@ -450,6 +483,8 @@ class PurchaseCreateSerializer(serializers.ModelSerializer):
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "theme", 
                     "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_json", 
                     "item_total", "tax", "add_charges", "grand_total"]
+
+        extra_kwargs = my_error_function(fields)
 
 
     def save(self, request):
@@ -500,6 +535,8 @@ class PurchaseEditSerializer(serializers.ModelSerializer):
                     "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_json", 
                     "item_total", "tax", "add_charges", "grand_total", "status"]
 
+        extra_kwargs = my_error_function(fields)
+
 
 
     def update(self, instance, validated_data):
@@ -534,6 +571,7 @@ class PayPurchaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = PayPurchaseOrder
         fields = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "purchase_id"]
+        extra_kwargs = my_error_function(fields)
 
 
     def save(self):
@@ -575,6 +613,7 @@ class EstimateCreateSerializer(serializers.ModelSerializer):
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "items_json", "item_total", "tax", "add_charges", "grand_total"]
+        extra_kwargs = my_error_function(fields)
 
 
     def save(self, request):
@@ -615,6 +654,7 @@ class EstimateSerailizer(serializers.ModelSerializer):
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "items_json", "item_total", "tax", "add_charges", "grand_total", "status"]
+        
 
 
 
@@ -626,6 +666,7 @@ class EstimateEditSerializer(serializers.ModelSerializer):
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "items_json", "item_total", "tax", "add_charges", "grand_total", "status"]
+        extra_kwargs = my_error_function(fields)
 
 
 
@@ -665,6 +706,7 @@ class PayEstimateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PayEstimate
         fields = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "estimate_id"]
+        extra_kwargs = my_error_function(fields)
 
 
     def save(self):
