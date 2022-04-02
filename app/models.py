@@ -55,7 +55,7 @@ class Invoice(models.Model):
     phone_number = models.CharField("Phone Number", max_length=15, null=False, blank=False)
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
-    theme = models.CharField("Logo Path", max_length=150, null=False, blank=False)
+    logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
     invoice_number = models.PositiveIntegerField("Invoice number", blank=False, null=False)
     invoice_date = models.DateField("Invoice Date", blank=False, null=False)
     po_number = models.PositiveIntegerField("PO number", blank=False, null=False)
@@ -96,7 +96,7 @@ class ProformaInvoice(models.Model):
     phone_number = models.CharField("Phone Number", max_length=15, null=False, blank=False)
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
-    theme = models.CharField("Logo Path", max_length=150, null=False, blank=False)
+    logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
     invoice_number = models.PositiveIntegerField("Invoice number", blank=False, null=False)
     invoice_date = models.DateField("Invoice Date", blank=False, null=False)
     po_number = models.PositiveIntegerField("PO number", blank=False, null=False)
@@ -130,8 +130,8 @@ class PurchaseOrder(models.Model):
     email = models.EmailField("Email", max_length=50, null=False, blank=False)
     phone_number = models.CharField("Phone Number", max_length=15, null=False, blank=False)
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    po_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
-    theme = models.CharField("Logo Path", max_length=150, null=False, blank=False)
+    po_pref = models.CharField("Purchase Order Preference", max_length=15, blank=False, null=False)
+    logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
 
     po_number = models.PositiveIntegerField("PO number", blank=False, null=False)
     po_date = models.DateField("Purchase Order Date", blank=False, null=False)
@@ -189,6 +189,137 @@ class Estimate(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.vendor.first_name})"
+
+
+
+
+
+
+
+
+class Quote(models.Model):
+    first_name = models.CharField("First Name", max_length=50, blank=False, null=False)
+    last_name = models.CharField("Last Name", max_length=50, blank=False, null=False)
+    address = models.CharField("Address", max_length=500, null=False, blank=False)
+    email = models.EmailField("Email", max_length=50, null=False, blank=False)
+    phone_number = models.CharField("Phone Number", max_length=15, null=False, blank=False)
+    taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
+    quote_pref = models.CharField("Quote Preference", max_length=15, blank=False, null=False)
+    logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
+
+    quote_number = models.PositiveIntegerField("Quote number", blank=False, null=False)
+    quote_date = models.DateField("Quote Date", blank=False, null=False)
+    po_number = models.PositiveIntegerField("PO number", blank=False, null=False)
+    ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
+    shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
+    bill_to = models.CharField("Bill To", max_length=2048, blank=False, null=False)
+    billing_address = models.CharField("Billing Address", max_length=500, null=False, blank=False)
+    notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
+
+    
+    items_json = models.JSONField("Items Json", blank=False, null=False, default=dict)
+    item_total = models.FloatField("Item Total", blank=False, null=False)
+    tax = models.FloatField("Tax", blank=True, null=True)
+    add_charges = models.FloatField("Additional Charges", blank=True, null=True)
+    grand_total = models.FloatField("Grand Total", blank=False, null=False)
+
+    status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
+    vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
+
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.vendor.first_name})"
+
+
+
+
+
+
+
+
+
+class Receipt(models.Model):
+    first_name = models.CharField("First Name", max_length=50, blank=False, null=False)
+    last_name = models.CharField("Last Name", max_length=50, blank=False, null=False)
+    address = models.CharField("Address", max_length=500, null=False, blank=False)
+    email = models.EmailField("Email", max_length=50, null=False, blank=False)
+    phone_number = models.CharField("Phone Number", max_length=15, null=False, blank=False)
+    taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
+    receipt_pref = models.CharField("Receipt Preference", max_length=15, blank=False, null=False)
+    logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
+
+    receipt_number = models.PositiveIntegerField("Receipt number", blank=False, null=False)
+    receipt_date = models.DateField("Receipt Date", blank=False, null=False)
+    po_number = models.PositiveIntegerField("PO number", blank=False, null=False)
+    due_date = models.DateField("Due Date", blank=False, null=False)
+    ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
+    shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
+    bill_to = models.CharField("Bill To", max_length=2048, blank=False, null=False)
+    billing_address = models.CharField("Billing Address", max_length=500, null=False, blank=False)
+    notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
+
+    
+    items_json = models.JSONField("Items Json", blank=False, null=False, default=dict)
+    item_total = models.FloatField("Item Total", blank=False, null=False)
+    tax = models.FloatField("Tax", blank=True, null=True)
+    add_charges = models.FloatField("Additional Charges", blank=True, null=True)
+    grand_total = models.FloatField("Grand Total", blank=False, null=False)
+
+    status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
+    vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
+
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.vendor.first_name})"
+
+
+
+
+
+
+
+
+
+
+class CreditNote(models.Model):
+    first_name = models.CharField("First Name", max_length=50, blank=False, null=False)
+    last_name = models.CharField("Last Name", max_length=50, blank=False, null=False)
+    address = models.CharField("Address", max_length=500, null=False, blank=False)
+    email = models.EmailField("Email", max_length=50, null=False, blank=False)
+    phone_number = models.CharField("Phone Number", max_length=15, null=False, blank=False)
+    taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
+    cn_pref = models.CharField("Credit Note Preference", max_length=15, blank=False, null=False)
+    logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
+
+    cn_number = models.PositiveIntegerField("Credit Note number", blank=False, null=False)
+    cn_date = models.DateField("Credit Note Date", blank=False, null=False)
+    po_number = models.PositiveIntegerField("PO number", blank=False, null=False)
+    due_date = models.DateField("Due Date", blank=False, null=False)
+    ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
+    shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
+    notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
+
+    
+    items_json = models.JSONField("Items Json", blank=False, null=False, default=dict)
+    item_total = models.FloatField("Item Total", blank=False, null=False)
+    tax = models.FloatField("Tax", blank=True, null=True)
+    add_charges = models.FloatField("Additional Charges", blank=True, null=True)
+    grand_total = models.FloatField("Grand Total", blank=False, null=False)
+
+    status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
+    vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
+
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.vendor.first_name})"
+
+
+
+
+
+
+
+
 
 
 
@@ -255,10 +386,54 @@ class PayEstimate(models.Model):
 
 
 
+class PayQuote(models.Model):
+    quote = models.ForeignKey(Quote, on_delete=models.CASCADE)
+    payment_type = models.CharField("Payment Type", max_length=1024, blank=False, null=False)
+    paid_date = models.DateField("Paid Date", blank=False, null=False)
+    paid_amount = models.FloatField("Paid Amount", blank=False, null=False)
+    payment_method = models.CharField("Payment Method", max_length=1024, blank=False, null=False)
+    reference = models.CharField("Reference", max_length=1024, blank=False, null=False)
+
+
+    def __str__(self):
+        return self.quote.first_name + self.quote.last_name
 
 
 
 
+
+
+
+
+class PayReceipt(models.Model):
+    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
+    payment_type = models.CharField("Payment Type", max_length=1024, blank=False, null=False)
+    paid_date = models.DateField("Paid Date", blank=False, null=False)
+    paid_amount = models.FloatField("Paid Amount", blank=False, null=False)
+    payment_method = models.CharField("Payment Method", max_length=1024, blank=False, null=False)
+    reference = models.CharField("Reference", max_length=1024, blank=False, null=False)
+
+
+    def __str__(self):
+        return self.receipt.first_name + self.receipt.last_name
+
+
+
+
+
+
+
+class PayCreditNote(models.Model):
+    credit_note = models.ForeignKey(CreditNote, on_delete=models.CASCADE)
+    payment_type = models.CharField("Payment Type", max_length=1024, blank=False, null=False)
+    paid_date = models.DateField("Paid Date", blank=False, null=False)
+    paid_amount = models.FloatField("Paid Amount", blank=False, null=False)
+    payment_method = models.CharField("Payment Method", max_length=1024, blank=False, null=False)
+    reference = models.CharField("Reference", max_length=1024, blank=False, null=False)
+
+
+    def __str__(self):
+        return self.credit_note.first_name + self.credit_note.last_name
 
 
 

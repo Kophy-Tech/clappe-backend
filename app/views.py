@@ -8,15 +8,15 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 #import from custom files
-from .serializers import CreateItemSerializer, CustomerCreateSerializer, CustomerEditSerializer, CustomerSerializer, EstimateCreateSerializer, EstimateEditSerializer, EstimateSerailizer, InvoiceEditSerializer, \
-                        InvoiceSerializer, ItemSerializer, PayEstimateSerializer, PayInvoiceSerializer, ProformaCreateSerializer, ProformaEditSerializer, \
-                        ProformerInvoiceSerailizer, SignUpSerializer, LoginSerializer, UserSerializer, InvoiceCreate,\
+from .serializers import CNCreateSerializer, CNEditSerializer, CreateItemSerializer, CreditNoteSerailizer, CustomerCreateSerializer, CustomerEditSerializer, CustomerSerializer, EstimateCreateSerializer, EstimateEditSerializer, EstimateSerailizer, InvoiceEditSerializer, \
+                        InvoiceSerializer, ItemSerializer, PayCNSerializer, PayEstimateSerializer, PayInvoiceSerializer, PayQuoteSerializer, PayReceiptSerializer, ProformaCreateSerializer, ProformaEditSerializer, \
+                        ProformerInvoiceSerailizer, QuoteCreateSerializer, QuoteEditSerializer, QuoteSerailizer, REceiptCreateSerializer, ReceiptEditSerializer, ReceiptSerailizer, SignUpSerializer, LoginSerializer, UserSerializer, InvoiceCreate,\
                         PayProformaSerializer, PurchaseCreateSerializer, PurchaseEditSerializer, PurchaseOrderSerailizer, \
                         PayPurchaseSerializer
 
 
 from .authentication import get_access_token, MyAuthentication
-from .models import JWT, Customer, Estimate, Invoice, Item, MyUsers, ProformaInvoice, PurchaseOrder
+from .models import JWT, CreditNote, Customer, Estimate, Invoice, Item, MyUsers, PayCreditNote, ProformaInvoice, PurchaseOrder, Quote, Receipt
 
 
 
@@ -307,7 +307,7 @@ def create_invoice(request):
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
         context = {"message": "create invoice page", "required fields": [
-            "first_name","last_name","address","email","phone_number","taxable","invoice_pref","theme","invoice_number",
+            "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","items_json",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total"]}
         return Response(context, status=status.HTTP_200_OK)
@@ -471,8 +471,8 @@ def create_proforma(request):
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
-        context = {"message": "create invoice page", "required fields": [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "theme", 
+        context = {"message": "create preforma invoice page", "required fields": [
+                "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
                     "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_json", 
                     "item_total", "tax", "add_charges", "grand_total"]}
         return Response(context, status=status.HTTP_200_OK)
@@ -631,8 +631,8 @@ def create_purchaseorder(request):
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
-        context = {"message": "create invoice page", "required fields": [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "theme", 
+        context = {"message": "create purchase order page", "required fields": [
+                "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
                     "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_json", 
                     "item_total", "tax", "add_charges", "grand_total"]}
         return Response(context, status=status.HTTP_200_OK)
@@ -801,7 +801,7 @@ def create_estimate(request):
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
-        context = {"message": "create invoice page", "required fields": [
+        context = {"message": "create estimate page", "required fields": [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "items_json", "item_total", "tax", "add_charges", "grand_total"]}
@@ -1040,4 +1040,515 @@ def edit_item(request, id):
             context = {"message": "Item not found"}
             
             return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###################################################### quote ##############################################################
+@api_view(["GET"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def all_quote(request):
+
+    my_quote = Quote.objects.filter(vendor=request.user.id).all()
+    context = {}
+
+    if len(my_quote) > 0:
+        quotes = QuoteSerailizer(my_quote, many=True)
+        context = {"message": quotes.data}
+        return Response(context, status=status.HTTP_200_OK)
+
+    else:
+        context['message'] = "You don't have any Quote"
+        return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def create_quote(request):
+
+    if request.method == "POST":
+        form = QuoteCreateSerializer(data=request.data)
+        context = {}
+
+        if form.is_valid():
+            new_quote = form.save(request)
+            context['message'] = "success"
+            context['quote'] = {"id": new_quote.id, **form.data}
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            errors = {**form.errors}
+            errors_list = [k[0] for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
+
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        context = {"message": "create quote page", "required fields": [
+                "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
+                    "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
+                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total"]}
+
+        return Response(context, status=status.HTTP_200_OK)
+
+
+
+
+
+@api_view(["GET", "PUT", "DELETE"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def edit_quote(request, id):
+
+    context = {}
+
+    if request.method == "GET":
+        try:
+            quote = Quote.objects.get(id=id)
+            if quote.vendor == request.user:
+                serialized_quote = QuoteSerailizer(quote)
+                context['message'] = serialized_quote.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context['message'] = "You don't have access."
+                return Response(context, status=status.HTTP_401_UNAUTHORIZED)
+
+        except Exception as e:
+            print(e)
+            context['message'] = "Quote not found"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    elif request.method == 'PUT':
+        try:
+            quote = Quote.objects.get(id=id)
+            form = QuoteEditSerializer(instance=quote, data=request.data)
+            context = {}
+
+            if form.is_valid():
+                updated_quote = form.update(quote, form.validated_data)
+                context['message'] = "success"
+                context['quote'] = {"id": updated_quote.id, **form.data}
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                errors = {**form.errors}
+                errors_list = [k[0] for k in errors.values()]
+                context = {'message': errors_list[0], 'errors': errors_list}
+
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception as e:
+            print(e)
+            context = {'message' :"Quote not found"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+    
+    elif request.method == "DELETE":
+        try:
+            quote = Quote.objects.get(id=id)
+            quote.delete()
+            context = {"message": "Success"}
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(e)
+            context = {"message": "Quote not found"}
+            
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def pay_quote(request):
+    
+    if request.method == "POST":
+        form = PayQuoteSerializer(data=request.data)
+        context = {}
+
+        if form.is_valid():
+            pay_quote = form.save()
+            if pay_quote:
+                context['message'] = "success"
+                context['pay_quote'] = {"id": pay_quote.id, **form.data}
+
+                return Response(context, status=status.HTTP_200_OK)
+            else:
+                context['message'] = "Invalid Quote ID"
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            errors = {**form.errors}
+            errors_list = [k[0] for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
+
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+    else:
+        context = {}
+        context['message'] = "New Quote payment"
+        context['required_fields'] = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "quote_id"]
+
+        return Response(context, status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+###################################################### receipt ##############################################################
+@api_view(["GET"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def all_receipt(request):
+
+    my_receipt = Receipt.objects.filter(vendor=request.user.id).all()
+    context = {}
+
+    if len(my_receipt) > 0:
+        receipts = ReceiptSerailizer(my_receipt, many=True)
+        context = {"message": receipts.data}
+        return Response(context, status=status.HTTP_200_OK)
+
+    else:
+        context['message'] = "You don't have any receipt"
+        return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def create_receipt(request):
+
+    if request.method == "POST":
+        form = REceiptCreateSerializer(data=request.data)
+        context = {}
+
+        if form.is_valid():
+            new_receipt = form.save(request)
+            context['message'] = "success"
+            context['receipt'] = {"id": new_receipt.id, **form.data}
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            errors = {**form.errors}
+            errors_list = [k[0] for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
+
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        context = {"message": "create receipt page", "required fields": [
+                "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
+                    "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
+                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total"]}
+
+        return Response(context, status=status.HTTP_200_OK)
+
+
+
+
+
+@api_view(["GET", "PUT", "DELETE"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def edit_receipt(request, id):
+
+    context = {}
+
+    if request.method == "GET":
+        try:
+            receipt = Receipt.objects.get(id=id)
+            if receipt.vendor == request.user:
+                serialized_receipt = ReceiptSerailizer(receipt)
+                context['message'] = serialized_receipt.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context['message'] = "You don't have access."
+                return Response(context, status=status.HTTP_401_UNAUTHORIZED)
+
+        except Exception as e:
+            print(e)
+            context['message'] = "Receipt not found"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    elif request.method == 'PUT':
+        try:
+            receipt = Receipt.objects.get(id=id)
+            form = ReceiptEditSerializer(instance=receipt, data=request.data)
+            context = {}
+
+            if form.is_valid():
+                updated_receipt = form.update(receipt, form.validated_data)
+                context['message'] = "success"
+                context['receipt'] = {"id": updated_receipt.id, **form.data}
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                errors = {**form.errors}
+                errors_list = [k[0] for k in errors.values()]
+                context = {'message': errors_list[0], 'errors': errors_list}
+
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception as e:
+            print(e)
+            context = {'message' :"Receipt not found"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+    
+    elif request.method == "DELETE":
+        try:
+            receipt = Receipt.objects.get(id=id)
+            receipt.delete()
+            context = {"message": "Success"}
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(e)
+            context = {"message": "Receipt not found"}
+            
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def pay_receipt(request):
+    
+    if request.method == "POST":
+        form = PayReceiptSerializer(data=request.data)
+        context = {}
+
+        if form.is_valid():
+            pay_receipt = form.save()
+            if pay_receipt:
+                context['message'] = "success"
+                context['pay_receipt'] = {"id": pay_receipt.id, **form.data}
+
+                return Response(context, status=status.HTTP_200_OK)
+            else:
+                context['message'] = "Invalid receipt ID"
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            errors = {**form.errors}
+            errors_list = [k[0] for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
+
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+    else:
+        context = {}
+        context['message'] = "New Receipt payment"
+        context['required_fields'] = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "receipt_id"]
+
+        return Response(context, status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+
+
+
+###################################################### creditnote ##############################################################
+@api_view(["GET"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def all_credit(request):
+
+    my_credit = CreditNote.objects.filter(vendor=request.user.id).all()
+    context = {}
+
+    if len(my_credit) > 0:
+        credits = CreditNoteSerailizer(my_credit, many=True)
+        context = {"message": credits.data}
+        return Response(context, status=status.HTTP_200_OK)
+
+    else:
+        context['message'] = "You don't have any Credit Note"
+        return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def create_credit(request):
+
+    if request.method == "POST":
+        form = CNCreateSerializer(data=request.data)
+        context = {}
+
+        if form.is_valid():
+            new_credit = form.save(request)
+            context['message'] = "success"
+            context['credit'] = {"id": new_credit.id, **form.data}
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            errors = {**form.errors}
+            errors_list = [k[0] for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
+
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        context = {"message": "create credit note page", "required fields": [
+                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
+                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "items_json", 
+                    "item_total", "tax", "add_charges", "grand_total"]}
+
+        return Response(context, status=status.HTTP_200_OK)
+
+
+
+
+
+@api_view(["GET", "PUT", "DELETE"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def edit_credit(request, id):
+
+    context = {}
+
+    if request.method == "GET":
+        try:
+            credit = CreditNote.objects.get(id=id)
+            if credit.vendor == request.user:
+                serialized_credit = CreditNoteSerailizer(credit)
+                context['message'] = serialized_credit.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context['message'] = "You don't have access."
+                return Response(context, status=status.HTTP_401_UNAUTHORIZED)
+
+        except Exception as e:
+            print(e)
+            context['message'] = "Credit Note not found"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    elif request.method == 'PUT':
+        try:
+            credit = CreditNote.objects.get(id=id)
+            form = CNEditSerializer(instance=credit, data=request.data)
+            context = {}
+
+            if form.is_valid():
+                updated_credit = form.update(credit, form.validated_data)
+                context['message'] = "success"
+                context['credit'] = {"id": updated_credit.id, **form.data}
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                errors = {**form.errors}
+                errors_list = [k[0] for k in errors.values()]
+                context = {'message': errors_list[0], 'errors': errors_list}
+
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception as e:
+            print(e)
+            context = {'message' :"Credit Note not found"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+    
+    elif request.method == "DELETE":
+        try:
+            credit = CreditNote.objects.get(id=id)
+            credit.delete()
+            context = {"message": "Success"}
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(e)
+            context = {"message": "Credit Note not found"}
+            
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def pay_credit(request):
+    
+    if request.method == "POST":
+        form = PayCNSerializer(data=request.data)
+        context = {}
+
+        if form.is_valid():
+            pay_credit = form.save()
+            if pay_credit:
+                context['message'] = "success"
+                context['pay_credit'] = {"id": pay_credit.id, **form.data}
+
+                return Response(context, status=status.HTTP_200_OK)
+            else:
+                context['message'] = "Invalid credit ID"
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            errors = {**form.errors}
+            errors_list = [k[0] for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
+
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+    else:
+        context = {}
+        context['message'] = "New credit note payment"
+        context['required_fields'] = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "credit_id"]
+
+        return Response(context, status.HTTP_200_OK)
+
+
+
 

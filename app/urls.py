@@ -2,7 +2,8 @@ from django.urls import path
 from .views import all_estimate, all_invoice, all_items, all_purchaseorder, create_estimate, create_invoice, create_item, create_purchaseorder, \
                     edit_estimate, edit_invoice, edit_item, edit_purchaseorder, home, pay_estimate, pay_invoice, pay_purchaseorder, \
                     signup, login, logout, customer, edit_customer, my_customer, user_profile, create_proforma, edit_proforma, \
-                    pay_proforma, all_proforma
+                    pay_proforma, all_proforma, create_quote, edit_quote, all_quote, pay_quote, all_credit, create_credit, edit_credit, \
+                    pay_credit, all_receipt, create_receipt, edit_receipt, pay_receipt
 
 
 
@@ -52,5 +53,29 @@ urlpatterns = [
     path("item/create", create_item, name="create_item"),
     path('item/all', all_items, name="all_items"),
     path("item/edit/<int:id>", edit_item, name="edit_item"),
+
+
+
+    # quote urls
+    path("quote/create", create_quote, name="create_quote"),
+    path('quote/all', all_quote, name="all_quote"),
+    path("quote/edit/<int:id>", edit_quote, name="edit_quote"),
+    path("quote/pay", pay_quote, name="pay_quote"),
+
+
+
+    # receipt urls
+    path("receipt/create", create_receipt, name="create_receipt"),
+    path('receipt/all', all_receipt, name="all_receipt"),
+    path("receipt/edit/<int:id>", edit_receipt, name="edit_receipt"),
+    path("receipt/pay", pay_receipt, name="pay_receipt"),
+
+
+
+    # credit urls
+    path("credit/create", create_credit, name="create_credit"),
+    path('credit/all', all_credit, name="all_credit"),
+    path("credit/edit/<int:id>", edit_credit, name="edit_credit"),
+    path("credit/pay", pay_credit, name="pay_credit"),
 
 ]
