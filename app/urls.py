@@ -3,7 +3,8 @@ from .views import all_estimate, all_invoice, all_items, all_purchaseorder, crea
                     edit_estimate, edit_invoice, edit_item, edit_purchaseorder, home, pay_estimate, pay_invoice, pay_purchaseorder, \
                     signup, login, logout, customer, edit_customer, my_customer, user_profile, create_proforma, edit_proforma, \
                     pay_proforma, all_proforma, create_quote, edit_quote, all_quote, pay_quote, all_credit, create_credit, edit_credit, \
-                    pay_credit, all_receipt, create_receipt, edit_receipt, pay_receipt
+                    pay_credit, all_receipt, create_receipt, edit_receipt, pay_receipt, create_delivery, edit_delivery, all_delivery,\
+                    pay_delivery, change_profile, change_preference, change_password, change_payment, get_number
 
 
 
@@ -14,6 +15,10 @@ urlpatterns = [
     path('login', login, name='login'),
     path('logout', logout, name='logout'),
     path('profile', user_profile, name='profile'),
+    path('profile/payment', change_payment, name='change_payment'),
+    path('profile/password', change_password, name='change_password'),
+    path('profile/preference', change_preference, name='change_preference'),
+    path('profile/change', change_profile, name='change_profile'),
 
 
     # customers urls
@@ -78,4 +83,14 @@ urlpatterns = [
     path("credit/edit/<int:id>", edit_credit, name="edit_credit"),
     path("credit/pay", pay_credit, name="pay_credit"),
 
+    # delivery note urls
+    path("delivery/create", create_delivery, name="create_delivery"),
+    path('delivery/all', all_delivery, name="all_delivery"),
+    path("delivery/edit/<int:id>", edit_delivery, name="edit_delivery"),
+    path("delivery/pay", pay_delivery, name="pay_delivery"),
+
+
+
+    # other urls
+    path("get_number", get_number, name="get_number"),
 ]

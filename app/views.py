@@ -8,15 +8,19 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 #import from custom files
-from .serializers import CNCreateSerializer, CNEditSerializer, CreateItemSerializer, CreditNoteSerailizer, CustomerCreateSerializer, CustomerEditSerializer, CustomerSerializer, EstimateCreateSerializer, EstimateEditSerializer, EstimateSerailizer, InvoiceEditSerializer, \
-                        InvoiceSerializer, ItemSerializer, PayCNSerializer, PayEstimateSerializer, PayInvoiceSerializer, PayQuoteSerializer, PayReceiptSerializer, ProformaCreateSerializer, ProformaEditSerializer, \
-                        ProformerInvoiceSerailizer, QuoteCreateSerializer, QuoteEditSerializer, QuoteSerailizer, REceiptCreateSerializer, ReceiptEditSerializer, ReceiptSerailizer, SignUpSerializer, LoginSerializer, UserSerializer, InvoiceCreate,\
+from .serializers import CNCreateSerializer, CNEditSerializer, CreateItemSerializer, CreditNoteSerailizer, CustomerCreateSerializer,\
+                        CustomerEditSerializer, CustomerSerializer, DNCreateSerializer, DNEditSerializer, DNSerailizer, \
+                        EstimateCreateSerializer, EstimateEditSerializer, EstimateSerailizer, InvoiceEditSerializer, \
+                        InvoiceSerializer, ItemSerializer, PayCNSerializer, PayDNSerializer, PayEstimateSerializer, PayInvoiceSerializer,\
+                        PayQuoteSerializer, PayReceiptSerializer, ProformaCreateSerializer, ProformaEditSerializer, \
+                        ProformerInvoiceSerailizer, QuoteCreateSerializer, QuoteEditSerializer, QuoteSerailizer, REceiptCreateSerializer,\
+                        ReceiptEditSerializer, ReceiptSerailizer, SignUpSerializer, LoginSerializer, UserSerializer, InvoiceCreate,\
                         PayProformaSerializer, PurchaseCreateSerializer, PurchaseEditSerializer, PurchaseOrderSerailizer, \
-                        PayPurchaseSerializer
+                        PayPurchaseSerializer, ProfileSerializer, PasswordChangeSerializer, PreferenceSerializer, PaymentSerializer
 
 
 from .authentication import get_access_token, MyAuthentication
-from .models import JWT, CreditNote, Customer, Estimate, Invoice, Item, MyUsers, PayCreditNote, ProformaInvoice, PurchaseOrder, Quote, Receipt
+from .models import JWT, CreditNote, Customer, DeliveryNote, Estimate, Invoice, Item, MyUsers, ProformaInvoice, PurchaseOrder, Quote, Receipt
 
 
 
@@ -1550,5 +1554,400 @@ def pay_credit(request):
         return Response(context, status.HTTP_200_OK)
 
 
+
+
+
+
+
+
+###################################################### delivery note #####################################################################
+
+@api_view(["GET"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def all_delivery(request):
+
+    my_delivery = DeliveryNote.objects.filter(vendor=request.user.id).all()
+    context = {}
+
+    if len(my_delivery) > 0:
+        deliverys = DNSerailizer(my_delivery, many=True)
+        context = {"message": deliverys.data}
+        return Response(context, status=status.HTTP_200_OK)
+
+    else:
+        context['message'] = "You don't have any Delivery Note"
+        return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def create_delivery(request):
+
+    if request.method == "POST":
+        form = DNCreateSerializer(data=request.data)
+        context = {}
+
+        if form.is_valid():
+            new_delivery = form.save(request)
+            context['message'] = "success"
+            context['delivery'] = {"id": new_delivery.id, **form.data}
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            errors = {**form.errors}
+            errors_list = [k[0] for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
+
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        context = {"message": "create delivery note page", "required fields": [
+                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
+                    "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "items_json", 
+                    "item_total", "tax", "add_charges", "grand_total"]}
+
+        return Response(context, status=status.HTTP_200_OK)
+
+
+
+
+
+@api_view(["GET", "PUT", "DELETE"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def edit_delivery(request, id):
+
+    context = {}
+
+    if request.method == "GET":
+        try:
+            delivery = DeliveryNote.objects.get(id=id)
+            if delivery.vendor == request.user:
+                serialized_delivery = DNSerailizer(delivery)
+                context['message'] = serialized_delivery.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context['message'] = "You don't have access."
+                return Response(context, status=status.HTTP_401_UNAUTHORIZED)
+
+        except Exception as e:
+            print(e)
+            context['message'] = "Delivery Note not found"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    elif request.method == 'PUT':
+        try:
+            delivery = DeliveryNote.objects.get(id=id)
+            form = DNEditSerializer(instance=delivery, data=request.data)
+            context = {}
+
+            if form.is_valid():
+                updated_delivery = form.update(delivery, form.validated_data)
+                context['message'] = "success"
+                context['delivery'] = {"id": updated_delivery.id, **form.data}
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                errors = {**form.errors}
+                errors_list = [k[0] for k in errors.values()]
+                context = {'message': errors_list[0], 'errors': errors_list}
+
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception as e:
+            print(e)
+            context = {'message' :"Delivery Note not found"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+    
+    elif request.method == "DELETE":
+        try:
+            delivery = DeliveryNote.objects.get(id=id)
+            delivery.delete()
+            context = {"message": "Success"}
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(e)
+            context = {"message": "Delivery Note not found"}
+            
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def pay_delivery(request):
+    
+    if request.method == "POST":
+        form = PayDNSerializer(data=request.data)
+        context = {}
+
+        if form.is_valid():
+            pay_delivery = form.save()
+            if pay_delivery:
+                context['message'] = "success"
+                context['pay_delivery'] = {"id": pay_delivery.id, **form.data}
+
+                return Response(context, status=status.HTTP_200_OK)
+            else:
+                context['message'] = "Invalid delivery ID"
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            errors = {**form.errors}
+            errors_list = [k[0] for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
+
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+    else:
+        context = {}
+        context['message'] = "New delivery note payment"
+        context['required_fields'] = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "delivery_id"]
+
+        return Response(context, status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+############################################################# other ################################################################
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def change_profile(request):
+
+    if request.method == "GET":
+        my_profile = ProfileSerializer(instance=request.user)
+        context = {**my_profile.data}
+        return Response(context, status=status.HTTP_200_OK)
+
+    if request.method == "POST":
+        context = {}
+
+        form = ProfileSerializer(instance=request.user, data=request.data)
+        if form.is_valid():
+            updated_profile = form.update(request.user, form.validated_data)
+
+            context['message'] = "Success"
+            context['profile'] = {**form.validated_data}
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            errors = {**form.errors}
+            errors_list = [k[0] for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
+
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def change_password(request):
+
+    if request.method == "GET":
+        context = {}
+        context['message'] = "change password page"
+        context['required_fields'] = ["old_password", "new_password", "confirm_password"]
+        return Response(context, status=status.HTTP_200_OK)
+
+
+
+    if request.method == "POST":
+        context = {}
+        # my_profile = PasswordChangeSerializer(instance=request.user)
+
+        form = PasswordChangeSerializer(instance=request.user, data=request.data)
+        if form.is_valid():
+            code, message = form.save(request)
+
+            if code == 200:
+                context['messgae'] = message
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context['message'] = message
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+
+        else:
+            errors = {**form.errors}
+            errors_list = [k[0] for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
+
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+
+
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def change_preference(request):
+
+    my_preference = PreferenceSerializer(instance=request.user)
+
+
+    if request.method == "GET":
+            context = {**my_preference.data}
+            return Response(context, status=status.HTTP_200_OK)
+    
+
+    if request.method == "POST":
+        context = {}
+        pref_ser = PreferenceSerializer(instance=my_preference, data=request.data)
+
+        if pref_ser.is_valid():
+            result = pref_ser.update(request)
+
+            context['message'] = "Preference Saved successfully"
+            context['preference'] = {**pref_ser.validated_data}
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+
+            errors = {**pref_ser.errors}
+            errors_list = [k[0] for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
+
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+
+
+
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def change_payment(request):
+
+    my_preference = PaymentSerializer(instance=request.user)
+
+
+    if request.method == "GET":
+            context = {**my_preference.data}
+            return Response(context, status=status.HTTP_200_OK)
+    
+
+    if request.method == "POST":
+        context = {}
+        payment_info = PaymentSerializer(instance=my_preference, data=request.data)
+
+        if payment_info.is_valid():
+            result = payment_info.update(request)
+
+            context['message'] = "Payment info Saved successfully"
+            context['preference'] = {**payment_info.validated_data}
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+
+            errors = {**payment_info.errors}
+            errors_list = [k[0] for k in errors.values()]
+            context = {'message': errors_list[0], 'errors': errors_list}
+
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+@api_view(["GET", "POST"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def get_number(request):
+
+    if request.method == "POST":
+        num_type = request.data.get("type", None)
+
+        context = {}
+
+        # invoice, proforma, pruchase_order, estimate, quote, receipt, credit_note, delivery_note, 
+
+        if num_type == "invoice":
+            count = len(Invoice.objects.filter(vendor=request.user.id).all())
+
+        elif num_type == "proforma":
+            count = len(ProformaInvoice.objects.filter(vendor=request.user.id).all())
+
+        elif num_type == "purchase_order":
+            count = len(PurchaseOrder.objects.filter(vendor=request.user.id).all())
+
+        elif num_type == "estimate":
+            count = len(Estimate.objects.filter(vendor=request.user.id).all())
+
+        elif num_type == "quote":
+            count = len(Quote.objects.filter(vendor=request.user.id).all())
+
+        elif num_type == "receipt":
+            count = len(Receipt.objects.filter(vendor=request.user.id).all())
+
+        elif num_type == "credit_note":
+            count = len(CreditNote.objects.filter(vendor=request.user.id).all())
+
+        elif num_type == "delivery_note":
+            count = len(DeliveryNote.objects.filter(vendor=request.user.id).all())
+
+
+        else:
+            context['error'] = "pass either of invoice, proforma, pruchase_order, estimate, quote, receipt, credit_note, delivery_note as the type"
+
+            return Response(context, status.HTTP_400_BAD_REQUEST)
+
+
+        context['message'] = "00" + str(count)
+
+        return Response(context, status.HTTP_200_OK)
+
+    else:
+        context = {}
+        context['error'] = "pass either of invoice, proforma, pruchase_order, estimate, quote, receipt, credit_note, delivery_note as the type"
+
+        return Response(context, status.HTTP_200_OK)
 
 

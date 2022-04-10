@@ -1,7 +1,8 @@
-from typing import List
 from rest_framework import serializers
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.hashers import check_password
 from drf_tweaks.serializers import ModelSerializer
-from .models import CreditNote, Customer, Item, MyUsers, Invoice, PayCreditNote, PayQuote, PayReceipt, ProformaInvoice, \
+from .models import CreditNote, Customer, DeliveryNote, Item, MyUsers, Invoice, PayCreditNote, PayDeliveryNote, PayQuote, PayReceipt, ProformaInvoice, \
                     Estimate, PurchaseOrder, PayInvoice, PayEstimate, PayProforma, PayPurchaseOrder, Quote, Receipt
 
 
@@ -1229,3 +1230,272 @@ class PayReceiptSerializer(ModelSerializer):
         pay_receipt.save()
 
         return pay_receipt
+
+
+
+
+
+
+
+
+
+
+
+
+
+################################################# delivery note ############################################################################
+
+class DNCreateSerializer(ModelSerializer):
+    required_error = "{fieldname} is required."
+    blank_error = "{fieldname} can not be blank."
+    class Meta:
+        model = DeliveryNote
+        fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
+                    "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
+                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total"]
+        
+        
+
+
+    def save(self, request):
+        new_delivery = DeliveryNote()
+        new_delivery.first_name = self.validated_data["first_name"]
+        new_delivery.last_name = self.validated_data["last_name"]
+        new_delivery.address = self.validated_data["address"]
+        new_delivery.email = self.validated_data["email"]
+        new_delivery.phone_number = self.validated_data["phone_number"]
+        new_delivery.taxable = self.validated_data["taxable"]
+        new_delivery.dn_pref = self.validated_data["dn_pref"]
+        new_delivery.logo_path = self.validated_data["logo_path"]
+        new_delivery.dn_number = self.validated_data["dn_number"]
+        new_delivery.dn_date = self.validated_data["dn_date"]
+        new_delivery.po_number = self.validated_data["po_number"]
+        new_delivery.due_date = self.validated_data["due_date"]
+        new_delivery.ship_to = self.validated_data["ship_to"]
+        new_delivery.shipping_address = self.validated_data["shipping_address"]
+        new_delivery.notes = self.validated_data["notes"]
+        new_delivery.items_json = self.validated_data["items_json"]
+        new_delivery.item_total = self.validated_data["item_total"]
+        new_delivery.tax = self.validated_data["tax"]
+        new_delivery.add_charges = self.validated_data["add_charges"]
+        new_delivery.grand_total = self.validated_data["grand_total"]
+
+        new_delivery.vendor = request.user
+
+        new_delivery.save()
+
+        return new_delivery
+
+
+
+class DNSerailizer(serializers.ModelSerializer):
+    class Meta:
+        model = DeliveryNote
+        fields = [
+                "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
+                    "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
+                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total", "status"]
+        
+
+
+
+
+class DNEditSerializer(ModelSerializer):
+    required_error = "{fieldname} is required."
+    blank_error = "{fieldname} can not be blank."
+    class Meta:
+        model = DeliveryNote
+        fields = [
+                "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
+                    "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
+                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total", "status"]
+
+        
+
+
+
+    def update(self, instance, validated_data):
+        instance.first_name = validated_data["first_name"]
+        instance.last_name = validated_data["last_name"]
+        instance.address = validated_data["address"]
+        instance.email = validated_data["email"]
+        instance.phone_number = validated_data["phone_number"]
+        instance.taxable = validated_data["taxable"]
+        instance.dn_pref = validated_data["dn_pref"]
+        instance.logo_path = validated_data["logo_path"]
+        instance.dn_number = validated_data["dn_number"]
+        instance.dn_date = validated_data["dn_date"]
+        instance.po_number = validated_data["po_number"]
+        instance.due_date = validated_data["due_date"]
+        instance.ship_to = validated_data["ship_to"]
+        instance.shipping_address = validated_data["shipping_address"]
+        instance.notes = validated_data["notes"]
+        instance.items_json = validated_data["items_json"]
+        instance.item_total = validated_data["item_total"]
+        instance.tax = validated_data["tax"]
+        instance.add_charges = validated_data["add_charges"]
+        instance.grand_total = validated_data["grand_total"]
+
+        instance.save()
+
+        return instance
+
+
+
+
+
+
+class PayDNSerializer(ModelSerializer):
+    delivery_id = serializers.IntegerField()
+    required_error = "{fieldname} is required."
+    blank_error = "{fieldname} can not be blank."
+    class Meta:
+        model = PayDeliveryNote
+        fields = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "delivery_id"]
+        
+
+
+    def save(self):
+
+        try:
+            delivery = DeliveryNote.objects.get(id=self.validated_data['delivery_id'])
+        except Exception as e:
+            print(e)
+            return None
+
+        pay_delivery = PayDeliveryNote()
+        pay_delivery.payment_type = self.validated_data["payment_type"]
+        pay_delivery.paid_date = self.validated_data["paid_date"]
+        pay_delivery.paid_amount = self.validated_data["paid_amount"]
+        pay_delivery.payment_method = self.validated_data["payment_method"]
+        pay_delivery.reference = self.validated_data["reference"]
+
+        delivery.status = "Paid"
+        delivery.save()
+        pay_delivery.delivery_note = delivery
+        
+
+        pay_delivery.save()
+
+        return pay_delivery
+
+
+
+
+
+
+
+#################################################### others #####################################################################################
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyUsers
+        fields = ["photo_path", "business_name", "first_name", "last_name", "address", "email", "phone_number", "phone_number_type",
+                    "other_phone_number", "fax", "business_number", "logo_path", "tax_type", "tax_rate"]
+
+    
+    def validate(self, data):
+        if MyUsers.objects.filter(email=data['email']).exclude(id=self.instance.id).exists():
+            raise serializers.ValidationError("Email Already Exists")
+
+        return data
+
+
+    def update(self, instance, validated_data):
+        instance.photo_path = validated_data.get('photo_path', None)
+        instance.business_name = validated_data.get('business_name', None)
+        instance.first_name = validated_data.get('first_name', None)
+        instance.last_name = validated_data.get('last_name', None)
+        instance.address = validated_data.get('address', None)
+        instance.email = validated_data.get('email', None)
+        instance.phone_number = validated_data.get('phone_number', None)
+        instance.phone_number_type = validated_data.get('phone_number_type', None)
+        instance.other_phone_number = validated_data.get('other_phone_number', None)
+        instance.fax = validated_data.get('fax', None)
+        instance.business_number = validated_data.get('business_number', None)
+        instance.logo_path = validated_data.get('logo_path', None)
+        instance.tax_type = validated_data.get('tax_type', None)
+        instance.tax_rate = validated_data.get('tax_rate', None)
+        
+        instance.save()
+
+        return instance
+
+
+
+
+
+
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(required=True)
+    
+
+    def save(self, request):
+        old_password = self.validated_data['old_password']
+        new_password = self.validated_data['new_password']
+        confirm_password = self.validated_data['confirm_password']
+
+        current_user = MyUsers.objects.get(id=request.user.id)
+        if check_password(old_password, current_user.password):
+            if new_password == confirm_password:
+                current_user.set_password(new_password)
+                update_session_auth_hash(request, current_user)
+                current_user.save()
+
+                return (200, "Password changed successfully")
+            
+            else:
+                return (400, "New password and confirm password does not match")
+        
+        else:
+            return (404, "Old password is incorrect, check and try again")
+        
+
+
+
+
+class PreferenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyUsers
+        fields = ["lang_pref", "region", "email_report", "currency"]
+
+
+    
+    def update(self, request):
+        current_user = MyUsers.objects.get(id=request.user.id)
+
+        current_user.lang_pref = self.validated_data.get("lang_pref", None)
+        current_user.region = self.validated_data.get("region", None)
+        current_user.email_report = self.validated_data.get("email_report", None)
+        current_user.currency = self.validated_data.get("currency", None)
+
+        current_user.save()
+
+        return current_user
+
+
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyUsers
+        fields = ["paypal", "bank_transfer", "e_transfer", "other_payment"]
+
+
+
+    def update(self, request):
+        current_user = MyUsers.objects.get(id=request.user.id)
+
+        current_user.paypal = self.validated_data.get("paypal", None)
+        current_user.bank_transfer = self.validated_data.get("bank_transfer", None)
+        current_user.e_transfer = self.validated_data.get("e_transfer", None)
+        current_user.other_payment = self.validated_data.get("other_payment", None)
+
+
+        current_user.save()
+
+        return current_user
