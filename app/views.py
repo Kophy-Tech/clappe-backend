@@ -57,8 +57,9 @@ def signup(request):
 
         else:
             errors = {**serializer.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -96,8 +97,9 @@ def login(request):
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         else:
             errors = {**serializer.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -193,8 +195,9 @@ def customer(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -249,8 +252,9 @@ def edit_customer(request, id):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -305,14 +309,15 @@ def create_invoice(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
         context = {"message": "create invoice page", "required fields": [
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
-            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","items_json",
+            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","items_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total"]}
         return Response(context, status=status.HTTP_200_OK)
 
@@ -411,8 +416,9 @@ def pay_invoice(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -470,14 +476,15 @@ def create_proforma(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
         context = {"message": "create preforma invoice page", "required fields": [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
-                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_json", 
+                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_list", 
                     "item_total", "tax", "add_charges", "grand_total"]}
         return Response(context, status=status.HTTP_200_OK)
 
@@ -576,8 +583,9 @@ def pay_proforma(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -630,14 +638,15 @@ def create_purchaseorder(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
         context = {"message": "create purchase order page", "required fields": [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
-                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_json", 
+                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_list", 
                     "item_total", "tax", "add_charges", "grand_total"]}
         return Response(context, status=status.HTTP_200_OK)
 
@@ -736,8 +745,9 @@ def pay_purchaseorder(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -800,15 +810,16 @@ def create_estimate(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
         context = {"message": "create estimate page", "required fields": [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total"]}
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total"]}
         return Response(context, status=status.HTTP_200_OK)
 
 
@@ -906,8 +917,9 @@ def pay_estimate(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -969,8 +981,9 @@ def create_item(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -1097,15 +1110,16 @@ def create_quote(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
         context = {"message": "create quote page", "required fields": [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total"]}
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total"]}
 
         return Response(context, status=status.HTTP_200_OK)
 
@@ -1204,8 +1218,9 @@ def pay_quote(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1264,15 +1279,16 @@ def create_receipt(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
         context = {"message": "create receipt page", "required fields": [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total"]}
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total"]}
 
         return Response(context, status=status.HTTP_200_OK)
 
@@ -1371,8 +1387,9 @@ def pay_receipt(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1434,14 +1451,15 @@ def create_credit(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
         context = {"message": "create credit note page", "required fields": [
                  "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
-                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "items_json", 
+                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "items_list", 
                     "item_total", "tax", "add_charges", "grand_total"]}
 
         return Response(context, status=status.HTTP_200_OK)
@@ -1541,8 +1559,9 @@ def pay_credit(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1600,14 +1619,15 @@ def create_delivery(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
         context = {"message": "create delivery note page", "required fields": [
                  "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
-                    "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "items_json", 
+                    "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "items_list", 
                     "item_total", "tax", "add_charges", "grand_total"]}
 
         return Response(context, status=status.HTTP_200_OK)
@@ -1707,8 +1727,9 @@ def pay_delivery(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1760,8 +1781,9 @@ def change_profile(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1802,8 +1824,9 @@ def change_password(request):
 
         else:
             errors = {**form.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 

@@ -177,11 +177,12 @@ class CustomerSerializer(serializers.ModelSerializer):
 class InvoiceCreate(ModelSerializer):
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
+    # invalid_error = "{fieldname} is not valid"
     class Meta:
         model = Invoice
         fields = [
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
-            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","items_json",
+            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","items_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total"]
 
 
@@ -207,7 +208,7 @@ class InvoiceCreate(ModelSerializer):
         new_invoice.billing_address = self.validated_data["billing_address"]
         new_invoice.notes = self.validated_data["notes"]
 
-        new_invoice.items_json = self.validated_data['items_json']
+        new_invoice.items_list = self.validated_data['items_list']
         new_invoice.item_total = self.validated_data["item_total"]
         new_invoice.tax = self.validated_data["tax"]
         new_invoice.add_charges = self.validated_data["add_charges"]
@@ -231,7 +232,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         model = Invoice
         fields = [ "id",
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
-            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","items_json",
+            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","items_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status"]
 
 
@@ -247,7 +248,7 @@ class InvoiceEditSerializer(ModelSerializer):
         model = Invoice
         fields = [
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
-            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "items_json",
+            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "items_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status"]
 
 
@@ -271,7 +272,7 @@ class InvoiceEditSerializer(ModelSerializer):
         instance.billing_address = validated_data["billing_address"]
         instance.notes = validated_data["notes"]
 
-        instance.items_json = validated_data['items_json']
+        instance.items_list = validated_data['items_list']
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -337,7 +338,7 @@ class ProformaCreateSerializer(ModelSerializer):
         model = ProformaInvoice
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
-                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_json", 
+                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_list", 
                     "item_total", "tax", "add_charges", "grand_total"]
 
 
@@ -357,7 +358,7 @@ class ProformaCreateSerializer(ModelSerializer):
         new_proforma.due_date = self.validated_data["due_date"]
         new_proforma.notes = self.validated_data["notes"]
         new_proforma.attachment_path = self.validated_data["attachment_path"]
-        new_proforma.items_json = self.validated_data["items_json"]
+        new_proforma.items_list = self.validated_data["items_list"]
         new_proforma.item_total = self.validated_data["item_total"]
         new_proforma.tax = self.validated_data["tax"]
         new_proforma.add_charges = self.validated_data["add_charges"]
@@ -376,7 +377,7 @@ class ProformerInvoiceSerailizer(serializers.ModelSerializer):
         model = ProformaInvoice
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
-                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_json", 
+                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status"]
 
 
@@ -389,7 +390,7 @@ class ProformaEditSerializer(ModelSerializer):
         model = ProformaInvoice
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
-                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_json", 
+                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status"]
 
 
@@ -410,7 +411,7 @@ class ProformaEditSerializer(ModelSerializer):
         instance.due_date = validated_data["due_date"]
         instance.notes = validated_data["notes"]
         instance.attachment_path = validated_data["attachment_path"]
-        instance.items_json = validated_data["items_json"]
+        instance.items_list = validated_data["items_list"]
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -478,7 +479,7 @@ class PurchaseCreateSerializer(ModelSerializer):
         model = PurchaseOrder
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
-                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_json", 
+                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_list", 
                     "item_total", "tax", "add_charges", "grand_total"]
 
 
@@ -498,7 +499,7 @@ class PurchaseCreateSerializer(ModelSerializer):
         new_purchaseorder.ship_to = self.validated_data["ship_to"]
         new_purchaseorder.notes = self.validated_data["notes"]
         new_purchaseorder.shipping_address = self.validated_data["shipping_address"]
-        new_purchaseorder.items_json = self.validated_data["items_json"]
+        new_purchaseorder.items_list = self.validated_data["items_list"]
         new_purchaseorder.item_total = self.validated_data["item_total"]
         new_purchaseorder.tax = self.validated_data["tax"]
         new_purchaseorder.add_charges = self.validated_data["add_charges"]
@@ -517,7 +518,7 @@ class PurchaseOrderSerailizer(serializers.ModelSerializer):
         model = PurchaseOrder
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
-                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_json", 
+                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_list", 
                     "item_total", "tax", "add_charges", "grand_total",  "status"]
 
 
@@ -530,7 +531,7 @@ class PurchaseEditSerializer(ModelSerializer):
         model = PurchaseOrder
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
-                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_json", 
+                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status"]
 
 
@@ -548,7 +549,7 @@ class PurchaseEditSerializer(ModelSerializer):
         instance.po_number = validated_data["po_number"]
         instance.po_date = validated_data["po_date"]
         instance.notes = validated_data["notes"]
-        instance.items_json = validated_data["items_json"]
+        instance.items_list = validated_data["items_list"]
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -612,7 +613,7 @@ class EstimateCreateSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total"]
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total"]
 
 
     def save(self, request):
@@ -632,7 +633,7 @@ class EstimateCreateSerializer(ModelSerializer):
         new_estimate.bill_to = self.validated_data["bill_to"]
         new_estimate.billing_address = self.validated_data["billing_address"]
         new_estimate.notes = self.validated_data["notes"]
-        new_estimate.items_json = self.validated_data["items_json"]
+        new_estimate.items_list = self.validated_data["items_list"]
         new_estimate.item_total = self.validated_data["item_total"]
         new_estimate.tax = self.validated_data["tax"]
         new_estimate.add_charges = self.validated_data["add_charges"]
@@ -652,7 +653,7 @@ class EstimateSerailizer(serializers.ModelSerializer):
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total", "status"]
         
 
 
@@ -666,7 +667,7 @@ class EstimateEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total", "status"]
 
 
 
@@ -686,7 +687,7 @@ class EstimateEditSerializer(ModelSerializer):
         instance.bill_to = validated_data["bill_to"]
         instance.billing_address = validated_data["billing_address"]
         instance.notes = validated_data["notes"]
-        instance.items_json = validated_data["items_json"]
+        instance.items_list = validated_data["items_list"]
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -803,7 +804,7 @@ class QuoteCreateSerializer(ModelSerializer):
         model = Quote
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total"]
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total"]
                         
 
 
@@ -826,7 +827,7 @@ class QuoteCreateSerializer(ModelSerializer):
         new_quote.bill_to = self.validated_data["bill_to"]
         new_quote.billing_address = self.validated_data["billing_address"]
         new_quote.notes = self.validated_data["notes"]
-        new_quote.items_json = self.validated_data["items_json"]
+        new_quote.items_list = self.validated_data["items_list"]
         new_quote.item_total = self.validated_data["item_total"]
         new_quote.tax = self.validated_data["tax"]
         new_quote.add_charges = self.validated_data["add_charges"]
@@ -846,7 +847,7 @@ class QuoteSerailizer(serializers.ModelSerializer):
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total", "status"]
         
 
 
@@ -860,7 +861,7 @@ class QuoteEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total", "status"]
         
 
 
@@ -882,7 +883,7 @@ class QuoteEditSerializer(ModelSerializer):
         instance.bill_to = validated_data["bill_to"]
         instance.billing_address = validated_data["billing_address"]
         instance.notes = validated_data["notes"]
-        instance.items_json = validated_data["items_json"]
+        instance.items_list = validated_data["items_list"]
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -949,7 +950,7 @@ class CNCreateSerializer(ModelSerializer):
     class Meta:
         model = CreditNote
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
-                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "items_json", 
+                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "items_list", 
                     "item_total", "tax", "add_charges", "grand_total"]       
 
         
@@ -972,7 +973,7 @@ class CNCreateSerializer(ModelSerializer):
         new_credit.ship_to = self.validated_data["ship_to"]
         new_credit.shipping_address = self.validated_data["shipping_address"]
         new_credit.notes = self.validated_data["notes"]
-        new_credit.items_json = self.validated_data["items_json"]
+        new_credit.items_list = self.validated_data["items_list"]
         new_credit.item_total = self.validated_data["item_total"]
         new_credit.tax = self.validated_data["tax"]
         new_credit.add_charges = self.validated_data["add_charges"]
@@ -991,7 +992,7 @@ class CreditNoteSerailizer(serializers.ModelSerializer):
         model = CreditNote
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
-                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "items_json", 
+                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "items_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status"]
         
 
@@ -1005,7 +1006,7 @@ class CNEditSerializer(ModelSerializer):
         model = CreditNote
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
-                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "items_json", 
+                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "items_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status"]
 
         
@@ -1028,7 +1029,7 @@ class CNEditSerializer(ModelSerializer):
         instance.ship_to = validated_data["ship_to"]
         instance.shipping_address = validated_data["shipping_address"]
         instance.notes = validated_data["notes"]
-        instance.items_json = validated_data["items_json"]
+        instance.items_list = validated_data["items_list"]
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -1100,7 +1101,7 @@ class REceiptCreateSerializer(ModelSerializer):
         model = Receipt
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total"]
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total"]
         
         
 
@@ -1124,7 +1125,7 @@ class REceiptCreateSerializer(ModelSerializer):
         new_receipt.bill_to = self.validated_data["bill_to"]
         new_receipt.billing_address = self.validated_data["billing_address"]
         new_receipt.notes = self.validated_data["notes"]
-        new_receipt.items_json = self.validated_data["items_json"]
+        new_receipt.items_list = self.validated_data["items_list"]
         new_receipt.item_total = self.validated_data["item_total"]
         new_receipt.tax = self.validated_data["tax"]
         new_receipt.add_charges = self.validated_data["add_charges"]
@@ -1144,7 +1145,7 @@ class ReceiptSerailizer(serializers.ModelSerializer):
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total", "status"]
         
 
 
@@ -1158,7 +1159,7 @@ class ReceiptEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total", "status"]
 
         
 
@@ -1182,7 +1183,7 @@ class ReceiptEditSerializer(ModelSerializer):
         instance.bill_to = validated_data["bill_to"]
         instance.billing_address = validated_data["billing_address"]
         instance.notes = validated_data["notes"]
-        instance.items_json = validated_data["items_json"]
+        instance.items_list = validated_data["items_list"]
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -1252,7 +1253,7 @@ class DNCreateSerializer(ModelSerializer):
         model = DeliveryNote
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total"]
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total"]
         
         
 
@@ -1274,7 +1275,7 @@ class DNCreateSerializer(ModelSerializer):
         new_delivery.ship_to = self.validated_data["ship_to"]
         new_delivery.shipping_address = self.validated_data["shipping_address"]
         new_delivery.notes = self.validated_data["notes"]
-        new_delivery.items_json = self.validated_data["items_json"]
+        new_delivery.items_list = self.validated_data["items_list"]
         new_delivery.item_total = self.validated_data["item_total"]
         new_delivery.tax = self.validated_data["tax"]
         new_delivery.add_charges = self.validated_data["add_charges"]
@@ -1294,7 +1295,7 @@ class DNSerailizer(serializers.ModelSerializer):
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total", "status"]
         
 
 
@@ -1308,7 +1309,7 @@ class DNEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
-                    "notes", "items_json", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total", "status"]
 
         
 
@@ -1330,7 +1331,7 @@ class DNEditSerializer(ModelSerializer):
         instance.ship_to = validated_data["ship_to"]
         instance.shipping_address = validated_data["shipping_address"]
         instance.notes = validated_data["notes"]
-        instance.items_json = validated_data["items_json"]
+        instance.items_list = validated_data["items_list"]
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
