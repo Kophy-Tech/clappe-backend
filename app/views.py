@@ -317,7 +317,7 @@ def create_invoice(request):
     else:
         context = {"message": "create invoice page", "required fields": [
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
-            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","items_list",
+            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","item_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total"]}
         return Response(context, status=status.HTTP_200_OK)
 
@@ -484,7 +484,7 @@ def create_proforma(request):
     else:
         context = {"message": "create preforma invoice page", "required fields": [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
-                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "items_list", 
+                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total"]}
         return Response(context, status=status.HTTP_200_OK)
 
@@ -646,7 +646,7 @@ def create_purchaseorder(request):
     else:
         context = {"message": "create purchase order page", "required fields": [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
-                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "items_list", 
+                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total"]}
         return Response(context, status=status.HTTP_200_OK)
 
@@ -819,7 +819,7 @@ def create_estimate(request):
         context = {"message": "create estimate page", "required fields": [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total"]}
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total"]}
         return Response(context, status=status.HTTP_200_OK)
 
 
@@ -1119,7 +1119,7 @@ def create_quote(request):
         context = {"message": "create quote page", "required fields": [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total"]}
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total"]}
 
         return Response(context, status=status.HTTP_200_OK)
 
@@ -1288,7 +1288,7 @@ def create_receipt(request):
         context = {"message": "create receipt page", "required fields": [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "items_list", "item_total", "tax", "add_charges", "grand_total"]}
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total"]}
 
         return Response(context, status=status.HTTP_200_OK)
 
@@ -1459,7 +1459,7 @@ def create_credit(request):
     else:
         context = {"message": "create credit note page", "required fields": [
                  "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
-                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "items_list", 
+                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total"]}
 
         return Response(context, status=status.HTTP_200_OK)
@@ -1627,7 +1627,7 @@ def create_delivery(request):
     else:
         context = {"message": "create delivery note page", "required fields": [
                  "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
-                    "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "items_list", 
+                    "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total"]}
 
         return Response(context, status=status.HTTP_200_OK)
