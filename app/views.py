@@ -16,11 +16,15 @@ from .serializers import CNCreateSerializer, CNEditSerializer, CreateItemSeriali
                         ProformerInvoiceSerailizer, QuoteCreateSerializer, QuoteEditSerializer, QuoteSerailizer, REceiptCreateSerializer,\
                         ReceiptEditSerializer, ReceiptSerailizer, SignUpSerializer, LoginSerializer, UserSerializer, InvoiceCreate,\
                         PayProformaSerializer, PurchaseCreateSerializer, PurchaseEditSerializer, PurchaseOrderSerailizer, \
-                        PayPurchaseSerializer, ProfileSerializer, PasswordChangeSerializer, PreferenceSerializer, PaymentSerializer
+                        PayPurchaseSerializer, ProfileSerializer, PasswordChangeSerializer, PreferenceSerializer, PaymentSerializer,\
+                        custom_item_serializer
 
 
 from .authentication import get_access_token, MyAuthentication
 from .models import JWT, CreditNote, Customer, DeliveryNote, Estimate, Invoice, Item, MyUsers, ProformaInvoice, PurchaseOrder, Quote, Receipt
+
+
+
 
 
 
@@ -304,6 +308,7 @@ def create_invoice(request):
             new_invoice = form.save(request)
             context['message'] = "success"
             context['invoice'] = {"id": new_invoice.id, **form.data}
+            context['invoice']['item_list'] = custom_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -338,6 +343,8 @@ def edit_invoice(request, id):
             if invoice.vendor == request.user:
                 serialized_invoice = InvoiceSerializer(invoice)
                 context['message'] = serialized_invoice.data
+                context['message']['item_list'] = custom_item_serializer(invoice.item_list, invoice.quantity_list)
+
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -359,13 +366,15 @@ def edit_invoice(request, id):
                 updated_invoice = form.update(invoice, form.validated_data)
                 context['message'] = "success"
                 context['invoice'] = {"id": updated_invoice.id, **form.data}
+                context['invoice']['item_list'] = custom_item_serializer(updated_invoice.item_list, updated_invoice.quantity_list)
 
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
                 errors = {**form.errors}
-                errors_list = [k[0] for k in errors.values()]
-                context = {'message': errors_list[0], 'errors': errors_list}
+                new_errors = {key: value[0] for key,value in errors.items()}
+                errors_list = [k for k in new_errors.values()]
+                context = {'message': errors_list[0], 'errors': new_errors}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -471,6 +480,7 @@ def create_proforma(request):
             new_invoice = form.save(request)
             context['message'] = "success"
             context['invoice'] = {"id": new_invoice.id, **form.data}
+            context['invoice']['item_list'] = custom_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -505,6 +515,7 @@ def edit_proforma(request, id):
             if proforma.vendor == request.user:
                 serialized_proforma = ProformerInvoiceSerailizer(proforma)
                 context['message'] = serialized_proforma.data
+                context['message']['item_list'] = custom_item_serializer(proforma.item_list, proforma.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -526,13 +537,15 @@ def edit_proforma(request, id):
                 updated_proforma = form.update(proforma, form.validated_data)
                 context['message'] = "success"
                 context['proforma'] = {"id": updated_proforma.id, **form.data}
+                context['proforma']['item_list'] = custom_item_serializer(updated_proforma.item_list, updated_proforma.quantity_list)
 
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
                 errors = {**form.errors}
-                errors_list = [k[0] for k in errors.values()]
-                context = {'message': errors_list[0], 'errors': errors_list}
+                new_errors = {key: value[0] for key,value in errors.items()}
+                errors_list = [k for k in new_errors.values()]
+                context = {'message': errors_list[0], 'errors': new_errors}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -633,6 +646,7 @@ def create_purchaseorder(request):
             new_po = form.save(request)
             context['message'] = "success"
             context['invoice'] = {"id": new_po.id, **form.data}
+            context['invoice']['item_list'] = custom_item_serializer(new_po.item_list, new_po.quantity_list)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -667,6 +681,7 @@ def edit_purchaseorder(request, id):
             if purchase.vendor == request.user:
                 serialized_purchase = PurchaseOrderSerailizer(purchase)
                 context['message'] = serialized_purchase.data
+                context['message']['item_list'] = custom_item_serializer(serialized_purchase.item_list, serialized_purchase.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -688,13 +703,15 @@ def edit_purchaseorder(request, id):
                 updated_proforma = form.update(purchase, form.validated_data)
                 context['message'] = "success"
                 context['purchase'] = {"id": updated_proforma.id, **form.data}
+                context['purchase']['item_list'] = custom_item_serializer(updated_proforma.item_list, updated_proforma.quantity_list)
 
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
                 errors = {**form.errors}
-                errors_list = [k[0] for k in errors.values()]
-                context = {'message': errors_list[0], 'errors': errors_list}
+                new_errors = {key: value[0] for key,value in errors.items()}
+                errors_list = [k for k in new_errors.values()]
+                context = {'message': errors_list[0], 'errors': new_errors}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -805,6 +822,7 @@ def create_estimate(request):
             new_estimate = form.save(request)
             context['message'] = "success"
             context['estimate'] = {"id": new_estimate.id, **form.data}
+            context['estimate']['item_list'] = custom_item_serializer(new_estimate.item_list, new_estimate.quantity_list)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -839,6 +857,7 @@ def edit_estimate(request, id):
             if estimate.vendor == request.user:
                 serialized_estimate = EstimateSerailizer(estimate)
                 context['message'] = serialized_estimate.data
+                context['message']['item_list'] = custom_item_serializer(estimate.item_list, estimate.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -860,13 +879,15 @@ def edit_estimate(request, id):
                 updated_estimate = form.update(estimate, form.validated_data)
                 context['message'] = "success"
                 context['estimate'] = {"id": updated_estimate.id, **form.data}
+                context['estimate']['item_list'] = custom_item_serializer(updated_estimate.item_list, updated_estimate.quantity_list)
 
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
                 errors = {**form.errors}
-                errors_list = [k[0] for k in errors.values()]
-                context = {'message': errors_list[0], 'errors': errors_list}
+                new_errors = {key: value[0] for key,value in errors.items()}
+                errors_list = [k for k in new_errors.values()]
+                context = {'message': errors_list[0], 'errors': new_errors}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -1033,8 +1054,9 @@ def edit_item(request, id):
 
             else:
                 errors = {**form.errors}
-                errors_list = [k[0] for k in errors.values()]
-                context = {'message': errors_list[0], 'errors': errors_list}
+                new_errors = {key: value[0] for key,value in errors.items()}
+                errors_list = [k for k in new_errors.values()]
+                context = {'message': errors_list[0], 'errors': new_errors}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -1105,6 +1127,7 @@ def create_quote(request):
             new_quote = form.save(request)
             context['message'] = "success"
             context['quote'] = {"id": new_quote.id, **form.data}
+            context['quote']['item_list'] = custom_item_serializer(new_quote.item_list, new_quote.quantity_list)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1140,6 +1163,7 @@ def edit_quote(request, id):
             if quote.vendor == request.user:
                 serialized_quote = QuoteSerailizer(quote)
                 context['message'] = serialized_quote.data
+                context['message']['item_list'] = custom_item_serializer(quote.item_list, quote.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -1161,13 +1185,15 @@ def edit_quote(request, id):
                 updated_quote = form.update(quote, form.validated_data)
                 context['message'] = "success"
                 context['quote'] = {"id": updated_quote.id, **form.data}
+                context['quote']['item_list'] = custom_item_serializer(updated_quote.item_list, updated_quote.quantity_list)
 
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
                 errors = {**form.errors}
-                errors_list = [k[0] for k in errors.values()]
-                context = {'message': errors_list[0], 'errors': errors_list}
+                new_errors = {key: value[0] for key,value in errors.items()}
+                errors_list = [k for k in new_errors.values()]
+                context = {'message': errors_list[0], 'errors': new_errors}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -1274,6 +1300,7 @@ def create_receipt(request):
             new_receipt = form.save(request)
             context['message'] = "success"
             context['receipt'] = {"id": new_receipt.id, **form.data}
+            context['receipt']['item_list'] = custom_item_serializer(new_receipt.item_list, new_receipt.quantity_list)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1309,6 +1336,7 @@ def edit_receipt(request, id):
             if receipt.vendor == request.user:
                 serialized_receipt = ReceiptSerailizer(receipt)
                 context['message'] = serialized_receipt.data
+                context['message']['item_list'] = custom_item_serializer(receipt.item_list, receipt.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -1330,13 +1358,15 @@ def edit_receipt(request, id):
                 updated_receipt = form.update(receipt, form.validated_data)
                 context['message'] = "success"
                 context['receipt'] = {"id": updated_receipt.id, **form.data}
+                context['receipt']['item_list'] = custom_item_serializer(updated_receipt.item_list, updated_receipt.quantity_list)
 
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
                 errors = {**form.errors}
-                errors_list = [k[0] for k in errors.values()]
-                context = {'message': errors_list[0], 'errors': errors_list}
+                new_errors = {key: value[0] for key,value in errors.items()}
+                errors_list = [k for k in new_errors.values()]
+                context = {'message': errors_list[0], 'errors': new_errors}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -1446,6 +1476,7 @@ def create_credit(request):
             new_credit = form.save(request)
             context['message'] = "success"
             context['credit'] = {"id": new_credit.id, **form.data}
+            context['credit']['item_list'] = custom_item_serializer(new_credit.item_list, new_credit.quantity_list)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1481,6 +1512,7 @@ def edit_credit(request, id):
             if credit.vendor == request.user:
                 serialized_credit = CreditNoteSerailizer(credit)
                 context['message'] = serialized_credit.data
+                context['message']['item_list'] = custom_item_serializer(credit.item_list, credit.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -1502,13 +1534,15 @@ def edit_credit(request, id):
                 updated_credit = form.update(credit, form.validated_data)
                 context['message'] = "success"
                 context['credit'] = {"id": updated_credit.id, **form.data}
+                context['credit']['item_list'] = custom_item_serializer(updated_credit.item_list, updated_credit.quantity_list)
 
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
                 errors = {**form.errors}
-                errors_list = [k[0] for k in errors.values()]
-                context = {'message': errors_list[0], 'errors': errors_list}
+                new_errors = {key: value[0] for key,value in errors.items()}
+                errors_list = [k for k in new_errors.values()]
+                context = {'message': errors_list[0], 'errors': new_errors}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -1614,6 +1648,7 @@ def create_delivery(request):
             new_delivery = form.save(request)
             context['message'] = "success"
             context['delivery'] = {"id": new_delivery.id, **form.data}
+            context['delivery']['item_list'] = custom_item_serializer(new_delivery.item_list, new_delivery.quantity_list)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1649,6 +1684,7 @@ def edit_delivery(request, id):
             if delivery.vendor == request.user:
                 serialized_delivery = DNSerailizer(delivery)
                 context['message'] = serialized_delivery.data
+                context['message']['item_list'] = custom_item_serializer(delivery.item_list, delivery.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -1670,13 +1706,15 @@ def edit_delivery(request, id):
                 updated_delivery = form.update(delivery, form.validated_data)
                 context['message'] = "success"
                 context['delivery'] = {"id": updated_delivery.id, **form.data}
+                context['delivery']['item_list'] = custom_item_serializer(updated_delivery.item_list, updated_delivery.quantity_list)
 
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
                 errors = {**form.errors}
-                errors_list = [k[0] for k in errors.values()]
-                context = {'message': errors_list[0], 'errors': errors_list}
+                new_errors = {key: value[0] for key,value in errors.items()}
+                errors_list = [k for k in new_errors.values()]
+                context = {'message': errors_list[0], 'errors': new_errors}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
@@ -1867,8 +1905,9 @@ def change_preference(request):
         else:
 
             errors = {**pref_ser.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1910,8 +1949,9 @@ def change_payment(request):
         else:
 
             errors = {**payment_info.errors}
-            errors_list = [k[0] for k in errors.values()]
-            context = {'message': errors_list[0], 'errors': errors_list}
+            new_errors = {key: value[0] for key,value in errors.items()}
+            errors_list = [k for k in new_errors.values()]
+            context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
 

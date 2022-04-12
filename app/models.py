@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.fields import ArrayField
+
+
 # Create your models here.
 
 
@@ -85,7 +88,8 @@ class Invoice(models.Model):
     billing_address = models.CharField("Billing Address", max_length=500, null=False, blank=False)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
     
-    items_list = models.CharField("Items List", blank=False, null=False, max_length=1024)
+    item_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
+    quantity_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
     item_total = models.FloatField("Item Total", blank=False, null=False)
     tax = models.FloatField("Tax", blank=True, null=True)
     add_charges = models.FloatField("Additional Charges", blank=True, null=True)
@@ -123,7 +127,8 @@ class ProformaInvoice(models.Model):
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
     attachment_path = models.CharField("Attachment Path", max_length=2048, blank=True, null=True)
     
-    items_list = models.CharField("Items List", blank=False, null=False, max_length=1024)
+    item_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
+    quantity_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
     item_total = models.FloatField("Item Total", blank=False, null=False)
     tax = models.FloatField("Tax", blank=True, null=True)
     add_charges = models.FloatField("Additional Charges", blank=True, null=True)
@@ -159,7 +164,8 @@ class PurchaseOrder(models.Model):
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
 
     
-    items_list = models.CharField("Items List", blank=False, null=False, max_length=1024)
+    item_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
+    quantity_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
     item_total = models.FloatField("Item Total", blank=False, null=False)
     tax = models.FloatField("Tax", blank=True, null=True)
     add_charges = models.FloatField("Additional Charges", blank=True, null=True)
@@ -197,7 +203,8 @@ class Estimate(models.Model):
     billing_address = models.CharField("Billing Address", max_length=500, null=False, blank=False)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
     
-    items_list = models.CharField("Items List", blank=False, null=False, max_length=1024)
+    item_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
+    quantity_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
     item_total = models.FloatField("Item Total", blank=False, null=False)
     tax = models.FloatField("Tax", blank=True, null=True)
     add_charges = models.FloatField("Additional Charges", blank=True, null=True)
@@ -237,7 +244,8 @@ class Quote(models.Model):
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
 
     
-    items_list = models.CharField("Items List", blank=False, null=False, max_length=1024)
+    item_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
+    quantity_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
     item_total = models.FloatField("Item Total", blank=False, null=False)
     tax = models.FloatField("Tax", blank=True, null=True)
     add_charges = models.FloatField("Additional Charges", blank=True, null=True)
@@ -279,7 +287,8 @@ class Receipt(models.Model):
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
 
     
-    items_list = models.CharField("Items List", blank=False, null=False, max_length=1024)
+    item_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
+    quantity_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
     item_total = models.FloatField("Item Total", blank=False, null=False)
     tax = models.FloatField("Tax", blank=True, null=True)
     add_charges = models.FloatField("Additional Charges", blank=True, null=True)
@@ -320,7 +329,8 @@ class CreditNote(models.Model):
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
 
     
-    items_list = models.CharField("Items List", blank=False, null=False, max_length=1024)
+    item_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
+    quantity_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
     item_total = models.FloatField("Item Total", blank=False, null=False)
     tax = models.FloatField("Tax", blank=True, null=True)
     add_charges = models.FloatField("Additional Charges", blank=True, null=True)
@@ -364,7 +374,8 @@ class DeliveryNote(models.Model):
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
 
     
-    items_list = models.CharField("Items List", blank=False, null=False, max_length=1024)
+    item_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
+    quantity_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
     item_total = models.FloatField("Item Total", blank=False, null=False)
     tax = models.FloatField("Tax", blank=True, null=True)
     add_charges = models.FloatField("Additional Charges", blank=True, null=True)

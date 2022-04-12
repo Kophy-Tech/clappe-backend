@@ -209,7 +209,14 @@ class InvoiceCreate(ModelSerializer):
         new_invoice.billing_address = self.validated_data["billing_address"]
         new_invoice.notes = self.validated_data["notes"]
 
-        new_invoice.items_list = self.validated_data['item_list']
+
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        new_invoice.item_list = ids
+        new_invoice.quantity_list = quantities
+
         new_invoice.item_total = self.validated_data["item_total"]
         new_invoice.tax = self.validated_data["tax"]
         new_invoice.add_charges = self.validated_data["add_charges"]
@@ -274,7 +281,14 @@ class InvoiceEditSerializer(ModelSerializer):
         instance.billing_address = validated_data["billing_address"]
         instance.notes = validated_data["notes"]
 
-        instance.items_list = validated_data['item_list']
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        instance.item_list = ids
+        instance.quantity_list = quantities
+
+
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -361,7 +375,15 @@ class ProformaCreateSerializer(ModelSerializer):
         new_proforma.due_date = self.validated_data["due_date"]
         new_proforma.notes = self.validated_data["notes"]
         new_proforma.attachment_path = self.validated_data["attachment_path"]
-        new_proforma.items_list = self.validated_data["item_list"]
+        
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        new_proforma.item_list = ids
+        new_proforma.quantity_list = quantities
+
+
         new_proforma.item_total = self.validated_data["item_total"]
         new_proforma.tax = self.validated_data["tax"]
         new_proforma.add_charges = self.validated_data["add_charges"]
@@ -415,7 +437,15 @@ class ProformaEditSerializer(ModelSerializer):
         instance.due_date = validated_data["due_date"]
         instance.notes = validated_data["notes"]
         instance.attachment_path = validated_data["attachment_path"]
-        instance.items_list = validated_data["item_list"]
+        
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        instance.item_list = ids
+        instance.quantity_list = quantities
+
+
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -504,7 +534,15 @@ class PurchaseCreateSerializer(ModelSerializer):
         new_purchaseorder.ship_to = self.validated_data["ship_to"]
         new_purchaseorder.notes = self.validated_data["notes"]
         new_purchaseorder.shipping_address = self.validated_data["shipping_address"]
-        new_purchaseorder.items_list = self.validated_data["item_list"]
+        
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        new_purchaseorder.item_list = ids
+        new_purchaseorder.quantity_list = quantities
+
+
         new_purchaseorder.item_total = self.validated_data["item_total"]
         new_purchaseorder.tax = self.validated_data["tax"]
         new_purchaseorder.add_charges = self.validated_data["add_charges"]
@@ -555,7 +593,15 @@ class PurchaseEditSerializer(ModelSerializer):
         instance.po_number = validated_data["po_number"]
         instance.po_date = validated_data["po_date"]
         instance.notes = validated_data["notes"]
-        instance.items_list = validated_data["item_list"]
+        
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        instance.item_list = ids
+        instance.quantity_list = quantities
+
+
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -640,7 +686,15 @@ class EstimateCreateSerializer(ModelSerializer):
         new_estimate.bill_to = self.validated_data["bill_to"]
         new_estimate.billing_address = self.validated_data["billing_address"]
         new_estimate.notes = self.validated_data["notes"]
-        new_estimate.items_list = self.validated_data["item_list"]
+        
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        new_estimate.item_list = ids
+        new_estimate.quantity_list = quantities
+
+
         new_estimate.item_total = self.validated_data["item_total"]
         new_estimate.tax = self.validated_data["tax"]
         new_estimate.add_charges = self.validated_data["add_charges"]
@@ -695,7 +749,15 @@ class EstimateEditSerializer(ModelSerializer):
         instance.bill_to = validated_data["bill_to"]
         instance.billing_address = validated_data["billing_address"]
         instance.notes = validated_data["notes"]
-        instance.items_list = validated_data["item_list"]
+        
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        instance.item_list = ids
+        instance.quantity_list = quantities
+
+
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -836,7 +898,15 @@ class QuoteCreateSerializer(ModelSerializer):
         new_quote.bill_to = self.validated_data["bill_to"]
         new_quote.billing_address = self.validated_data["billing_address"]
         new_quote.notes = self.validated_data["notes"]
-        new_quote.items_list = self.validated_data["item_list"]
+        
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        new_quote.item_list = ids
+        new_quote.quantity_list = quantities
+
+
         new_quote.item_total = self.validated_data["item_total"]
         new_quote.tax = self.validated_data["tax"]
         new_quote.add_charges = self.validated_data["add_charges"]
@@ -893,7 +963,15 @@ class QuoteEditSerializer(ModelSerializer):
         instance.bill_to = validated_data["bill_to"]
         instance.billing_address = validated_data["billing_address"]
         instance.notes = validated_data["notes"]
-        instance.items_list = validated_data["item_list"]
+        
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        instance.item_list = ids
+        instance.quantity_list = quantities
+
+
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -984,7 +1062,15 @@ class CNCreateSerializer(ModelSerializer):
         new_credit.ship_to = self.validated_data["ship_to"]
         new_credit.shipping_address = self.validated_data["shipping_address"]
         new_credit.notes = self.validated_data["notes"]
-        new_credit.items_list = self.validated_data["item_list"]
+        
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        new_credit.item_list = ids
+        new_credit.quantity_list = quantities
+
+
         new_credit.item_total = self.validated_data["item_total"]
         new_credit.tax = self.validated_data["tax"]
         new_credit.add_charges = self.validated_data["add_charges"]
@@ -1041,7 +1127,15 @@ class CNEditSerializer(ModelSerializer):
         instance.ship_to = validated_data["ship_to"]
         instance.shipping_address = validated_data["shipping_address"]
         instance.notes = validated_data["notes"]
-        instance.items_list = validated_data["item_list"]
+        
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        instance.item_list = ids
+        instance.quantity_list = quantities
+
+
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -1138,7 +1232,15 @@ class REceiptCreateSerializer(ModelSerializer):
         new_receipt.bill_to = self.validated_data["bill_to"]
         new_receipt.billing_address = self.validated_data["billing_address"]
         new_receipt.notes = self.validated_data["notes"]
-        new_receipt.items_list = self.validated_data["item_list"]
+        
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        new_receipt.item_list = ids
+        new_receipt.quantity_list = quantities
+
+
         new_receipt.item_total = self.validated_data["item_total"]
         new_receipt.tax = self.validated_data["tax"]
         new_receipt.add_charges = self.validated_data["add_charges"]
@@ -1197,7 +1299,15 @@ class ReceiptEditSerializer(ModelSerializer):
         instance.bill_to = validated_data["bill_to"]
         instance.billing_address = validated_data["billing_address"]
         instance.notes = validated_data["notes"]
-        instance.items_list = validated_data["item_list"]
+        
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        instance.item_list = ids
+        instance.quantity_list = quantities
+
+
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -1290,7 +1400,15 @@ class DNCreateSerializer(ModelSerializer):
         new_delivery.ship_to = self.validated_data["ship_to"]
         new_delivery.shipping_address = self.validated_data["shipping_address"]
         new_delivery.notes = self.validated_data["notes"]
-        new_delivery.items_list = self.validated_data["item_list"]
+        
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        new_delivery.item_list = ids
+        new_delivery.quantity_list = quantities
+
+
         new_delivery.item_total = self.validated_data["item_total"]
         new_delivery.tax = self.validated_data["tax"]
         new_delivery.add_charges = self.validated_data["add_charges"]
@@ -1347,7 +1465,15 @@ class DNEditSerializer(ModelSerializer):
         instance.ship_to = validated_data["ship_to"]
         instance.shipping_address = validated_data["shipping_address"]
         instance.notes = validated_data["notes"]
-        instance.items_list = validated_data["item_list"]
+        
+        item_list = self.validated_data['item_list']
+        ids = [int(i['id']) for i in item_list]
+        quantities = [int(i['quantity']) for i in item_list]
+
+        instance.item_list = ids
+        instance.quantity_list = quantities
+
+
         instance.item_total = validated_data["item_total"]
         instance.tax = validated_data["tax"]
         instance.add_charges = validated_data["add_charges"]
@@ -1516,3 +1642,24 @@ class PaymentSerializer(serializers.ModelSerializer):
         current_user.save()
 
         return current_user
+
+
+
+
+
+
+def custom_item_serializer(items, quantities):
+    total_list = []
+    for id in range(len(items)):
+        single_item = Item.objects.get(pk=items[id])
+        serialized_items = ItemSerializer(single_item)
+
+        item_data = {**serialized_items.data, "quantity": quantities[id]}
+        item_data['amount'] = item_data['sales_price'] * quantities[id]
+        item_data.pop("cost_price")
+        item_data.pop("description")
+
+        total_list.append(item_data)
+
+
+    return total_list
