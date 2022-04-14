@@ -14,3 +14,4 @@ celery==5.2.3
 redis==4.1.4
 django-celery-results==2.2.0
 openpyxl==3.0.9
+reportlab==3.6.2
