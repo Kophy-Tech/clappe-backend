@@ -2,8 +2,14 @@ from rest_framework import serializers
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.hashers import check_password
 from drf_tweaks.serializers import ModelSerializer
+
 from .models import CreditNote, Customer, DeliveryNote, Item, MyUsers, Invoice, PayCreditNote, PayDeliveryNote, PayQuote, PayReceipt, ProformaInvoice, \
                     Estimate, PurchaseOrder, PayInvoice, PayEstimate, PayProforma, PayPurchaseOrder, Quote, Receipt
+
+from .forms import ScheduleForm
+
+from app.pdf.main import get_report
+from app.my_email import send_my_email
 
 
 
@@ -176,6 +182,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 class InvoiceCreate(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     # invalid_error = "{fieldname} is not valid"
@@ -184,7 +191,7 @@ class InvoiceCreate(ModelSerializer):
         fields = [
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","item_list",
-            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total"]
+            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "send_email"]
 
 
     def save(self, request):
@@ -224,10 +231,33 @@ class InvoiceCreate(ModelSerializer):
         new_invoice.discount_type = self.validated_data["discount_type"]
         new_invoice.discount_amount = self.validated_data["discount_amount"]
         new_invoice.grand_total = self.validated_data["grand_total"]
+        new_invoice.status = "Unpaid"
         
         new_invoice.vendor = request.user
 
         new_invoice.save()
+
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Invoice for {new_invoice.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(new_invoice.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": new_invoice.due_date,
+            "document_type": "invoice",
+            "document_id": new_invoice.id,
+            "task_type": "one_time",
+            "email": new_invoice.email
+        }
+
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _, _ = new_schedule.save()
+
 
         return new_invoice
 
@@ -251,6 +281,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
 class InvoiceEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -258,7 +289,7 @@ class InvoiceEditSerializer(ModelSerializer):
         fields = [
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "item_list",
-            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status"]
+            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "send_email"]
 
 
     def update(self, instance, validated_data):
@@ -299,6 +330,26 @@ class InvoiceEditSerializer(ModelSerializer):
 
 
         instance.save()
+
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Invoice for {instance.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(instance.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": instance.due_date,
+            "document_type": "invoice",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.email
+        }
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _ = new_schedule.update()
 
         return instance
 
@@ -349,6 +400,7 @@ class PayInvoiceSerializer(ModelSerializer):
 
 class ProformaCreateSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -356,7 +408,7 @@ class ProformaCreateSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
                     "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total"]
+                    "item_total", "tax", "add_charges", "grand_total", "send_email"]
 
 
     def save(self, request):
@@ -393,6 +445,28 @@ class ProformaCreateSerializer(ModelSerializer):
 
         new_proforma.save()
 
+
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Proforma Invoice for {new_proforma.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(new_proforma.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": new_proforma.due_date,
+            "document_type": "invoice",
+            "document_id": new_proforma.id,
+            "task_type": "one_time",
+            "email": new_proforma.email
+        }
+
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _, _ = new_schedule.save()
+
         return new_proforma
 
 
@@ -410,6 +484,7 @@ class ProformerInvoiceSerailizer(serializers.ModelSerializer):
 
 class ProformaEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -417,7 +492,7 @@ class ProformaEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
                     "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
 
 
 
@@ -452,6 +527,26 @@ class ProformaEditSerializer(ModelSerializer):
         instance.grand_total = validated_data["grand_total"]
 
         instance.save()
+
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Proforma Invoice for {instance.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(instance.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": instance.due_date,
+            "document_type": "invoice",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.email
+        }
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _ = new_schedule.update()
 
         return instance
 
@@ -508,6 +603,7 @@ class PayProformaSerializer(ModelSerializer):
 
 class PurchaseCreateSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -515,7 +611,7 @@ class PurchaseCreateSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
                     "po_number", "po_date", "ship_to", "notes", "shipping_address", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total"]
+                    "item_total", "tax", "add_charges", "grand_total", "send_email"]
 
 
 
@@ -552,6 +648,27 @@ class PurchaseCreateSerializer(ModelSerializer):
 
         new_purchaseorder.save()
 
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Purchase Order for {new_purchaseorder.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(new_purchaseorder.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": new_purchaseorder.due_date,
+            "document_type": "invoice",
+            "document_id": new_purchaseorder.id,
+            "task_type": "one_time",
+            "email": new_purchaseorder.email
+        }
+
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _, _ = new_schedule.save()
+
         return new_purchaseorder
 
 
@@ -569,6 +686,7 @@ class PurchaseOrderSerailizer(serializers.ModelSerializer):
 
 class PurchaseEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -576,7 +694,7 @@ class PurchaseEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
                     "po_number", "po_date", "ship_to", "notes", "shipping_address", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
 
 
 
@@ -608,6 +726,26 @@ class PurchaseEditSerializer(ModelSerializer):
         instance.grand_total = validated_data["grand_total"]
 
         instance.save()
+
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Purchase Order for {instance.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(instance.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": instance.due_date,
+            "document_type": "invoice",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.email
+        }
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _ = new_schedule.update()
 
         return instance
 
@@ -659,6 +797,7 @@ class PayPurchaseSerializer(ModelSerializer):
 
 class EstimateCreateSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -666,7 +805,7 @@ class EstimateCreateSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
 
 
     def save(self, request):
@@ -704,6 +843,27 @@ class EstimateCreateSerializer(ModelSerializer):
 
         new_estimate.save()
 
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Estimate for {new_estimate.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(new_estimate.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": new_estimate.due_date,
+            "document_type": "invoice",
+            "document_id": new_estimate.id,
+            "task_type": "one_time",
+            "email": new_estimate.email
+        }
+
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _, _ = new_schedule.save()
+
         return new_estimate
 
 
@@ -722,6 +882,7 @@ class EstimateSerailizer(serializers.ModelSerializer):
 
 class EstimateEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -729,7 +890,7 @@ class EstimateEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
 
 
 
@@ -764,6 +925,26 @@ class EstimateEditSerializer(ModelSerializer):
         instance.grand_total = validated_data["grand_total"]
 
         instance.save()
+
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Estimate for {instance.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(instance.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": instance.due_date,
+            "document_type": "invoice",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.email
+        }
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _ = new_schedule.update()
 
         return instance
 
@@ -869,13 +1050,14 @@ class CreateItemSerializer(ModelSerializer):
 
 class QuoteCreateSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Quote
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
                         
 
 
@@ -916,6 +1098,28 @@ class QuoteCreateSerializer(ModelSerializer):
 
         new_quote.save()
 
+
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Quote for {new_quote.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(Invoice.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": new_quote.due_date,
+            "document_type": "quote",
+            "document_id": new_quote.id,
+            "task_type": "one_time",
+            "email": new_quote.email
+        }
+
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _, _ = new_schedule.save()
+
         return new_quote
 
 
@@ -934,6 +1138,7 @@ class QuoteSerailizer(serializers.ModelSerializer):
 
 class QuoteEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -941,7 +1146,7 @@ class QuoteEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
         
 
 
@@ -978,6 +1183,26 @@ class QuoteEditSerializer(ModelSerializer):
         instance.grand_total = validated_data["grand_total"]
 
         instance.save()
+
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Quote for {instance.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(Invoice.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": instance.due_date,
+            "document_type": "quote",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.email
+        }
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _ = new_schedule.update()
 
         return instance
 
@@ -1034,13 +1259,14 @@ class PayQuoteSerializer(ModelSerializer):
 
 class CNCreateSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = CreditNote
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
                     "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total"]       
+                    "item_total", "tax", "add_charges", "grand_total", "send_email"]       
 
         
 
@@ -1080,6 +1306,27 @@ class CNCreateSerializer(ModelSerializer):
 
         new_credit.save()
 
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Credit Note for {new_credit.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(Invoice.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": new_credit.due_date,
+            "document_type": "credit_note",
+            "document_id": new_credit.id,
+            "task_type": "one_time",
+            "email": new_credit.email
+        }
+
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _, _ = new_schedule.save()
+
         return new_credit
 
 
@@ -1098,6 +1345,7 @@ class CreditNoteSerailizer(serializers.ModelSerializer):
 
 class CNEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -1105,7 +1353,7 @@ class CNEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
                     "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
 
         
 
@@ -1142,6 +1390,26 @@ class CNEditSerializer(ModelSerializer):
         instance.grand_total = validated_data["grand_total"]
 
         instance.save()
+
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Credit Note for {instance.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(Invoice.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": instance.due_date,
+            "document_type": "credit_note",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.email
+        }
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _ = new_schedule.update()
 
         return instance
 
@@ -1202,13 +1470,14 @@ class PayCNSerializer(ModelSerializer):
 
 class REceiptCreateSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Receipt
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
         
         
 
@@ -1250,6 +1519,27 @@ class REceiptCreateSerializer(ModelSerializer):
 
         new_receipt.save()
 
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Receipt for {new_receipt.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(Invoice.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": new_receipt.due_date,
+            "document_type": "receipt",
+            "document_id": new_receipt.id,
+            "task_type": "one_time",
+            "email": new_receipt.email
+        }
+
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _, _ = new_schedule.save()
+
         return new_receipt
 
 
@@ -1268,6 +1558,7 @@ class ReceiptSerailizer(serializers.ModelSerializer):
 
 class ReceiptEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -1275,7 +1566,7 @@ class ReceiptEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
 
         
 
@@ -1314,6 +1605,26 @@ class ReceiptEditSerializer(ModelSerializer):
         instance.grand_total = validated_data["grand_total"]
 
         instance.save()
+
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Receipt for {instance.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(Invoice.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": instance.due_date,
+            "document_type": "receipt",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.email
+        }
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _ = new_schedule.update()
 
         return instance
 
@@ -1372,13 +1683,14 @@ class PayReceiptSerializer(ModelSerializer):
 
 class DNCreateSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = DeliveryNote
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
         
         
 
@@ -1418,6 +1730,27 @@ class DNCreateSerializer(ModelSerializer):
 
         new_delivery.save()
 
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Delivery Note for {new_delivery.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(Invoice.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": new_delivery.due_date,
+            "document_type": "delivery_note",
+            "document_id": new_delivery.id,
+            "task_type": "one_time",
+            "email": new_delivery.email
+        }
+
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _, _ = new_schedule.save()
+
         return new_delivery
 
 
@@ -1436,6 +1769,7 @@ class DNSerailizer(serializers.ModelSerializer):
 
 class DNEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
+    send_email = serializers.BooleanField(default=False)
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -1443,7 +1777,7 @@ class DNEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
 
         
 
@@ -1480,6 +1814,26 @@ class DNEditSerializer(ModelSerializer):
         instance.grand_total = validated_data["grand_total"]
 
         instance.save()
+
+        if self.validated_data['send_email']:
+            # for sending email when creating a new document
+            file_name = f"Delivery Note for {instance.email}.pdf"
+            get_report(file_name)
+            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+            subject = "Transaction Receipt"
+            send_my_email(Invoice.email, body, subject, file_name)
+            
+        # date, docuemnt_type, document_id, task_type [one time or periodic], email
+        schedule_details = {
+            "date": instance.due_date,
+            "document_type": "delivery_note",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.email
+        }
+        new_schedule = ScheduleForm(schedule_details)
+        if new_schedule.is_valid():
+            _ = new_schedule.update()
 
         return instance
 
