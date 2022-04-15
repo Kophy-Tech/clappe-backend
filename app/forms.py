@@ -39,14 +39,14 @@ class ScheduleForm(forms.Form):
         if task_type == 'one_time':
             # for due email
             new_task.task = "app.tasks.send_due_mail_task"
-            new_task.name = f"Email Notfication for {email} ({document_type.capitalize()})"
+            new_task.name = f"Email Notfication for {email} ({document_type.capitalize()} - {document_id})"
             new_task.one_off = True
             new_task.description = f"Email Notfication for {email} ({document_type.capitalize()})"
         
         else:
             # for monthly email
             new_task.task = "app.tasks.send_monthly_mail_task"
-            new_task.name = f"Monthly Email Report for {email} ({document_type.capitalize()})"
+            new_task.name = f"Monthly Email Report for {email} ({document_type.capitalize()}  - {document_id})"
             new_task.one_off = False
             new_task.description = f"Monthly Email Report for {email} ({document_type.capitalize()})"
 
