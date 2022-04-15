@@ -19,6 +19,47 @@ from app.my_email import send_my_email
 
 
 
+def get_number(request, num_type):
+
+    # invoice, proforma, pruchase_order, estimate, quote, receipt, credit_note, delivery_note, 
+
+    if num_type == "invoice":
+        count = len(Invoice.objects.filter(vendor=request.user.id).all())
+
+    elif num_type == "proforma":
+        count = len(ProformaInvoice.objects.filter(vendor=request.user.id).all())
+
+    elif num_type == "purchase_order":
+        count = len(PurchaseOrder.objects.filter(vendor=request.user.id).all())
+
+    elif num_type == "estimate":
+        count = len(Estimate.objects.filter(vendor=request.user.id).all())
+
+    elif num_type == "quote":
+        count = len(Quote.objects.filter(vendor=request.user.id).all())
+
+    elif num_type == "receipt":
+        count = len(Receipt.objects.filter(vendor=request.user.id).all())
+
+    elif num_type == "credit_note":
+        count = len(CreditNote.objects.filter(vendor=request.user.id).all())
+
+    elif num_type == "delivery_note":
+        count = len(DeliveryNote.objects.filter(vendor=request.user.id).all())
+
+
+    return "00" + str(count)
+
+
+
+
+
+
+
+
+
+
+
 class SignUpSerializer(ModelSerializer):
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -183,13 +224,14 @@ class CustomerSerializer(serializers.ModelSerializer):
 class InvoiceCreate(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     # invalid_error = "{fieldname} is not valid"
     class Meta:
         model = Invoice
         fields = [
-            "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
+            "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","item_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "send_email"]
 
@@ -205,7 +247,7 @@ class InvoiceCreate(ModelSerializer):
         new_invoice.taxable = self.validated_data["taxable"]
         new_invoice.invoice_pref = self.validated_data["invoice_pref"]
         new_invoice.logo_path = self.validated_data["logo_path"]
-        new_invoice.invoice_number = self.validated_data['invoice_number']
+        new_invoice.invoice_number = get_number(request, 'invoice')
         new_invoice.invoice_date = self.validated_data['invoice_date']
         new_invoice.po_number = self.validated_data['po_number']
         new_invoice.due_date = self.validated_data['due_date']
@@ -287,7 +329,7 @@ class InvoiceEditSerializer(ModelSerializer):
     class Meta:
         model = Invoice
         fields = [
-            "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
+            "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "item_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "send_email"]
 
@@ -301,7 +343,6 @@ class InvoiceEditSerializer(ModelSerializer):
         instance.taxable = validated_data["taxable"]
         instance.invoice_pref = validated_data["invoice_pref"]
         instance.logo_path = validated_data["logo_path"]
-        instance.invoice_number = validated_data['invoice_number']
         instance.invoice_date = validated_data['invoice_date']
         instance.po_number = validated_data['po_number']
         instance.due_date = validated_data['due_date']
@@ -407,7 +448,7 @@ class ProformaCreateSerializer(ModelSerializer):
         model = ProformaInvoice
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
-                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", 
+                "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "send_email"]
 
 
@@ -421,7 +462,7 @@ class ProformaCreateSerializer(ModelSerializer):
         new_proforma.taxable = self.validated_data["taxable"]
         new_proforma.invoice_pref = self.validated_data["invoice_pref"]
         new_proforma.logo_path = self.validated_data["logo_path"]
-        new_proforma.invoice_number = self.validated_data["invoice_number"]
+        new_proforma.invoice_number = get_number(request, 'proforma')
         new_proforma.invoice_date = self.validated_data["invoice_date"]
         new_proforma.po_number = self.validated_data["po_number"]
         new_proforma.due_date = self.validated_data["due_date"]
@@ -491,7 +532,7 @@ class ProformaEditSerializer(ModelSerializer):
         model = ProformaInvoice
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
-                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", 
+                    "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
 
 
@@ -506,7 +547,6 @@ class ProformaEditSerializer(ModelSerializer):
         instance.taxable = validated_data["taxable"]
         instance.invoice_pref = validated_data["invoice_pref"]
         instance.logo_path = validated_data["logo_path"]
-        instance.invoice_number = validated_data["invoice_number"]
         instance.invoice_date = validated_data["invoice_date"]
         instance.po_number = validated_data["po_number"]
         instance.due_date = validated_data["due_date"]
@@ -610,7 +650,7 @@ class PurchaseCreateSerializer(ModelSerializer):
         model = PurchaseOrder
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
-                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "item_list", 
+                    "po_date", "ship_to", "notes", "shipping_address", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "send_email"]
 
 
@@ -625,7 +665,7 @@ class PurchaseCreateSerializer(ModelSerializer):
         new_purchaseorder.taxable = self.validated_data["taxable"]
         new_purchaseorder.po_pref = self.validated_data["po_pref"]
         new_purchaseorder.logo_path = self.validated_data["logo_path"]
-        new_purchaseorder.po_number = self.validated_data["po_number"]
+        new_purchaseorder.po_number = get_number(request, 'purchase_order')
         new_purchaseorder.po_date = self.validated_data["po_date"]
         new_purchaseorder.ship_to = self.validated_data["ship_to"]
         new_purchaseorder.notes = self.validated_data["notes"]
@@ -693,7 +733,7 @@ class PurchaseEditSerializer(ModelSerializer):
         model = PurchaseOrder
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
-                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "item_list", 
+                    "po_date", "ship_to", "notes", "shipping_address", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
 
 
@@ -708,7 +748,6 @@ class PurchaseEditSerializer(ModelSerializer):
         instance.taxable = validated_data["taxable"]
         instance.po_pref = validated_data["po_pref"]
         instance.logo_path = validated_data["logo_path"]
-        instance.po_number = validated_data["po_number"]
         instance.po_date = validated_data["po_date"]
         instance.notes = validated_data["notes"]
         
@@ -804,7 +843,7 @@ class EstimateCreateSerializer(ModelSerializer):
         model = Estimate
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
-                    "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
+                    "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
 
 
@@ -818,7 +857,7 @@ class EstimateCreateSerializer(ModelSerializer):
         new_estimate.taxable = self.validated_data["taxable"]
         new_estimate.estimate_pref = self.validated_data["estimate_pref"]
         new_estimate.logo_path = self.validated_data["logo_path"]
-        new_estimate.estimate_number = self.validated_data["estimate_number"]
+        new_estimate.estimate_number = get_number(request, 'estimate')
         new_estimate.estimate_date = self.validated_data["estimate_date"]
         new_estimate.ship_to = self.validated_data["ship_to"]
         new_estimate.shipping_address = self.validated_data["shipping_address"]
@@ -889,7 +928,7 @@ class EstimateEditSerializer(ModelSerializer):
         model = Estimate
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
-                    "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
+                    "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
 
 
@@ -903,7 +942,6 @@ class EstimateEditSerializer(ModelSerializer):
         instance.taxable = validated_data["taxable"]
         instance.estimate_pref = validated_data["estimate_pref"]
         instance.logo_path = validated_data["logo_path"]
-        instance.estimate_number = validated_data["estimate_number"]
         instance.estimate_date = validated_data["estimate_date"]
         instance.ship_to = validated_data["ship_to"]
         instance.shipping_address = validated_data["shipping_address"]
@@ -1056,7 +1094,7 @@ class QuoteCreateSerializer(ModelSerializer):
     class Meta:
         model = Quote
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
-                    "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
+                    "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
                         
 
@@ -1072,7 +1110,7 @@ class QuoteCreateSerializer(ModelSerializer):
         new_quote.taxable = self.validated_data["taxable"]
         new_quote.quote_pref = self.validated_data["quote_pref"]
         new_quote.logo_path = self.validated_data["logo_path"]
-        new_quote.quote_number = self.validated_data["quote_number"]
+        new_quote.quote_number = get_number(request, 'quote')
         new_quote.quote_date = self.validated_data["quote_date"]
         new_quote.po_number = self.validated_data["po_number"]
         new_quote.ship_to = self.validated_data["ship_to"]
@@ -1145,7 +1183,7 @@ class QuoteEditSerializer(ModelSerializer):
         model = Quote
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
-                    "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
+                    "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
         
 
@@ -1160,7 +1198,6 @@ class QuoteEditSerializer(ModelSerializer):
         instance.taxable = validated_data["taxable"]
         instance.quote_pref = validated_data["quote_pref"]
         instance.logo_path = validated_data["logo_path"]
-        instance.quote_number = validated_data["quote_number"]
         instance.quote_date = validated_data["quote_date"]
         instance.po_number = validated_data["po_number"]
         instance.ship_to = validated_data["ship_to"]
@@ -1265,7 +1302,7 @@ class CNCreateSerializer(ModelSerializer):
     class Meta:
         model = CreditNote
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
-                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
+                    "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "send_email"]       
 
         
@@ -1281,7 +1318,7 @@ class CNCreateSerializer(ModelSerializer):
         new_credit.taxable = self.validated_data["taxable"]
         new_credit.cn_pref = self.validated_data["cn_pref"]
         new_credit.logo_path = self.validated_data["logo_path"]
-        new_credit.cn_number = self.validated_data["cn_number"]
+        new_credit.cn_number = get_number(request, 'credit_note')
         new_credit.cn_date = self.validated_data["cn_date"]
         new_credit.po_number = self.validated_data["po_number"]
         new_credit.due_date = self.validated_data["due_date"]
@@ -1352,7 +1389,7 @@ class CNEditSerializer(ModelSerializer):
         model = CreditNote
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
-                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
+                    "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
 
         
@@ -1368,7 +1405,6 @@ class CNEditSerializer(ModelSerializer):
         instance.taxable = validated_data["taxable"]
         instance.cn_pref = validated_data["cn_pref"]
         instance.logo_path = validated_data["logo_path"]
-        instance.cn_number = validated_data["cn_number"]
         instance.cn_date = validated_data["cn_date"]
         instance.po_number = validated_data["po_number"]
         instance.due_date = validated_data["due_date"]
@@ -1476,7 +1512,7 @@ class REceiptCreateSerializer(ModelSerializer):
     class Meta:
         model = Receipt
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
-                    "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
+                    "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
         
         
@@ -1492,7 +1528,7 @@ class REceiptCreateSerializer(ModelSerializer):
         new_receipt.taxable = self.validated_data["taxable"]
         new_receipt.receipt_pref = self.validated_data["receipt_pref"]
         new_receipt.logo_path = self.validated_data["logo_path"]
-        new_receipt.receipt_number = self.validated_data["receipt_number"]
+        new_receipt.receipt_number = get_number(request, 'receipt')
         new_receipt.receipt_date = self.validated_data["receipt_date"]
         new_receipt.po_number = self.validated_data["po_number"]
         new_receipt.due_date = self.validated_data["due_date"]
@@ -1565,7 +1601,7 @@ class ReceiptEditSerializer(ModelSerializer):
         model = Receipt
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
-                    "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
+                    "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
 
         
@@ -1581,7 +1617,6 @@ class ReceiptEditSerializer(ModelSerializer):
         instance.taxable = validated_data["taxable"]
         instance.receipt_pref = validated_data["receipt_pref"]
         instance.logo_path = validated_data["logo_path"]
-        instance.receipt_number = validated_data["receipt_number"]
         instance.receipt_date = validated_data["receipt_date"]
         instance.po_number = validated_data["po_number"]
         instance.due_date = validated_data["due_date"]
@@ -1689,7 +1724,7 @@ class DNCreateSerializer(ModelSerializer):
     class Meta:
         model = DeliveryNote
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
-                    "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
+                    "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
         
         
@@ -1705,7 +1740,7 @@ class DNCreateSerializer(ModelSerializer):
         new_delivery.taxable = self.validated_data["taxable"]
         new_delivery.dn_pref = self.validated_data["dn_pref"]
         new_delivery.logo_path = self.validated_data["logo_path"]
-        new_delivery.dn_number = self.validated_data["dn_number"]
+        new_delivery.dn_number = get_number(request, 'delivery_note')
         new_delivery.dn_date = self.validated_data["dn_date"]
         new_delivery.po_number = self.validated_data["po_number"]
         new_delivery.due_date = self.validated_data["due_date"]
@@ -1776,7 +1811,7 @@ class DNEditSerializer(ModelSerializer):
         model = DeliveryNote
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
-                    "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
+                    "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
 
         
@@ -1792,7 +1827,6 @@ class DNEditSerializer(ModelSerializer):
         instance.taxable = validated_data["taxable"]
         instance.dn_pref = validated_data["dn_pref"]
         instance.logo_path = validated_data["logo_path"]
-        instance.dn_number = validated_data["dn_number"]
         instance.dn_date = validated_data["dn_date"]
         instance.po_number = validated_data["po_number"]
         instance.due_date = validated_data["due_date"]
