@@ -319,8 +319,8 @@ class InvoiceSerializer(serializers.ModelSerializer):
         model = Invoice
         fields = [ "id",
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
-            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes",
-            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status"]
+            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes", "quantity_list",
+            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list"]
 
 
 
@@ -524,7 +524,7 @@ class ProformerInvoiceSerailizer(serializers.ModelSerializer):
         model = ProformaInvoice
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
-                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", 
+                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", "quantity_list"
                     "item_total", "tax", "add_charges", "grand_total", "status"]
 
 
@@ -725,7 +725,7 @@ class PurchaseOrderSerailizer(serializers.ModelSerializer):
         model = PurchaseOrder
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
-                    "po_number", "po_date", "ship_to", "notes", "shipping_address", "item_list", 
+                    "po_number", "po_date", "ship_to", "notes", "shipping_address",  "item_list", "quantity_list"
                     "item_total", "tax", "add_charges", "grand_total",  "status"]
 
 
@@ -920,7 +920,7 @@ class EstimateSerailizer(serializers.ModelSerializer):
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status"]
         
 
 
@@ -1102,7 +1102,7 @@ class QuoteCreateSerializer(ModelSerializer):
         model = Quote
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
                     "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
+                    "notes",  "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
                         
 
 
@@ -1380,7 +1380,7 @@ class CreditNoteSerailizer(serializers.ModelSerializer):
         model = CreditNote
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
-                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
+                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes",  "item_list", "quantity_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status"]
         
 
@@ -1593,7 +1593,7 @@ class ReceiptSerailizer(serializers.ModelSerializer):
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status"]
         
 
 
@@ -1803,7 +1803,7 @@ class DNSerailizer(serializers.ModelSerializer):
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status"]
         
 
 
