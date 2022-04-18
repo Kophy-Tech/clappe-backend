@@ -15,7 +15,13 @@ from app.my_email import send_my_email
 
 
 
+CURRENCY_MAPPING = {
+    "Dollar": "$",
+    "Pound": "£",
+    "Rupees": "₹",
+    "Naira": "₦",
 
+}
 
 
 
@@ -279,10 +285,11 @@ class InvoiceCreate(ModelSerializer):
 
         new_invoice.save()
 
+        file_name = None
+
         if self.validated_data['send_email']:
             # for sending email when creating a new document
-            file_name = f"Invoice for {new_invoice.email}.pdf"
-            get_report(file_name)
+            file_name = get_report(self.validated_data, CURRENCY_MAPPING[request.user.currency], "invoice")
             body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
             subject = "Transaction Receipt"
             send_my_email(new_invoice.email, body, subject, file_name)
@@ -301,7 +308,7 @@ class InvoiceCreate(ModelSerializer):
             _, _ = new_schedule.save()
 
 
-        return new_invoice
+        return new_invoice, file_name
 
 
 
@@ -312,7 +319,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         model = Invoice
         fields = [ "id",
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
-            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","item_list",
+            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status"]
 
 
