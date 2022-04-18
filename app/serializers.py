@@ -524,7 +524,7 @@ class ProformerInvoiceSerailizer(serializers.ModelSerializer):
         model = ProformaInvoice
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
-                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", "quantity_list"
+                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", "quantity_list",
                     "item_total", "tax", "add_charges", "grand_total", "status"]
 
 
@@ -725,7 +725,7 @@ class PurchaseOrderSerailizer(serializers.ModelSerializer):
         model = PurchaseOrder
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
-                    "po_number", "po_date", "ship_to", "notes", "shipping_address",  "item_list", "quantity_list"
+                    "po_number", "po_date", "ship_to", "notes", "shipping_address",  "item_list", "quantity_list",
                     "item_total", "tax", "add_charges", "grand_total",  "status"]
 
 
@@ -1102,7 +1102,7 @@ class QuoteCreateSerializer(ModelSerializer):
         model = Quote
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
                     "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes",  "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
+                    "notes",  "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
                         
 
 
@@ -1175,7 +1175,7 @@ class QuoteSerailizer(serializers.ModelSerializer):
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status"]
         
 
 
