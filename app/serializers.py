@@ -2044,17 +2044,5 @@ class PaymentSerializer(serializers.ModelSerializer):
 
 
 def custom_item_serializer(items, quantities):
-    total_list = []
-    for id in range(len(items)):
-        single_item = Item.objects.get(pk=items[id])
-        serialized_items = ItemSerializer(single_item)
-
-        item_data = {**serialized_items.data, "quantity": quantities[id]}
-        item_data['amount'] = item_data['sales_price'] * quantities[id]
-        item_data.pop("cost_price")
-        item_data.pop("description")
-
-        total_list.append(item_data)
-
-
+    total_list = [{"id": a, "quantity": b} for a,b in zip(items, quantities)]
     return total_list

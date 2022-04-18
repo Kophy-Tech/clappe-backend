@@ -305,10 +305,11 @@ def create_invoice(request):
         context = {}
 
         if form.is_valid():
-            new_invoice = form.save(request)
+            new_invoice, pdf_file = form.save(request)
             context['message'] = "success"
             context['invoice'] = {"id": new_invoice.id, **form.data}
-            context['invoice']['item_list'] = custom_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
+            # context['invoice']['item_list'] = [{"id": a, "quantity": b} for a,b in zip(new_invoice.iten_list, new_invoice.quantity_list)]
+            # context['invoice']['item_list'] = custom_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -366,7 +367,7 @@ def edit_invoice(request, id):
                 updated_invoice = form.update(invoice, form.validated_data)
                 context['message'] = "success"
                 context['invoice'] = {"id": updated_invoice.id, **form.data}
-                context['invoice']['item_list'] = custom_item_serializer(updated_invoice.item_list, updated_invoice.quantity_list)
+                # context['invoice']['item_list'] = custom_item_serializer(updated_invoice.item_list, updated_invoice.quantity_list)
 
                 return Response(context, status=status.HTTP_200_OK)
 
