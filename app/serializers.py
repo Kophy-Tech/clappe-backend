@@ -224,12 +224,91 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 
 
+###################################################### items ########################################################
+
+class ItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Item
+        fields = ["id", "name", "description", "cost_price", "sales_price", "sales_tax"]
+
+
+
+
+
+
+
+class CreateItemSerializer(ModelSerializer):
+    required_error = "{fieldname} is required."
+    blank_error = "{fieldname} can not be blank."
+    class Meta:
+        model = Item
+        fields = ["name", "description", "cost_price", "sales_price", "sales_tax"]
+        
+
+
+    
+    def save(self, request):
+        new_item = Item()
+        new_item.name = self.validated_data['name']
+        new_item.description = self.validated_data['description']
+        new_item.cost_price = self.validated_data['cost_price']
+        new_item.sales_price = self.validated_data['sales_price']
+        new_item.sales_tax = self.validated_data['sales_tax']
+
+        new_item.vendor = request.user
+
+        new_item.save()
+
+        return new_item
+
+
+    def update(self, instance):
+        instance.name = self.validated_data['name']
+        instance.description = self.validated_data['description']
+        instance.cost_price = self.validated_data['cost_price']
+        instance.sales_price = self.validated_data['sales_price']
+        instance.sales_tax = self.validated_data['sales_tax']
+
+        instance.save()
+
+        return instance
+
+
+
+def pdf_item_serializer(items, quantities):
+    total_list = []
+    for id in range(len(items)):
+        single_item = Item.objects.get(pk=items[id])
+        serialized_items = ItemSerializer(single_item)
+
+        item_data = {**serialized_items.data, "quantity": quantities[id]}
+        item_data['amount'] = item_data['sales_price'] * quantities[id]
+        item_data.pop("cost_price")
+        item_data.pop("description")
+
+        total_list.append(item_data)
+
+
+    return total_list
+
+
+
+
+
+
+
+
+
+
+
 ############################################### invoice ####################################################################
 
 
 class InvoiceCreate(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+    terms = serializers.CharField()
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -239,7 +318,7 @@ class InvoiceCreate(ModelSerializer):
         fields = [
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","item_list",
-            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "send_email"]
+            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "send_email", "download", "terms"]
 
 
     def save(self, request):
@@ -285,14 +364,22 @@ class InvoiceCreate(ModelSerializer):
 
         new_invoice.save()
 
-        file_name = None
 
         if self.validated_data['send_email']:
             # for sending email when creating a new document
-            file_name = get_report(self.validated_data, CURRENCY_MAPPING[request.user.currency], "invoice")
+            invoice_ser = InvoiceSerializer(new_invoice).data
+            invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
+            file_name = get_report(invoice_ser, self.validated_data, CURRENCY_MAPPING[request.user.currency], "invoice", request)
             body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
             subject = "Transaction Receipt"
             send_my_email(new_invoice.email, body, subject, file_name)
+        
+        # elif self.validated_data['download']:
+        #     invoice_ser = InvoiceSerializer(new_invoice).data
+        #     invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
+        #     file_name = get_report(invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, self.validated_data['terms'])
+
+        
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -308,7 +395,7 @@ class InvoiceCreate(ModelSerializer):
             _, _ = new_schedule.save()
 
 
-        return new_invoice, file_name
+        return new_invoice
 
 
 
@@ -320,7 +407,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         fields = [ "id",
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes", "quantity_list",
-            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list"]
+            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list", "notes"]
 
 
 
@@ -586,7 +673,7 @@ class ProformaEditSerializer(ModelSerializer):
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
             "date": instance.due_date,
-            "document_type": "invoice",
+            "document_type": "proforma",
             "document_id": instance.id,
             "task_type": "one_time",
             "email": instance.email
@@ -706,7 +793,7 @@ class PurchaseCreateSerializer(ModelSerializer):
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
             "date": new_purchaseorder.due_date,
-            "document_type": "invoice",
+            "document_type": "purchase",
             "document_id": new_purchaseorder.id,
             "task_type": "one_time",
             "email": new_purchaseorder.email
@@ -784,7 +871,7 @@ class PurchaseEditSerializer(ModelSerializer):
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
             "date": instance.due_date,
-            "document_type": "invoice",
+            "document_type": "purchase",
             "document_id": instance.id,
             "task_type": "one_time",
             "email": instance.email
@@ -900,7 +987,7 @@ class EstimateCreateSerializer(ModelSerializer):
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
             "date": new_estimate.due_date,
-            "document_type": "invoice",
+            "document_type": "estimate",
             "document_id": new_estimate.id,
             "task_type": "one_time",
             "email": new_estimate.email
@@ -982,7 +1069,7 @@ class EstimateEditSerializer(ModelSerializer):
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
             "date": instance.due_date,
-            "document_type": "invoice",
+            "document_type": "estimate",
             "document_id": instance.id,
             "task_type": "one_time",
             "email": instance.email
@@ -1031,58 +1118,6 @@ class PayEstimateSerializer(ModelSerializer):
 
         return pay_estimate
 
-
-
-
-
-
-
-
-###################################################### items ########################################################
-
-class ItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Item
-        fields = ["id", "name", "description", "cost_price", "sales_price", "sales_tax"]
-
-
-
-
-class CreateItemSerializer(ModelSerializer):
-    required_error = "{fieldname} is required."
-    blank_error = "{fieldname} can not be blank."
-    class Meta:
-        model = Item
-        fields = ["name", "description", "cost_price", "sales_price", "sales_tax"]
-        
-
-
-    
-    def save(self, request):
-        new_item = Item()
-        new_item.name = self.validated_data['name']
-        new_item.description = self.validated_data['description']
-        new_item.cost_price = self.validated_data['cost_price']
-        new_item.sales_price = self.validated_data['sales_price']
-        new_item.sales_tax = self.validated_data['sales_tax']
-
-        new_item.vendor = request.user
-
-        new_item.save()
-
-        return new_item
-
-
-    def update(self, instance):
-        instance.name = self.validated_data['name']
-        instance.description = self.validated_data['description']
-        instance.cost_price = self.validated_data['cost_price']
-        instance.sales_price = self.validated_data['sales_price']
-        instance.sales_tax = self.validated_data['sales_tax']
-
-        instance.save()
-
-        return instance
 
 
 
@@ -2046,3 +2081,6 @@ class PaymentSerializer(serializers.ModelSerializer):
 def custom_item_serializer(items, quantities):
     total_list = [{"id": a, "quantity": b} for a,b in zip(items, quantities)]
     return total_list
+
+
+
