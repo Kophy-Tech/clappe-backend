@@ -286,7 +286,14 @@ def all_invoice(request):
 
     if len(my_invoice) > 0:
         invoices = InvoiceSerializer(my_invoice, many=True)
-        context["message"] = invoices.data
+        # context["message"] = invoices.data
+        total_invoices = []
+        for invoice in invoices.data:
+            invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
+            invoice.pop("quantity_list")
+            total_invoices.append(invoice)
+
+        context = {"message": total_invoices}
         return Response(context, status=status.HTTP_200_OK)
 
     else:
@@ -459,7 +466,13 @@ def all_proforma(request):
 
     if len(my_invoice) > 0:
         invoices = ProformerInvoiceSerailizer(my_invoice, many=True)
-        context = {"message": invoices.data}
+        total_invoices = []
+        for invoice in invoices.data:
+            invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
+            invoice.pop("quantity_list")
+            total_invoices.append(invoice)
+
+        context = {"message": total_invoices}
         return Response(context, status=status.HTTP_200_OK)
 
     else:
@@ -624,7 +637,13 @@ def all_purchaseorder(request):
 
     if len(my_po) > 0:
         pos = PurchaseOrderSerailizer(my_po, many=True)
-        context = {"message": pos.data}
+        total_invoices = []
+        for invoice in pos.data:
+            invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
+            invoice.pop("quantity_list")
+            total_invoices.append(invoice)
+
+        context = {"message": total_invoices}
         return Response(context, status=status.HTTP_200_OK)
 
     else:
@@ -800,7 +819,13 @@ def all_estimate(request):
 
     if len(my_estimate) > 0:
         estimates = EstimateSerailizer(my_estimate, many=True)
-        context = {"message": estimates.data}
+        total_invoices = []
+        for invoice in estimates.data:
+            invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
+            invoice.pop("quantity_list")
+            total_invoices.append(invoice)
+
+        context = {"message": total_invoices}
         return Response(context, status=status.HTTP_200_OK)
 
     else:
@@ -1105,7 +1130,13 @@ def all_quote(request):
 
     if len(my_quote) > 0:
         quotes = QuoteSerailizer(my_quote, many=True)
-        context = {"message": quotes.data}
+        total_invoices = []
+        for invoice in quotes.data:
+            invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
+            invoice.pop("quantity_list")
+            total_invoices.append(invoice)
+
+        context = {"message": total_invoices}
         return Response(context, status=status.HTTP_200_OK)
 
     else:
@@ -1278,7 +1309,13 @@ def all_receipt(request):
 
     if len(my_receipt) > 0:
         receipts = ReceiptSerailizer(my_receipt, many=True)
-        context = {"message": receipts.data}
+        total_invoices = []
+        for invoice in receipts.data:
+            invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
+            invoice.pop("quantity_list")
+            total_invoices.append(invoice)
+
+        context = {"message": total_invoices}
         return Response(context, status=status.HTTP_200_OK)
 
     else:
@@ -1454,7 +1491,13 @@ def all_credit(request):
 
     if len(my_credit) > 0:
         credits = CreditNoteSerailizer(my_credit, many=True)
-        context = {"message": credits.data}
+        total_invoices = []
+        for invoice in credits.data:
+            invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
+            invoice.pop("quantity_list")
+            total_invoices.append(invoice)
+
+        context = {"message": total_invoices}
         return Response(context, status=status.HTTP_200_OK)
 
     else:
@@ -1626,7 +1669,13 @@ def all_delivery(request):
 
     if len(my_delivery) > 0:
         deliverys = DNSerailizer(my_delivery, many=True)
-        context = {"message": deliverys.data}
+        total_invoices = []
+        for invoice in deliverys.data:
+            invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
+            invoice.pop("quantity_list")
+            total_invoices.append(invoice)
+
+        context = {"message": total_invoices}
         return Response(context, status=status.HTTP_200_OK)
 
     else:
