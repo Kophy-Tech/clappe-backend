@@ -1,146 +1,22 @@
 from reportlab.lib import colors
+from reportlab.lib.units import cm
+from reportlab.lib.pagesizes import A4
 import textwrap
 
 
-background_color = colors.Color(0.1875, 0.390625, 0.5625)
+background_color = colors.Color(0.1, 0.1, 1)
 
-
-def angle_graph(pdf, c, t, x, y, size=100, type='percent'):
-
-    '''
-    This function is for drawing the speedometer looking graph using overlapping sector, semi-circle and circle.
-    Input:
-        pdf - pdf object
-        c - current value
-        t - target value
-        x - value for x-axis
-        y - value for y-axis
-        size - how big the graph should be, default of 100 (this value worked for most cases)
-        type - the type of the text on the graph, it can be percent, money or days, default is percent
-
-    Output: None
-    '''
-
-    pdf.setStrokeColor(colors.white)
-    pdf.setFillColor(colors.gray)
-    # draw the background semi-circle
-    pdf.wedge(x, y, x+size, y+size, 180, 180, fill=1)
-
-
-    # sauce code: 112940
-
-    # calculate the angle for the overlapping sector (converts the current value into angle)
-    current_angle = int((c / (c+t))*180)
-
-    pdf.setFillColor(background_color)
-    # draw the overlapping sector
-    pdf.wedge(x, y, x+size, y+size, 180, current_angle, fill=1)
-
-    pdf.setFillColor(colors.white)
-    # draw the top circle that will house the text for the graph
-    pdf.circle(x+(size/2),y+(size/2), 30, fill=1)
-
-    pdf.setFillColor(colors.black)
-    pdf.setStrokeColor(colors.black)
-    
-    pdf.setFontSize(8)
-
-    try:
-        # this value helps center the text very well
-        a = (size-100)/2
-    except:
-        a = 0
-
-    
-    if type == 'percent':
-        # calculate the percetanges that will be printed on the circle
-        percent_c = int(round((c / (c+t))*100, 2))
-        percent_t = int(round((t / (c+t))*100, 2))
-        pdf.drawCentredString(x+50+a, y+35, f"{percent_c}%")
-        pdf.drawCentredString(x+50+a, y+45, f"C:{percent_c}%")
-        pdf.drawCentredString(x+50+a, y+55, f"T:{percent_t}%")
-
-    elif type == 'money':
-        # print the text on the graph if the type is money
-        pdf.drawCentredString(x+50+a, y+35, "${:.2f}".format(c).strip())
-        pdf.drawCentredString(x+50+a, y+45, "C: ${:.2f}".format(c).strip())
-        pdf.drawCentredString(x+50+a, y+55, "T: ${:.2f}".format(t).strip())
-
-    else:
-        # print the text on the graph if the type is days
-        pdf.drawCentredString(x+50+a, y+35, "{:.0f}days".format(c))
-        pdf.drawCentredString(x+50+a, y+45, "C:{:.0f}days".format(c))
-        pdf.drawCentredString(x+50+a, y+55, "T:{:.0f}days".format(t))
-        
-
-# sauce code: 112940
-
-
-def histogram_graph(pdf, current, epic, hfma, x, y, space=20, type='percent'):
-    '''
-    This function is for drawing the histogram graph using 3 rectangles.
-    Input:
-        pdf - pdf object
-        current - current value
-        epic - epic value
-        hfma - hfma value
-        x - value for x-axis
-        y - value for y-axis
-        space - how amount of space that should be between each rectangle, default of 20 (this value worked for most cases)
-        type - the type of the text on the graph, it can be percent, money or days, default is percent
-
-    Output: None
-    '''
-
-    pdf.setFillColor(background_color)
-    pdf.setStrokeColor(colors.white)
-
-    # calculate the percentage of each data passed to the function, using 200 as the max value
-    # 200 is used bcause it is the max legth of the rectangle
-    current_p = (current / (current+epic+hfma)) * 200
-    epic_p = (epic / (current+epic+hfma)) * 200
-    hfma_p = (hfma / (current+epic+hfma)) * 200
-
-    # draw the rectangles using percentages calculated above
-    pdf.rect(x, y, current_p, 15, fill=1)
-    pdf.setFillColor(colors.gray)
-    pdf.rect(x, y+space, epic_p, 15, fill=1)
-    pdf.setFillColor(colors.lightgrey)
-    pdf.rect(x, y+space+space, hfma_p, 15, fill=1)
-
-    pdf.setFillColor(colors.black)
-    pdf.setStrokeColor(colors.black)
-
-
-    if type=='percent':
-        # print the text on the graph if the type is percent
-        pdf.drawString(x+current_p+10, y+12, "{:.2f}%".format((current_p/200)*100))
-        pdf.drawString(x+epic_p+10, y+32, "{:.2f}%".format((epic_p/200)*100))
-        pdf.drawString(x+hfma_p+10, y+52, "{:.2f}%".format((hfma_p/200)*100))
-
-    elif type=='money':
-        # print the text on the graph if the type is money
-        pdf.drawString(x+current_p+10, y+12, "${:.2f}".format(current).strip())
-        pdf.drawString(x+epic_p+10, y+32, "${:.2f}".format(epic).strip())
-        pdf.drawString(x+hfma_p+10, y+52, "${:.2f}".format(hfma).strip())
-
-    else:
-        # print the text on the graph if the type is days
-        pdf.drawString(x+current_p+10, y+12, "{:.0f} days".format(current))
-        pdf.drawString(x+epic_p+10, y+32, "{:.0f} days".format(epic))
-        pdf.drawString(x+hfma_p+10, y+52, "{:.0f} days".format(hfma))
+page_number = 1
 
 
 
-# sauce code: 278832
-
-def draw_wrapped_line(pdf, text, length, x_pos, y_pos, y_offset, w_type):
+def draw_wrapped_line(pdf, text, length, x_pos, y_pos, y_offset):
     '''
     This function is for wrapping text.
     Input:
         pdf - pdf object
         text - the text you want to wrap
-        length - the number of characters that should be on eah line.
+        length - the number of characters that should be on each line.
         x_pos - value for x-axis
         y_pos - value for y-axis
         y_offset - amount of space that should be between each line of text.
@@ -152,17 +28,177 @@ def draw_wrapped_line(pdf, text, length, x_pos, y_pos, y_offset, w_type):
     if len(text) > length:
         wraps = textwrap.wrap(text, length)
         for x in range(len(wraps)):
-            if w_type == 'center':
-                pdf.drawCentredString(x_pos, y_pos, wraps[x])
-            else:
-                pdf.drawString(x_pos, y_pos, wraps[x])
+            pdf.drawString(x_pos, y_pos, wraps[x])
             y_pos += y_offset
     else:
-        if w_type == 'center':
-            pdf.drawCentredString(x_pos, y_pos, text)
-        else:
-            pdf.drawString(x_pos, y_pos, text)
+        pdf.drawString(x_pos, y_pos, text)
     
-    return y_pos
+    return pdf
 
-# sauce code: 210510
+
+
+
+def add_another_page(pdf, data, initial_total, currency, term):
+    new_total= initial_total + 0
+    global page_number
+    page_number += 1
+
+    # another page
+    pdf.showPage()
+    pdf.translate(cm, cm)
+    pdf.setPageSize((A4[0]+15, A4[1]))
+    background_color = colors.Color(0.1, 0.1, 1)
+
+    pdf.setFillColor(background_color)
+    pdf.setLineWidth(0.1)
+    pdf.setStrokeColor(background_color)
+    pdf.setFont('Times-Roman', 10)
+
+    start_y = 10
+    box_height = 10
+
+    len_data = len(data)
+
+    for i in range(len_data):
+        if i == 50:
+            break
+        else:
+            # quantity
+            pdf.drawCentredString(9, start_y+15, str(data[i]['quantity']))
+            # description
+            pdf.drawString(200, start_y+15, str(data[i]['name']))
+            # rate
+            pdf.drawCentredString(445, start_y+15, str(data[i]['sales_price']))
+            # amount
+            pdf.drawCentredString(530, start_y+15, str(data[i]['amount']))
+
+            start_y += 15
+            new_total += int(data[i]['amount'])
+
+
+
+
+    if len_data > 0:
+        box_height += start_y
+        # box for items
+        pdf.rect(-15, 10, 585, box_height)
+        pdf.line(30, 10, 30, box_height+10)
+        pdf.line(400, 10, 400, box_height+10)
+        pdf.line(490, 10, 490, box_height+10)
+
+    if len(data) > 49:
+        pdf.drawCentredString((A4[0]-15)/2, 805, f"Page {page_number}")
+        pdf = add_another_page(pdf, data[50:], new_total, currency, term)
+    else:
+
+        # rectangle for amount
+        pdf.rect(-15, box_height+20, 585, 50)
+        pdf.drawString(-5, box_height+35, "Thank you for your business.")
+        pdf = draw_wrapped_line(pdf, term, 95, -5, box_height+45, 10)
+        # pdf.drawString(9, box_height+55, data['terms'])
+        pdf.line(400, box_height+20, 400, box_height+70)
+        pdf.setFont('Times-Roman', 20)
+        pdf.drawCentredString(425, box_height+45, "Total")
+        pdf.setFont('Times-Roman', 10)
+        pdf.drawCentredString(530, box_height+45, f"{currency} {new_total}")
+        
+        pdf.drawCentredString((A4[0]-15)/2, 805, f"Page {page_number}")
+
+        # box for signature
+        pdf.rect(-15, box_height+70, 100, 100)
+        pdf.drawString(-15, box_height+80, "Signature")
+
+    return pdf
+
+
+
+
+
+
+
+def add_other_details(pdf, document, start_y, document_type, currency, terms):
+    # accept the document object and return the details already added to the pdf
+
+    documents = {'invoice': "invoice_number",
+                "proforma invoice": "invoice_number",
+                "purchase order": "po_number",
+                "estimate": "estimate_number",
+                "quote": "quote_number",
+                "receipt": "receipt_number",
+                "credit note": "cn_number",
+                "delivery note": "dn_number"
+                }
+
+    doc_number_key = documents[document_type]
+    doc_date_key = doc_number_key.replace('number', 'date')
+
+
+    # adding date and document number
+    pdf.drawString(445, 60, document[doc_date_key])
+    pdf.drawCentredString(530, 60, document[doc_number_key])
+
+    # add customer details
+    pdf.drawString(-10, 180, f"{document['first_name']} {document['last_name']}")
+    pdf.drawString(-10, 192, f"{document['address']}")
+    pdf.drawString(-10, 204, f"{document['email']}")
+    pdf.drawString(-10, 216, f"{document['phone_number']}")
+
+
+    # adding the 3 details
+    pdf.drawCentredString(420, 225, str(document['po_number']))
+    # pdf.drawCentredString(425, 225, "Terms")
+    # pdf.drawCentredString(515, 225, "Project")
+
+    total_amount = 0
+    item_list = document['item_list']
+    item_list_len = len(item_list)
+    # item_list_len = 13
+    # item_list = [i for i in range(1, item_list_len+1)]
+
+
+
+    for i in range(item_list_len):
+        if i == 31:
+            break
+        else:
+            # quantity
+            pdf.drawCentredString(9, start_y+15, str(item_list[i]['quantity']))
+            # description
+            pdf.drawString(200, start_y+15, str(item_list[i]['name']))
+            # rate
+            pdf.drawCentredString(445, start_y+15, str(item_list[i]['sales_price']))
+            # amount
+            pdf.drawCentredString(530, start_y+15, str(item_list[i]['amount']))
+
+            start_y += 15
+            total_amount += int(item_list[i]['amount'])
+
+    
+
+    if item_list_len > 31:
+        # call the function to handle the next page
+        # global page_number
+        # pdf.drawCentredString(350, 820, f"Page {page_number}")
+        pdf.drawCentredString((A4[0]-15)/2, 805, "Page 1")
+        pdf = add_another_page(pdf, item_list[31: ], total_amount, currency, terms)
+
+    else:
+        # global page_number
+        # rectangle for amount
+        pdf.rect(-15, 740, 585, 50)
+        pdf.drawString(-5, 750, "Thank you for your business.")
+        draw_wrapped_line(pdf, terms, 95, -5, 760, 10)
+        # pdf.drawString(9, 770, data['terms'])
+        pdf.line(400, 740, 400, 790)
+        pdf.setFont('Times-Roman', 20)
+        pdf.drawCentredString(425, 770, "Total")
+        pdf.setFont('Times-Roman', 10)
+        pdf.drawCentredString(530, 770, f"{currency} {total_amount}")
+
+        pdf.drawCentredString((A4[0]-15)/2, 805, "Page 1")
+
+
+
+    
+
+    return pdf

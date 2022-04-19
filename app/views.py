@@ -1,5 +1,6 @@
 #django imports
 from django.contrib.auth import authenticate
+from django.http import FileResponse
 
 #rest_frameworf imports
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -17,13 +18,14 @@ from .serializers import CNCreateSerializer, CNEditSerializer, CreateItemSeriali
                         ReceiptEditSerializer, ReceiptSerailizer, SignUpSerializer, LoginSerializer, UserSerializer, InvoiceCreate,\
                         PayProformaSerializer, PurchaseCreateSerializer, PurchaseEditSerializer, PurchaseOrderSerailizer, \
                         PayPurchaseSerializer, ProfileSerializer, PasswordChangeSerializer, PreferenceSerializer, PaymentSerializer,\
-                        custom_item_serializer
+                        custom_item_serializer, CURRENCY_MAPPING, pdf_item_serializer
 
-
+from app.pdf.main import get_report
+from app.my_email import send_my_email
 from .authentication import get_access_token, MyAuthentication
 from .models import JWT, CreditNote, Customer, DeliveryNote, Estimate, Invoice, Item, MyUsers, ProformaInvoice, PurchaseOrder, Quote, Receipt
 
-
+import io
 
 
 
@@ -308,15 +310,32 @@ def all_invoice(request):
 def create_invoice(request):
 
     if request.method == "POST":
+
+
         form = InvoiceCreate(data=request.data)
         context = {}
 
         if form.is_valid():
-            new_invoice, pdf_file = form.save(request)
+            new_invoice = form.save(request)
             context['message'] = "success"
             context['invoice'] = {"id": new_invoice.id, **form.data}
             # context['invoice']['item_list'] = [{"id": a, "quantity": b} for a,b in zip(new_invoice.iten_list, new_invoice.quantity_list)]
             # context['invoice']['item_list'] = custom_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
+
+
+            
+            if form.validated_data['download']:
+                buffer = io.BytesIO()
+                invoice_ser = InvoiceSerializer(new_invoice).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
+                file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
+
+                buffer.seek(0)
+                return FileResponse(buffer, as_attachment=True, filename=file_name)
+
+
+            # if pdf_file:
+            #     return FileResponse()
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -365,16 +384,26 @@ def edit_invoice(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
-        try:
+        # try:
             invoice = Invoice.objects.get(id=id)
             form = InvoiceEditSerializer(instance=invoice, data=request.data)
             context = {}
 
             if form.is_valid():
-                updated_invoice = form.update(invoice, form.validated_data)
+                updated_invoice = form.update(invoice, form.validated_data, request)
                 context['message'] = "success"
-                context['invoice'] = {"id": updated_invoice.id, **form.data}
+                context['invoice'] = {"id": updated_invoice.id, **form.validated_data}
                 # context['invoice']['item_list'] = custom_item_serializer(updated_invoice.item_list, updated_invoice.quantity_list)
+
+
+                if form.validated_data['download']:
+                    buffer = io.BytesIO()
+                    invoice_ser = InvoiceSerializer(updated_invoice).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_invoice.item_list, updated_invoice.quantity_list)
+                    file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
+
+                    buffer.seek(0)
+                    return FileResponse(buffer, as_attachment=True, filename=file_name)
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -386,10 +415,10 @@ def edit_invoice(request, id):
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
-        except Exception as e:
-            print(e)
-            context = {'message' :"Invoice not found"}
-            return Response(context, status=status.HTTP_404_NOT_FOUND)
+        # except Exception as e:
+        #     print(e)
+        #     context = {'message' :"Invoice not found"}
+        #     return Response(context, status=status.HTTP_404_NOT_FOUND)
 
     
     elif request.method == "DELETE":
@@ -494,7 +523,17 @@ def create_proforma(request):
             new_invoice = form.save(request)
             context['message'] = "success"
             context['invoice'] = {"id": new_invoice.id, **form.data}
-            context['invoice']['item_list'] = custom_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
+            # context['invoice']['item_list'] = custom_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
+
+            if form.validated_data['download']:
+                buffer = io.BytesIO()
+                invoice_ser = ProformerInvoiceSerailizer(new_invoice).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
+                file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "proforma invoice", request, form.validated_data['terms'])
+
+                buffer.seek(0)
+                return FileResponse(buffer, as_attachment=True, filename=file_name)
+
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -508,7 +547,7 @@ def create_proforma(request):
     else:
         context = {"message": "create preforma invoice page", "required fields": [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
-                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", 
+                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total"]}
         return Response(context, status=status.HTTP_200_OK)
 
@@ -551,7 +590,16 @@ def edit_proforma(request, id):
                 updated_proforma = form.update(proforma, form.validated_data)
                 context['message'] = "success"
                 context['proforma'] = {"id": updated_proforma.id, **form.data}
-                context['proforma']['item_list'] = custom_item_serializer(updated_proforma.item_list, updated_proforma.quantity_list)
+                # context['proforma']['item_list'] = custom_item_serializer(updated_proforma.item_list, updated_proforma.quantity_list)
+
+                if form.validated_data['download']:
+                    buffer = io.BytesIO()
+                    invoice_ser = ProformerInvoiceSerailizer(updated_proforma).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_proforma.item_list, updated_proforma.quantity_list)
+                    file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "proforma invoice", request, form.validated_data['terms'])
+
+                    buffer.seek(0)
+                    return FileResponse(buffer, as_attachment=True, filename=file_name)
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -666,7 +714,16 @@ def create_purchaseorder(request):
             new_po = form.save(request)
             context['message'] = "success"
             context['invoice'] = {"id": new_po.id, **form.data}
-            context['invoice']['item_list'] = custom_item_serializer(new_po.item_list, new_po.quantity_list)
+            # context['invoice']['item_list'] = custom_item_serializer(new_po.item_list, new_po.quantity_list)
+
+            if form.validated_data['download']:
+                buffer = io.BytesIO()
+                invoice_ser = PurchaseOrderSerailizer(new_po).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_po.item_list, new_po.quantity_list)
+                file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "purchase order", request, form.validated_data['terms'])
+
+                buffer.seek(0)
+                return FileResponse(buffer, as_attachment=True, filename=file_name)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -720,10 +777,19 @@ def edit_purchaseorder(request, id):
             context = {}
 
             if form.is_valid():
-                updated_proforma = form.update(purchase, form.validated_data)
+                updated_purchase = form.update(purchase, form.validated_data)
                 context['message'] = "success"
-                context['purchase'] = {"id": updated_proforma.id, **form.data}
-                context['purchase']['item_list'] = custom_item_serializer(updated_proforma.item_list, updated_proforma.quantity_list)
+                context['purchase'] = {"id": updated_purchase.id, **form.data}
+                # context['purchase']['item_list'] = custom_item_serializer(updated_purchase.item_list, updated_purchase.quantity_list)
+
+                if form.validated_data['download']:
+                    buffer = io.BytesIO()
+                    invoice_ser = PurchaseOrderSerailizer(updated_purchase).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_purchase.item_list, updated_purchase.quantity_list)
+                    file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "purchase order", request, form.validated_data['terms'])
+
+                    buffer.seek(0)
+                    return FileResponse(buffer, as_attachment=True, filename=file_name)
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -848,7 +914,16 @@ def create_estimate(request):
             new_estimate = form.save(request)
             context['message'] = "success"
             context['estimate'] = {"id": new_estimate.id, **form.data}
-            context['estimate']['item_list'] = custom_item_serializer(new_estimate.item_list, new_estimate.quantity_list)
+            # context['estimate']['item_list'] = custom_item_serializer(new_estimate.item_list, new_estimate.quantity_list)
+
+            if form.validated_data['download']:
+                buffer = io.BytesIO()
+                invoice_ser = EstimateSerailizer(new_estimate).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_estimate.item_list, new_estimate.quantity_list)
+                file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "estimate", request, form.validated_data['terms'])
+
+                buffer.seek(0)
+                return FileResponse(buffer, as_attachment=True, filename=file_name)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -905,7 +980,16 @@ def edit_estimate(request, id):
                 updated_estimate = form.update(estimate, form.validated_data)
                 context['message'] = "success"
                 context['estimate'] = {"id": updated_estimate.id, **form.data}
-                context['estimate']['item_list'] = custom_item_serializer(updated_estimate.item_list, updated_estimate.quantity_list)
+                # context['estimate']['item_list'] = custom_item_serializer(updated_estimate.item_list, updated_estimate.quantity_list)
+
+                if form.validated_data['download']:
+                    buffer = io.BytesIO()
+                    invoice_ser = EstimateSerailizer(updated_estimate).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_estimate.item_list, updated_estimate.quantity_list)
+                    file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "estimate", request, form.validated_data['terms'])
+
+                    buffer.seek(0)
+                    return FileResponse(buffer, as_attachment=True, filename=file_name)
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1159,7 +1243,16 @@ def create_quote(request):
             new_quote = form.save(request)
             context['message'] = "success"
             context['quote'] = {"id": new_quote.id, **form.data}
-            context['quote']['item_list'] = custom_item_serializer(new_quote.item_list, new_quote.quantity_list)
+            # context['quote']['item_list'] = custom_item_serializer(new_quote.item_list, new_quote.quantity_list)
+
+            if form.validated_data['download']:
+                buffer = io.BytesIO()
+                invoice_ser = QuoteSerailizer(new_quote).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_quote.item_list, new_quote.quantity_list)
+                file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "quote", request, form.validated_data['terms'])
+
+                buffer.seek(0)
+                return FileResponse(buffer, as_attachment=True, filename=file_name)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1217,7 +1310,16 @@ def edit_quote(request, id):
                 updated_quote = form.update(quote, form.validated_data)
                 context['message'] = "success"
                 context['quote'] = {"id": updated_quote.id, **form.data}
-                context['quote']['item_list'] = custom_item_serializer(updated_quote.item_list, updated_quote.quantity_list)
+                # context['quote']['item_list'] = custom_item_serializer(updated_quote.item_list, updated_quote.quantity_list)
+
+                if form.validated_data['download']:
+                    buffer = io.BytesIO()
+                    invoice_ser = QuoteSerailizer(updated_quote).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_quote.item_list, updated_quote.quantity_list)
+                    file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "quote", request, form.validated_data['terms'])
+
+                    buffer.seek(0)
+                    return FileResponse(buffer, as_attachment=True, filename=file_name)
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1338,7 +1440,16 @@ def create_receipt(request):
             new_receipt = form.save(request)
             context['message'] = "success"
             context['receipt'] = {"id": new_receipt.id, **form.data}
-            context['receipt']['item_list'] = custom_item_serializer(new_receipt.item_list, new_receipt.quantity_list)
+            # context['receipt']['item_list'] = custom_item_serializer(new_receipt.item_list, new_receipt.quantity_list)
+
+            if form.validated_data['download']:
+                buffer = io.BytesIO()
+                invoice_ser = ReceiptSerailizer(new_receipt).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_receipt.item_list, new_receipt.quantity_list)
+                file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "receipt", request, form.validated_data['terms'])
+
+                buffer.seek(0)
+                return FileResponse(buffer, as_attachment=True, filename=file_name)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1396,7 +1507,16 @@ def edit_receipt(request, id):
                 updated_receipt = form.update(receipt, form.validated_data)
                 context['message'] = "success"
                 context['receipt'] = {"id": updated_receipt.id, **form.data}
-                context['receipt']['item_list'] = custom_item_serializer(updated_receipt.item_list, updated_receipt.quantity_list)
+                # context['receipt']['item_list'] = custom_item_serializer(updated_receipt.item_list, updated_receipt.quantity_list)
+
+                if form.validated_data['download']:
+                    buffer = io.BytesIO()
+                    invoice_ser = ReceiptSerailizer(updated_receipt).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_receipt.item_list, updated_receipt.quantity_list)
+                    file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "receipt", request, form.validated_data['terms'])
+
+                    buffer.seek(0)
+                    return FileResponse(buffer, as_attachment=True, filename=file_name)
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1520,7 +1640,16 @@ def create_credit(request):
             new_credit = form.save(request)
             context['message'] = "success"
             context['credit'] = {"id": new_credit.id, **form.data}
-            context['credit']['item_list'] = custom_item_serializer(new_credit.item_list, new_credit.quantity_list)
+            # context['credit']['item_list'] = custom_item_serializer(new_credit.item_list, new_credit.quantity_list)
+
+            if form.validated_data['download']:
+                buffer = io.BytesIO()
+                invoice_ser = CreditNoteSerailizer(new_credit).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_credit.item_list, new_credit.quantity_list)
+                file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "credit note", request, form.validated_data['terms'])
+
+                buffer.seek(0)
+                return FileResponse(buffer, as_attachment=True, filename=file_name)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1578,7 +1707,16 @@ def edit_credit(request, id):
                 updated_credit = form.update(credit, form.validated_data)
                 context['message'] = "success"
                 context['credit'] = {"id": updated_credit.id, **form.data}
-                context['credit']['item_list'] = custom_item_serializer(updated_credit.item_list, updated_credit.quantity_list)
+                # context['credit']['item_list'] = custom_item_serializer(updated_credit.item_list, updated_credit.quantity_list)
+
+                if form.validated_data['download']:
+                    buffer = io.BytesIO()
+                    invoice_ser = CreditNoteSerailizer(updated_credit).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_credit.item_list, updated_credit.quantity_list)
+                    file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "credit note", request, form.validated_data['terms'])
+
+                    buffer.seek(0)
+                    return FileResponse(buffer, as_attachment=True, filename=file_name)
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1698,7 +1836,16 @@ def create_delivery(request):
             new_delivery = form.save(request)
             context['message'] = "success"
             context['delivery'] = {"id": new_delivery.id, **form.data}
-            context['delivery']['item_list'] = custom_item_serializer(new_delivery.item_list, new_delivery.quantity_list)
+            # context['delivery']['item_list'] = custom_item_serializer(new_delivery.item_list, new_delivery.quantity_list)
+
+            if form.validated_data['download']:
+                buffer = io.BytesIO()
+                invoice_ser = DNSerailizer(new_delivery).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_delivery.item_list, new_delivery.quantity_list)
+                file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "delivery note", request, form.validated_data['terms'])
+
+                buffer.seek(0)
+                return FileResponse(buffer, as_attachment=True, filename=file_name)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1756,7 +1903,16 @@ def edit_delivery(request, id):
                 updated_delivery = form.update(delivery, form.validated_data)
                 context['message'] = "success"
                 context['delivery'] = {"id": updated_delivery.id, **form.data}
-                context['delivery']['item_list'] = custom_item_serializer(updated_delivery.item_list, updated_delivery.quantity_list)
+                # context['delivery']['item_list'] = custom_item_serializer(updated_delivery.item_list, updated_delivery.quantity_list)
+
+                if form.validated_data['download']:
+                    buffer = io.BytesIO()
+                    invoice_ser = DNSerailizer(updated_delivery).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_delivery.item_list, updated_delivery.quantity_list)
+                    file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "delivery note", request, form.validated_data['terms'])
+
+                    buffer.seek(0)
+                    return FileResponse(buffer, as_attachment=True, filename=file_name)
 
                 return Response(context, status=status.HTTP_200_OK)
 

@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import ArrayField
@@ -102,6 +103,8 @@ class Invoice(models.Model):
 
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
 
+    terms = models.CharField(max_length=5000, default="", blank=True, null=True)
+
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.vendor.first_name})"    
@@ -136,6 +139,7 @@ class ProformaInvoice(models.Model):
 
     status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
+    terms = models.CharField(max_length=5000, default="", blank=True, null=True)
 
 
     def __str__(self):
@@ -159,6 +163,7 @@ class PurchaseOrder(models.Model):
 
     po_number = models.CharField("PO number", blank=False, null=False, max_length=2048)
     po_date = models.DateField("Purchase Order Date", blank=False, null=False)
+    due_date = models.DateField("Due Date", blank=False, null=False, default=datetime.now())
     ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
     shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
@@ -173,6 +178,7 @@ class PurchaseOrder(models.Model):
 
     status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
+    terms = models.CharField(max_length=5000, default="", blank=True, null=True)
 
 
     def __str__(self):
@@ -212,6 +218,7 @@ class Estimate(models.Model):
 
     status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
+    terms = models.CharField(max_length=5000, default="", blank=True, null=True)
 
 
     def __str__(self):
@@ -253,6 +260,7 @@ class Quote(models.Model):
 
     status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
+    terms = models.CharField(max_length=5000, default="", blank=True, null=True)
 
 
     def __str__(self):
@@ -296,6 +304,7 @@ class Receipt(models.Model):
 
     status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
+    terms = models.CharField(max_length=5000, default="", blank=True, null=True)
 
 
     def __str__(self):
@@ -338,6 +347,7 @@ class CreditNote(models.Model):
 
     status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
+    terms = models.CharField(max_length=5000, default="", blank=True, null=True)
 
 
     def __str__(self):
@@ -383,6 +393,7 @@ class DeliveryNote(models.Model):
 
     status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
+    terms = models.CharField(max_length=5000, default="", blank=True, null=True)
 
 
     def __str__(self):

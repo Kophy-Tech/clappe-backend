@@ -308,7 +308,6 @@ class InvoiceCreate(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
     download = serializers.BooleanField(default=False)
-    terms = serializers.CharField()
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -342,6 +341,7 @@ class InvoiceCreate(ModelSerializer):
         new_invoice.bill_to = self.validated_data["bill_to"]
         new_invoice.billing_address = self.validated_data["billing_address"]
         new_invoice.notes = self.validated_data["notes"]
+        new_invoice.terms = self.validated_data["terms"]
 
 
         item_list = self.validated_data['item_list']
@@ -407,7 +407,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         fields = [ "id",
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes", "quantity_list",
-            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list", "notes"]
+            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list", "notes", "terms"]
 
 
 
@@ -418,6 +418,8 @@ class InvoiceSerializer(serializers.ModelSerializer):
 class InvoiceEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -425,10 +427,10 @@ class InvoiceEditSerializer(ModelSerializer):
         fields = [
             "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "item_list",
-            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "send_email"]
+            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "send_email", "download", "terms"]
 
 
-    def update(self, instance, validated_data):
+    def update(self, instance, validated_data, request):
         instance.first_name = validated_data["first_name"]
         instance.last_name = validated_data["last_name"]
         instance.address = validated_data["address"]
@@ -446,8 +448,9 @@ class InvoiceEditSerializer(ModelSerializer):
         instance.bill_to = validated_data["bill_to"]
         instance.billing_address = validated_data["billing_address"]
         instance.notes = validated_data["notes"]
+        instance.terms = validated_data["terms"]
 
-        item_list = self.validated_data['item_list']
+        item_list = validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -466,10 +469,12 @@ class InvoiceEditSerializer(ModelSerializer):
 
         instance.save()
 
+
         if self.validated_data['send_email']:
             # for sending email when creating a new document
-            file_name = f"Invoice for {instance.email}.pdf"
-            get_report(file_name)
+            invoice_ser = InvoiceSerializer(instance).data
+            invoice_ser['item_list'] = pdf_item_serializer(instance.item_list, instance.quantity_list)
+            file_name = get_report(invoice_ser, self.validated_data, CURRENCY_MAPPING[request.user.currency], "invoice", request)
             body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
             subject = "Transaction Receipt"
             send_my_email(instance.email, body, subject, file_name)
@@ -536,14 +541,17 @@ class PayInvoiceSerializer(ModelSerializer):
 class ProformaCreateSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = ProformaInvoice
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
-                "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "send_email"]
+                "invoice_date", "po_number", "due_date", "notes", "item_list", 
+                    "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
 
 
     def save(self, request):
@@ -561,7 +569,7 @@ class ProformaCreateSerializer(ModelSerializer):
         new_proforma.po_number = self.validated_data["po_number"]
         new_proforma.due_date = self.validated_data["due_date"]
         new_proforma.notes = self.validated_data["notes"]
-        new_proforma.attachment_path = self.validated_data["attachment_path"]
+        new_proforma.terms = self.validated_data["terms"]
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -592,7 +600,7 @@ class ProformaCreateSerializer(ModelSerializer):
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
             "date": new_proforma.due_date,
-            "document_type": "invoice",
+            "document_type": "proforma",
             "document_id": new_proforma.id,
             "task_type": "one_time",
             "email": new_proforma.email
@@ -611,8 +619,8 @@ class ProformerInvoiceSerailizer(serializers.ModelSerializer):
         model = ProformaInvoice
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
-                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", "quantity_list",
-                    "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "item_list", "quantity_list",
+                    "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
 
 
 
@@ -620,14 +628,16 @@ class ProformerInvoiceSerailizer(serializers.ModelSerializer):
 class ProformaEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = ProformaInvoice
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
-                    "invoice_date", "po_number", "due_date", "notes", "attachment_path", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
+                    "invoice_date", "po_number", "due_date", "notes", "item_list", 
+                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
 
 
@@ -645,7 +655,7 @@ class ProformaEditSerializer(ModelSerializer):
         instance.po_number = validated_data["po_number"]
         instance.due_date = validated_data["due_date"]
         instance.notes = validated_data["notes"]
-        instance.attachment_path = validated_data["attachment_path"]
+        instance.terms = validated_data["terms"]
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -738,14 +748,17 @@ class PayProformaSerializer(ModelSerializer):
 class PurchaseCreateSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = PurchaseOrder
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
-                    "po_date", "ship_to", "notes", "shipping_address", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "send_email"]
+                    "po_date", "ship_to", "notes", "shipping_address", "item_list", "due_date",
+                    "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
 
 
 
@@ -764,6 +777,7 @@ class PurchaseCreateSerializer(ModelSerializer):
         new_purchaseorder.ship_to = self.validated_data["ship_to"]
         new_purchaseorder.notes = self.validated_data["notes"]
         new_purchaseorder.shipping_address = self.validated_data["shipping_address"]
+        new_purchaseorder.terms = self.validated_data["terms"]
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -812,8 +826,8 @@ class PurchaseOrderSerailizer(serializers.ModelSerializer):
         model = PurchaseOrder
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
-                    "po_number", "po_date", "ship_to", "notes", "shipping_address",  "item_list", "quantity_list",
-                    "item_total", "tax", "add_charges", "grand_total",  "status"]
+                    "po_number", "po_date", "due_date", "ship_to", "notes", "shipping_address",  "item_list", "quantity_list",
+                    "item_total", "tax", "add_charges", "grand_total",  "status", "terms"]
 
 
 
@@ -821,14 +835,17 @@ class PurchaseOrderSerailizer(serializers.ModelSerializer):
 class PurchaseEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = PurchaseOrder
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
-                    "po_date", "ship_to", "notes", "shipping_address", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
+                    "po_date", "due_date", "ship_to", "notes", "shipping_address", "item_list", 
+                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
 
 
@@ -844,6 +861,7 @@ class PurchaseEditSerializer(ModelSerializer):
         instance.logo_path = validated_data["logo_path"]
         instance.po_date = validated_data["po_date"]
         instance.notes = validated_data["notes"]
+        instance.terms = validated_data["terms"]
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -931,6 +949,9 @@ class PayPurchaseSerializer(ModelSerializer):
 class EstimateCreateSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -938,7 +959,7 @@ class EstimateCreateSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
 
 
     def save(self, request):
@@ -958,6 +979,7 @@ class EstimateCreateSerializer(ModelSerializer):
         new_estimate.bill_to = self.validated_data["bill_to"]
         new_estimate.billing_address = self.validated_data["billing_address"]
         new_estimate.notes = self.validated_data["notes"]
+        new_estimate.terms = self.validated_data["terms"]
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1007,7 +1029,7 @@ class EstimateSerailizer(serializers.ModelSerializer):
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
 
 
@@ -1016,6 +1038,9 @@ class EstimateSerailizer(serializers.ModelSerializer):
 class EstimateEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -1023,7 +1048,7 @@ class EstimateEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
                     "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
 
 
@@ -1042,6 +1067,7 @@ class EstimateEditSerializer(ModelSerializer):
         instance.bill_to = validated_data["bill_to"]
         instance.billing_address = validated_data["billing_address"]
         instance.notes = validated_data["notes"]
+        instance.terms = validated_data["terms"]
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1131,13 +1157,16 @@ class PayEstimateSerializer(ModelSerializer):
 class QuoteCreateSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Quote
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
                     "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes",  "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
+                    "notes",  "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
                         
 
 
@@ -1160,6 +1189,7 @@ class QuoteCreateSerializer(ModelSerializer):
         new_quote.bill_to = self.validated_data["bill_to"]
         new_quote.billing_address = self.validated_data["billing_address"]
         new_quote.notes = self.validated_data["notes"]
+        new_quote.terms = self.validated_data["terms"]
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1210,7 +1240,7 @@ class QuoteSerailizer(serializers.ModelSerializer):
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
 
 
@@ -1219,6 +1249,9 @@ class QuoteSerailizer(serializers.ModelSerializer):
 class QuoteEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -1226,7 +1259,7 @@ class QuoteEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
                     "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
         
 
 
@@ -1247,6 +1280,7 @@ class QuoteEditSerializer(ModelSerializer):
         instance.bill_to = validated_data["bill_to"]
         instance.billing_address = validated_data["billing_address"]
         instance.notes = validated_data["notes"]
+        instance.terms = validated_data["terms"]
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1339,13 +1373,16 @@ class PayQuoteSerializer(ModelSerializer):
 class CNCreateSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = CreditNote
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
                     "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "send_email"]       
+                    "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]       
 
         
 
@@ -1367,6 +1404,7 @@ class CNCreateSerializer(ModelSerializer):
         new_credit.ship_to = self.validated_data["ship_to"]
         new_credit.shipping_address = self.validated_data["shipping_address"]
         new_credit.notes = self.validated_data["notes"]
+        new_credit.terms = self.validated_data["terms"]
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1416,7 +1454,7 @@ class CreditNoteSerailizer(serializers.ModelSerializer):
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
                     "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes",  "item_list", "quantity_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
 
 
@@ -1425,6 +1463,9 @@ class CreditNoteSerailizer(serializers.ModelSerializer):
 class CNEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -1432,7 +1473,7 @@ class CNEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
                     "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
+                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
         
 
@@ -1453,6 +1494,7 @@ class CNEditSerializer(ModelSerializer):
         instance.ship_to = validated_data["ship_to"]
         instance.shipping_address = validated_data["shipping_address"]
         instance.notes = validated_data["notes"]
+        instance.terms = validated_data["terms"]
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1549,13 +1591,16 @@ class PayCNSerializer(ModelSerializer):
 class REceiptCreateSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Receipt
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
                     "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
         
         
 
@@ -1579,6 +1624,7 @@ class REceiptCreateSerializer(ModelSerializer):
         new_receipt.bill_to = self.validated_data["bill_to"]
         new_receipt.billing_address = self.validated_data["billing_address"]
         new_receipt.notes = self.validated_data["notes"]
+        new_receipt.terms = self.validated_data["terms"]
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1628,7 +1674,7 @@ class ReceiptSerailizer(serializers.ModelSerializer):
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
 
 
@@ -1637,6 +1683,9 @@ class ReceiptSerailizer(serializers.ModelSerializer):
 class ReceiptEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -1644,7 +1693,7 @@ class ReceiptEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
                     "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
         
 
@@ -1667,6 +1716,7 @@ class ReceiptEditSerializer(ModelSerializer):
         instance.bill_to = validated_data["bill_to"]
         instance.billing_address = validated_data["billing_address"]
         instance.notes = validated_data["notes"]
+        instance.terms = validated_data["terms"]
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1761,13 +1811,16 @@ class PayReceiptSerializer(ModelSerializer):
 class DNCreateSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = DeliveryNote
         fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
                     "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
         
         
 
@@ -1789,6 +1842,7 @@ class DNCreateSerializer(ModelSerializer):
         new_delivery.ship_to = self.validated_data["ship_to"]
         new_delivery.shipping_address = self.validated_data["shipping_address"]
         new_delivery.notes = self.validated_data["notes"]
+        new_delivery.terms = self.validated_data["terms"]
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1838,7 +1892,7 @@ class DNSerailizer(serializers.ModelSerializer):
         fields = [
                 "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
-                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status"]
+                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
 
 
@@ -1847,6 +1901,9 @@ class DNSerailizer(serializers.ModelSerializer):
 class DNEditSerializer(ModelSerializer):
     item_list = serializers.ListField()
     send_email = serializers.BooleanField(default=False)
+    download = serializers.BooleanField(default=False)
+
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -1854,7 +1911,7 @@ class DNEditSerializer(ModelSerializer):
         fields = [
                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
                     "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email"]
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
         
 
@@ -1875,6 +1932,7 @@ class DNEditSerializer(ModelSerializer):
         instance.ship_to = validated_data["ship_to"]
         instance.shipping_address = validated_data["shipping_address"]
         instance.notes = validated_data["notes"]
+        instance.terms = validated_data["terms"]
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
