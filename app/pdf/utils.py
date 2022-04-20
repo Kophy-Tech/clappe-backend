@@ -138,10 +138,10 @@ def add_other_details(pdf, document, start_y, document_type, currency, terms):
     pdf.drawCentredString(530, 60, document[doc_number_key])
 
     # add customer details
-    pdf.drawString(-10, 180, f"{document['first_name']} {document['last_name']}")
-    pdf.drawString(-10, 192, f"{document['address']}")
-    pdf.drawString(-10, 204, f"{document['email']}")
-    pdf.drawString(-10, 216, f"{document['phone_number']}")
+    pdf.drawString(-10, 180, f"{document['customer']['first_name']} {document['customer']['last_name']}")
+    pdf.drawString(-10, 192, f"{document['customer']['address']}")
+    pdf.drawString(-10, 204, f"{document['customer']['email']}")
+    pdf.drawString(-10, 216, f"{document['customer']['phone_number']}")
 
 
     # adding the 3 details

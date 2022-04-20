@@ -1,4 +1,6 @@
 #django imports
+from datetime import datetime
+import os
 from django.contrib.auth import authenticate
 from django.http import FileResponse
 
@@ -332,6 +334,18 @@ def create_invoice(request):
 
                 buffer.seek(0)
                 return FileResponse(buffer, as_attachment=True, filename=file_name)
+            
+            elif form.validated_data['send_email']:
+                # for sending email when creating a new document
+                now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                file_name = f"{'invoice'.title()} for {request.user.email} - {now}.pdf"
+                invoice_ser = InvoiceSerializer(new_invoice).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
+                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
+                body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                subject = "Transaction Receipt"
+                send_my_email(new_invoice.customer.email, body, subject, file_name)
+                os.remove(file_name)
 
 
             # if pdf_file:
@@ -393,7 +407,6 @@ def edit_invoice(request, id):
                 updated_invoice = form.update(invoice, form.validated_data, request)
                 context['message'] = "success"
                 context['invoice'] = {"id": updated_invoice.id, **form.validated_data}
-                # context['invoice']['item_list'] = custom_item_serializer(updated_invoice.item_list, updated_invoice.quantity_list)
 
 
                 if form.validated_data['download']:
@@ -404,6 +417,20 @@ def edit_invoice(request, id):
 
                     buffer.seek(0)
                     return FileResponse(buffer, as_attachment=True, filename=file_name)
+
+                if form.validated_data['send_email']:
+                    # for sending email when creating a new document
+                    now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                    file_name = f"{'invoice'.title()} for {request.user.email} - {now}.pdf"
+                    invoice_ser = InvoiceSerializer(updated_invoice).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_invoice.item_list, updated_invoice.quantity_list)
+                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
+                    body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                    subject = "Transaction Receipt"
+                    send_my_email(updated_invoice.customer.email, body, subject, file_name)
+                    os.remove(file_name)
+
+
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -535,6 +562,19 @@ def create_proforma(request):
                 return FileResponse(buffer, as_attachment=True, filename=file_name)
 
 
+            elif form.validated_data['send_email']:
+                # for sending email when creating a new document
+                now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                file_name = f"{'proforma invoice'.title()} for {request.user.email} - {now}.pdf"
+                invoice_ser = ProformerInvoiceSerailizer(new_invoice).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
+                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "proforma invoice", request, form.validated_data['terms'])
+                body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                subject = "Transaction Receipt"
+                send_my_email(new_invoice.customer.email, body, subject, file_name)
+                os.remove(file_name)
+
+
             return Response(context, status=status.HTTP_200_OK)
 
         else:
@@ -589,7 +629,7 @@ def edit_proforma(request, id):
             if form.is_valid():
                 updated_proforma = form.update(proforma, form.validated_data)
                 context['message'] = "success"
-                context['proforma'] = {"id": updated_proforma.id, **form.data}
+                context['proforma'] = {"id": updated_proforma.id, **form.validated_data}
                 # context['proforma']['item_list'] = custom_item_serializer(updated_proforma.item_list, updated_proforma.quantity_list)
 
                 if form.validated_data['download']:
@@ -601,6 +641,20 @@ def edit_proforma(request, id):
                     buffer.seek(0)
                     return FileResponse(buffer, as_attachment=True, filename=file_name)
 
+
+                elif form.validated_data['send_email']:
+                    # for sending email when creating a new document
+                    now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                    file_name = f"{'proforma invoice'.title()} for {request.user.email} - {now}.pdf"
+                    invoice_ser = ProformerInvoiceSerailizer(updated_proforma).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_proforma.item_list, updated_proforma.quantity_list)
+                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "proforma invoice", request, form.validated_data['terms'])
+                    body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                    subject = "Transaction Receipt"
+                    send_my_email(updated_proforma.customer.email, body, subject, file_name)
+                    os.remove(file_name)
+
+                
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -725,6 +779,19 @@ def create_purchaseorder(request):
                 buffer.seek(0)
                 return FileResponse(buffer, as_attachment=True, filename=file_name)
 
+
+            elif form.validated_data['send_email']:
+                # for sending email when creating a new document
+                now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                file_name = f"{'purchase order'.title()} for {request.user.email} - {now}.pdf"
+                invoice_ser = PurchaseOrderSerailizer(new_po).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_po.item_list, new_po.quantity_list)
+                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "purchase order", request, form.validated_data['terms'])
+                body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                subject = "Transaction Receipt"
+                send_my_email(new_po.customer.email, body, subject, file_name)
+                os.remove(file_name)
+
             return Response(context, status=status.HTTP_200_OK)
 
         else:
@@ -758,7 +825,7 @@ def edit_purchaseorder(request, id):
             if purchase.vendor == request.user:
                 serialized_purchase = PurchaseOrderSerailizer(purchase)
                 context['message'] = serialized_purchase.data
-                context['message']['item_list'] = custom_item_serializer(serialized_purchase.item_list, serialized_purchase.quantity_list)
+                context['message']['item_list'] = custom_item_serializer(purchase.item_list, purchase.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -779,7 +846,7 @@ def edit_purchaseorder(request, id):
             if form.is_valid():
                 updated_purchase = form.update(purchase, form.validated_data)
                 context['message'] = "success"
-                context['purchase'] = {"id": updated_purchase.id, **form.data}
+                context['purchase'] = {"id": updated_purchase.id, **form.validated_data}
                 # context['purchase']['item_list'] = custom_item_serializer(updated_purchase.item_list, updated_purchase.quantity_list)
 
                 if form.validated_data['download']:
@@ -790,6 +857,19 @@ def edit_purchaseorder(request, id):
 
                     buffer.seek(0)
                     return FileResponse(buffer, as_attachment=True, filename=file_name)
+
+
+                elif form.validated_data['send_email']:
+                    # for sending email when creating a new document
+                    now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                    file_name = f"{'purchase order'.title()} for {request.user.email} - {now}.pdf"
+                    invoice_ser = PurchaseOrderSerailizer(updated_purchase).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_purchase.item_list, updated_purchase.quantity_list)
+                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "purchase order", request, form.validated_data['terms'])
+                    body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                    subject = "Transaction Receipt"
+                    send_my_email(updated_purchase.customer.email, body, subject, file_name)
+                    os.remove(file_name)
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -925,6 +1005,19 @@ def create_estimate(request):
                 buffer.seek(0)
                 return FileResponse(buffer, as_attachment=True, filename=file_name)
 
+
+            elif form.validated_data['send_email']:
+                # for sending email when creating a new document
+                now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                file_name = f"{'estimate'.title()} for {request.user.email} - {now}.pdf"
+                invoice_ser = EstimateSerailizer(new_estimate).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_estimate.item_list, new_estimate.quantity_list)
+                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "estimate", request, form.validated_data['terms'])
+                body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                subject = "Transaction Receipt"
+                send_my_email(new_estimate.customer.email, body, subject, file_name)
+                os.remove(file_name)
+
             return Response(context, status=status.HTTP_200_OK)
 
         else:
@@ -936,7 +1029,7 @@ def create_estimate(request):
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
         context = {"message": "create estimate page", "required fields": [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
+                "customer_id", "taxable", "estimate_pref", "logo_path", 
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total"]}
         return Response(context, status=status.HTTP_200_OK)
@@ -979,7 +1072,7 @@ def edit_estimate(request, id):
             if form.is_valid():
                 updated_estimate = form.update(estimate, form.validated_data)
                 context['message'] = "success"
-                context['estimate'] = {"id": updated_estimate.id, **form.data}
+                context['estimate'] = {"id": updated_estimate.id, **form.validated_data}
                 # context['estimate']['item_list'] = custom_item_serializer(updated_estimate.item_list, updated_estimate.quantity_list)
 
                 if form.validated_data['download']:
@@ -990,6 +1083,18 @@ def edit_estimate(request, id):
 
                     buffer.seek(0)
                     return FileResponse(buffer, as_attachment=True, filename=file_name)
+
+                elif form.validated_data['send_email']:
+                    # for sending email when creating a new document
+                    now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                    file_name = f"{'estimate'.title()} for {request.user.email} - {now}.pdf"
+                    invoice_ser = EstimateSerailizer(updated_estimate).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_estimate.item_list, updated_estimate.quantity_list)
+                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "estimate", request, form.validated_data['terms'])
+                    body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                    subject = "Transaction Receipt"
+                    send_my_email(updated_estimate.customer.email, body, subject, file_name)
+                    os.remove(file_name)
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1254,6 +1359,18 @@ def create_quote(request):
                 buffer.seek(0)
                 return FileResponse(buffer, as_attachment=True, filename=file_name)
 
+            elif form.validated_data['send_email']:
+                # for sending email when creating a new document
+                now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                file_name = f"{'quote'.title()} for {request.user.email} - {now}.pdf"
+                invoice_ser = QuoteSerailizer(new_quote).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_quote.item_list, new_quote.quantity_list)
+                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "quote", request, form.validated_data['terms'])
+                body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                subject = "Transaction Receipt"
+                send_my_email(new_quote.customer.email, body, subject, file_name)
+                os.remove(file_name)
+
             return Response(context, status=status.HTTP_200_OK)
 
         else:
@@ -1265,7 +1382,7 @@ def create_quote(request):
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
         context = {"message": "create quote page", "required fields": [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
+                "customer_id", "taxable", "quote_pref", "logo_path", "due_date",
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total"]}
 
@@ -1309,7 +1426,7 @@ def edit_quote(request, id):
             if form.is_valid():
                 updated_quote = form.update(quote, form.validated_data)
                 context['message'] = "success"
-                context['quote'] = {"id": updated_quote.id, **form.data}
+                context['quote'] = {"id": updated_quote.id, **form.validated_data}
                 # context['quote']['item_list'] = custom_item_serializer(updated_quote.item_list, updated_quote.quantity_list)
 
                 if form.validated_data['download']:
@@ -1320,6 +1437,19 @@ def edit_quote(request, id):
 
                     buffer.seek(0)
                     return FileResponse(buffer, as_attachment=True, filename=file_name)
+
+
+                elif form.validated_data['send_email']:
+                    # for sending email when creating a new document
+                    now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                    file_name = f"{'quote'.title()} for {request.user.email} - {now}.pdf"
+                    invoice_ser = QuoteSerailizer(updated_quote).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_quote.item_list, updated_quote.quantity_list)
+                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "quote", request, form.validated_data['terms'])
+                    body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                    subject = "Transaction Receipt"
+                    send_my_email(updated_quote.customer.email, body, subject, file_name)
+                    os.remove(file_name)
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1451,6 +1581,19 @@ def create_receipt(request):
                 buffer.seek(0)
                 return FileResponse(buffer, as_attachment=True, filename=file_name)
 
+
+            elif form.validated_data['send_email']:
+                # for sending email when creating a new document
+                now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                file_name = f"{'receipt'.title()} for {request.user.email} - {now}.pdf"
+                invoice_ser = ReceiptSerailizer(new_receipt).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_receipt.item_list, new_receipt.quantity_list)
+                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "receipt", request, form.validated_data['terms'])
+                body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                subject = "Transaction Receipt"
+                send_my_email(new_receipt.customer.email, body, subject, file_name)
+                os.remove(file_name)
+
             return Response(context, status=status.HTTP_200_OK)
 
         else:
@@ -1462,7 +1605,7 @@ def create_receipt(request):
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
         context = {"message": "create receipt page", "required fields": [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
+                "customer_id", "taxable", "receipt_pref", "logo_path", 
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total"]}
 
@@ -1506,7 +1649,7 @@ def edit_receipt(request, id):
             if form.is_valid():
                 updated_receipt = form.update(receipt, form.validated_data)
                 context['message'] = "success"
-                context['receipt'] = {"id": updated_receipt.id, **form.data}
+                context['receipt'] = {"id": updated_receipt.id, **form.validated_data}
                 # context['receipt']['item_list'] = custom_item_serializer(updated_receipt.item_list, updated_receipt.quantity_list)
 
                 if form.validated_data['download']:
@@ -1517,6 +1660,19 @@ def edit_receipt(request, id):
 
                     buffer.seek(0)
                     return FileResponse(buffer, as_attachment=True, filename=file_name)
+
+
+                elif form.validated_data['send_email']:
+                    # for sending email when creating a new document
+                    now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                    file_name = f"{'receipt'.title()} for {request.user.email} - {now}.pdf"
+                    invoice_ser = ReceiptSerailizer(updated_receipt).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_receipt.item_list, updated_receipt.quantity_list)
+                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "receipt", request, form.validated_data['terms'])
+                    body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                    subject = "Transaction Receipt"
+                    send_my_email(updated_receipt.customer.email, body, subject, file_name)
+                    os.remove(file_name)
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1651,6 +1807,19 @@ def create_credit(request):
                 buffer.seek(0)
                 return FileResponse(buffer, as_attachment=True, filename=file_name)
 
+
+            elif form.validated_data['send_email']:
+                # for sending email when creating a new document
+                now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                file_name = f"{'credit note'.title()} for {request.user.email} - {now}.pdf"
+                invoice_ser = CreditNoteSerailizer(new_credit).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_credit.item_list, new_credit.quantity_list)
+                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "credit note", request, form.validated_data['terms'])
+                body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                subject = "Transaction Receipt"
+                send_my_email(new_credit.customer.email, body, subject, file_name)
+                os.remove(file_name)
+
             return Response(context, status=status.HTTP_200_OK)
 
         else:
@@ -1706,7 +1875,7 @@ def edit_credit(request, id):
             if form.is_valid():
                 updated_credit = form.update(credit, form.validated_data)
                 context['message'] = "success"
-                context['credit'] = {"id": updated_credit.id, **form.data}
+                context['credit'] = {"id": updated_credit.id, **form.validated_data}
                 # context['credit']['item_list'] = custom_item_serializer(updated_credit.item_list, updated_credit.quantity_list)
 
                 if form.validated_data['download']:
@@ -1717,6 +1886,18 @@ def edit_credit(request, id):
 
                     buffer.seek(0)
                     return FileResponse(buffer, as_attachment=True, filename=file_name)
+
+                elif form.validated_data['send_email']:
+                    # for sending email when creating a new document
+                    now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                    file_name = f"{'credit note'.title()} for {request.user.email} - {now}.pdf"
+                    invoice_ser = CreditNoteSerailizer(updated_credit).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_credit.item_list, updated_credit.quantity_list)
+                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "credit note", request, form.validated_data['terms'])
+                    body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                    subject = "Transaction Receipt"
+                    send_my_email(updated_credit.customer.email, body, subject, file_name)
+                    os.remove(file_name)
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1847,6 +2028,19 @@ def create_delivery(request):
                 buffer.seek(0)
                 return FileResponse(buffer, as_attachment=True, filename=file_name)
 
+
+            elif form.validated_data['send_email']:
+                # for sending email when creating a new document
+                now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                file_name = f"{'delivery note'.title()} for {request.user.email} - {now}.pdf"
+                invoice_ser = DNSerailizer(new_delivery).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_delivery.item_list, new_delivery.quantity_list)
+                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "delivery note", request, form.validated_data['terms'])
+                body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                subject = "Transaction Receipt"
+                send_my_email(new_delivery.customer.email, body, subject, file_name)
+                os.remove(file_name)
+
             return Response(context, status=status.HTTP_200_OK)
 
         else:
@@ -1858,7 +2052,7 @@ def create_delivery(request):
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
         context = {"message": "create delivery note page", "required fields": [
-                 "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
+                 "customer_id", "taxable", "dn_pref", "logo_path", 
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total"]}
 
@@ -1902,7 +2096,7 @@ def edit_delivery(request, id):
             if form.is_valid():
                 updated_delivery = form.update(delivery, form.validated_data)
                 context['message'] = "success"
-                context['delivery'] = {"id": updated_delivery.id, **form.data}
+                context['delivery'] = {"id": updated_delivery.id, **form.validated_data}
                 # context['delivery']['item_list'] = custom_item_serializer(updated_delivery.item_list, updated_delivery.quantity_list)
 
                 if form.validated_data['download']:
@@ -1913,6 +2107,18 @@ def edit_delivery(request, id):
 
                     buffer.seek(0)
                     return FileResponse(buffer, as_attachment=True, filename=file_name)
+
+                elif form.validated_data['send_email']:
+                    # for sending email when creating a new document
+                    now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                    file_name = f"{'delivery note'.title()} for {request.user.email} - {now}.pdf"
+                    invoice_ser = DNSerailizer(updated_delivery).data
+                    invoice_ser['item_list'] = pdf_item_serializer(updated_delivery.item_list, updated_delivery.quantity_list)
+                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "delivery note", request, form.validated_data['terms'])
+                    body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                    subject = "Transaction Receipt"
+                    send_my_email(updated_delivery.customer.email, body, subject, file_name)
+                    os.remove(file_name)
 
                 return Response(context, status=status.HTTP_200_OK)
 

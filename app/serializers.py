@@ -118,8 +118,7 @@ class CustomerCreateSerializer(ModelSerializer):
     class Meta:
         model = Customer
         fields = ["first_name", "last_name", "business_name", "address", "email", "phone_number", "taxable", 
-                    "invoice_pref", "logo_path", "ship_to", "shipping_address", "billing_address", "notes",
-                    "invoice_number", "amount"]
+                    "invoice_pref", "logo_path", "ship_to", "shipping_address", "billing_address", "notes",]
 
 
 
@@ -213,8 +212,7 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = ["id", "first_name", "last_name", "business_name", "address", "email", "phone_number", "taxable", 
-                    "invoice_pref", "logo_path", "ship_to", "shipping_address", "billing_address", "notes", "status",
-                    "invoice_number", "amount"]
+                    "invoice_pref", "logo_path", "ship_to", "shipping_address", "billing_address", "notes", "status"]
 
 
 
@@ -305,9 +303,10 @@ def pdf_item_serializer(items, quantities):
 
 
 class InvoiceCreate(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id= serializers.IntegerField(required=True)
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -315,7 +314,7 @@ class InvoiceCreate(ModelSerializer):
     class Meta:
         model = Invoice
         fields = [
-            "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path",
+            "taxable","invoice_pref","logo_path", "customer_id",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","item_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "send_email", "download", "terms"]
 
@@ -323,11 +322,8 @@ class InvoiceCreate(ModelSerializer):
     def save(self, request):
 
         new_invoice = Invoice()
-        new_invoice.first_name = self.validated_data["first_name"]
-        new_invoice.last_name = self.validated_data["last_name"]
-        new_invoice.address = self.validated_data["address"]
-        new_invoice.email = self.validated_data["email"]
-        new_invoice.phone_number = self.validated_data["phone_number"]
+        new_invoice.customer = Customer.objects.get(id=self.validated_data['customer_id'])
+
         new_invoice.taxable = self.validated_data["taxable"]
         new_invoice.invoice_pref = self.validated_data["invoice_pref"]
         new_invoice.logo_path = self.validated_data["logo_path"]
@@ -365,14 +361,14 @@ class InvoiceCreate(ModelSerializer):
         new_invoice.save()
 
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            invoice_ser = InvoiceSerializer(new_invoice).data
-            invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
-            file_name = get_report(invoice_ser, self.validated_data, CURRENCY_MAPPING[request.user.currency], "invoice", request)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(new_invoice.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     invoice_ser = InvoiceSerializer(new_invoice).data
+        #     invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
+        #     file_name = get_report(invoice_ser, self.validated_data, CURRENCY_MAPPING[request.user.currency], "invoice", request)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(new_invoice.email, body, subject, file_name)
         
         # elif self.validated_data['download']:
         #     invoice_ser = InvoiceSerializer(new_invoice).data
@@ -387,7 +383,7 @@ class InvoiceCreate(ModelSerializer):
             "document_type": "invoice",
             "document_id": new_invoice.id,
             "task_type": "one_time",
-            "email": new_invoice.email
+            "email": new_invoice.customer.email
         }
 
         new_schedule = ScheduleForm(schedule_details)
@@ -402,10 +398,10 @@ class InvoiceCreate(ModelSerializer):
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
     class Meta:
         model = Invoice
-        fields = [ "id",
-            "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
+        fields = [ "id", "customer","taxable","invoice_pref","logo_path","invoice_number",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes", "quantity_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list", "notes", "terms"]
 
@@ -416,26 +412,29 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
 
 class InvoiceEditSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    customer_id = serializers.IntegerField(required=True)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Invoice
         fields = [
-            "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path",
+            "customer_id","taxable","invoice_pref","logo_path",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "item_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "send_email", "download", "terms"]
 
 
     def update(self, instance, validated_data, request):
-        instance.first_name = validated_data["first_name"]
-        instance.last_name = validated_data["last_name"]
-        instance.address = validated_data["address"]
-        instance.email = validated_data["email"]
-        instance.phone_number = validated_data["phone_number"]
+        # instance.first_name = validated_data["first_name"]
+        # instance.last_name = validated_data["last_name"]
+        # instance.address = validated_data["address"]
+        # instance.email = validated_data["email"]
+        # instance.phone_number = validated_data["phone_number"]
+        instance.customer = Customer.objects.get(id=validated_data['customer_id'])
+
         instance.taxable = validated_data["taxable"]
         instance.invoice_pref = validated_data["invoice_pref"]
         instance.logo_path = validated_data["logo_path"]
@@ -470,14 +469,14 @@ class InvoiceEditSerializer(ModelSerializer):
         instance.save()
 
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            invoice_ser = InvoiceSerializer(instance).data
-            invoice_ser['item_list'] = pdf_item_serializer(instance.item_list, instance.quantity_list)
-            file_name = get_report(invoice_ser, self.validated_data, CURRENCY_MAPPING[request.user.currency], "invoice", request)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(instance.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     invoice_ser = InvoiceSerializer(instance).data
+        #     invoice_ser['item_list'] = pdf_item_serializer(instance.item_list, instance.quantity_list)
+        #     file_name = get_report(invoice_ser, self.validated_data, CURRENCY_MAPPING[request.user.currency], "invoice", request)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(instance.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -485,7 +484,7 @@ class InvoiceEditSerializer(ModelSerializer):
             "document_type": "invoice",
             "document_id": instance.id,
             "task_type": "one_time",
-            "email": instance.email
+            "email": instance.customer.email
         }
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
@@ -539,9 +538,10 @@ class PayInvoiceSerializer(ModelSerializer):
 ######################################### proforma invoice #########################################################################
 
 class ProformaCreateSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id = serializers.IntegerField(required=True)
 
 
     required_error = "{fieldname} is required."
@@ -549,18 +549,21 @@ class ProformaCreateSerializer(ModelSerializer):
     class Meta:
         model = ProformaInvoice
         fields = [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
+                "customer_id", "taxable", "invoice_pref", "logo_path", 
                 "invoice_date", "po_number", "due_date", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
 
 
     def save(self, request):
         new_proforma = ProformaInvoice()
-        new_proforma.first_name = self.validated_data["first_name"]
-        new_proforma.last_name = self.validated_data["last_name"]
-        new_proforma.address = self.validated_data["address"]
-        new_proforma.email = self.validated_data["email"]
-        new_proforma.phone_number = self.validated_data["phone_number"]
+        # new_proforma.first_name = self.validated_data["first_name"]
+        # new_proforma.last_name = self.validated_data["last_name"]
+        # new_proforma.address = self.validated_data["address"]
+        # new_proforma.email = self.validated_data["email"]
+        # new_proforma.phone_number = self.validated_data["phone_number"]
+
+        new_proforma.customer = Customer.objects.get(id=self.validated_data['customer_id'])
+
         new_proforma.taxable = self.validated_data["taxable"]
         new_proforma.invoice_pref = self.validated_data["invoice_pref"]
         new_proforma.logo_path = self.validated_data["logo_path"]
@@ -589,13 +592,13 @@ class ProformaCreateSerializer(ModelSerializer):
         new_proforma.save()
 
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            file_name = f"Proforma Invoice for {new_proforma.email}.pdf"
-            get_report(file_name)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(new_proforma.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     file_name = f"Proforma Invoice for {new_proforma.email}.pdf"
+        #     get_report(file_name)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(new_proforma.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -603,7 +606,7 @@ class ProformaCreateSerializer(ModelSerializer):
             "document_type": "proforma",
             "document_id": new_proforma.id,
             "task_type": "one_time",
-            "email": new_proforma.email
+            "email": new_proforma.customer.email
         }
 
         new_schedule = ScheduleForm(schedule_details)
@@ -615,10 +618,11 @@ class ProformaCreateSerializer(ModelSerializer):
 
 
 class ProformerInvoiceSerailizer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
     class Meta:
         model = ProformaInvoice
         fields = [
-                "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
+                "id", "customer", "taxable", "invoice_pref", "logo_path", 
                     "invoice_number", "invoice_date", "po_number", "due_date", "notes", "item_list", "quantity_list",
                     "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
 
@@ -626,16 +630,17 @@ class ProformerInvoiceSerailizer(serializers.ModelSerializer):
 
 
 class ProformaEditSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id = serializers.IntegerField(required=True)
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = ProformaInvoice
         fields = [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
+                "customer_id", "taxable", "invoice_pref", "logo_path", 
                     "invoice_date", "po_number", "due_date", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
@@ -643,11 +648,14 @@ class ProformaEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
-        instance.first_name = validated_data["first_name"]
-        instance.last_name = validated_data["last_name"]
-        instance.address = validated_data["address"]
-        instance.email = validated_data["email"]
-        instance.phone_number = validated_data["phone_number"]
+        # instance.first_name = validated_data["first_name"]
+        # instance.last_name = validated_data["last_name"]
+        # instance.address = validated_data["address"]
+        # instance.email = validated_data["email"]
+        # instance.phone_number = validated_data["phone_number"]
+
+        instance.customer = Customer.objects.get(id=validated_data['customer_id'])
+
         instance.taxable = validated_data["taxable"]
         instance.invoice_pref = validated_data["invoice_pref"]
         instance.logo_path = validated_data["logo_path"]
@@ -672,13 +680,13 @@ class ProformaEditSerializer(ModelSerializer):
 
         instance.save()
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            file_name = f"Proforma Invoice for {instance.email}.pdf"
-            get_report(file_name)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(instance.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     file_name = f"Proforma Invoice for {instance.email}.pdf"
+        #     get_report(file_name)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(instance.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -686,7 +694,7 @@ class ProformaEditSerializer(ModelSerializer):
             "document_type": "proforma",
             "document_id": instance.id,
             "task_type": "one_time",
-            "email": instance.email
+            "email": instance.customer.email
         }
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
@@ -746,9 +754,10 @@ class PayProformaSerializer(ModelSerializer):
 ############################################## purchase order ########################################################################
 
 class PurchaseCreateSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id = serializers.IntegerField(required=True)
 
 
     required_error = "{fieldname} is required."
@@ -756,7 +765,7 @@ class PurchaseCreateSerializer(ModelSerializer):
     class Meta:
         model = PurchaseOrder
         fields = [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
+                "customer_id", "taxable", "po_pref", "logo_path", 
                     "po_date", "ship_to", "notes", "shipping_address", "item_list", "due_date",
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
 
@@ -764,16 +773,19 @@ class PurchaseCreateSerializer(ModelSerializer):
 
     def save(self, request):
         new_purchaseorder = PurchaseOrder()
-        new_purchaseorder.first_name = self.validated_data["first_name"]
-        new_purchaseorder.last_name = self.validated_data["last_name"]
-        new_purchaseorder.address = self.validated_data["address"]
-        new_purchaseorder.email = self.validated_data["email"]
-        new_purchaseorder.phone_number = self.validated_data["phone_number"]
+        # new_purchaseorder.first_name = self.validated_data["first_name"]
+        # new_purchaseorder.last_name = self.validated_data["last_name"]
+        # new_purchaseorder.address = self.validated_data["address"]
+        # new_purchaseorder.email = self.validated_data["email"]
+        # new_purchaseorder.phone_number = self.validated_data["phone_number"]
+        new_purchaseorder.customer = Customer.objects.get(id=self.validated_data['customer_id'])
+
         new_purchaseorder.taxable = self.validated_data["taxable"]
         new_purchaseorder.po_pref = self.validated_data["po_pref"]
         new_purchaseorder.logo_path = self.validated_data["logo_path"]
         new_purchaseorder.po_number = get_number(request, 'purchase_order')
         new_purchaseorder.po_date = self.validated_data["po_date"]
+        new_purchaseorder.due_date = self.validated_data["due_date"]
         new_purchaseorder.ship_to = self.validated_data["ship_to"]
         new_purchaseorder.notes = self.validated_data["notes"]
         new_purchaseorder.shipping_address = self.validated_data["shipping_address"]
@@ -796,13 +808,13 @@ class PurchaseCreateSerializer(ModelSerializer):
 
         new_purchaseorder.save()
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            file_name = f"Purchase Order for {new_purchaseorder.email}.pdf"
-            get_report(file_name)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(new_purchaseorder.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     file_name = f"Purchase Order for {new_purchaseorder.email}.pdf"
+        #     get_report(file_name)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(new_purchaseorder.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -810,7 +822,7 @@ class PurchaseCreateSerializer(ModelSerializer):
             "document_type": "purchase",
             "document_id": new_purchaseorder.id,
             "task_type": "one_time",
-            "email": new_purchaseorder.email
+            "email": new_purchaseorder.customer.email
         }
 
         new_schedule = ScheduleForm(schedule_details)
@@ -822,10 +834,11 @@ class PurchaseCreateSerializer(ModelSerializer):
 
 
 class PurchaseOrderSerailizer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
     class Meta:
         model = PurchaseOrder
         fields = [
-                "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
+                "id", "customer", "taxable", "po_pref", "logo_path", 
                     "po_number", "po_date", "due_date", "ship_to", "notes", "shipping_address",  "item_list", "quantity_list",
                     "item_total", "tax", "add_charges", "grand_total",  "status", "terms"]
 
@@ -833,9 +846,11 @@ class PurchaseOrderSerailizer(serializers.ModelSerializer):
 
 
 class PurchaseEditSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id = serializers.IntegerField(required=True)
+
 
 
     required_error = "{fieldname} is required."
@@ -843,7 +858,7 @@ class PurchaseEditSerializer(ModelSerializer):
     class Meta:
         model = PurchaseOrder
         fields = [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "po_pref", "logo_path", 
+                "customer_id", "taxable", "po_pref", "logo_path", 
                     "po_date", "due_date", "ship_to", "notes", "shipping_address", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
@@ -851,11 +866,12 @@ class PurchaseEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
-        instance.first_name = validated_data["first_name"]
-        instance.last_name = validated_data["last_name"]
-        instance.address = validated_data["address"]
-        instance.email = validated_data["email"]
-        instance.phone_number = validated_data["phone_number"]
+        # instance.first_name = validated_data["first_name"]
+        # instance.last_name = validated_data["last_name"]
+        # instance.address = validated_data["address"]
+        # instance.email = validated_data["email"]
+        # instance.phone_number = validated_data["phone_number"]
+        instance.customer = Customer.objects.get(id=validated_data['customer_id'])
         instance.taxable = validated_data["taxable"]
         instance.po_pref = validated_data["po_pref"]
         instance.logo_path = validated_data["logo_path"]
@@ -878,13 +894,13 @@ class PurchaseEditSerializer(ModelSerializer):
 
         instance.save()
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            file_name = f"Purchase Order for {instance.email}.pdf"
-            get_report(file_name)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(instance.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     file_name = f"Purchase Order for {instance.email}.pdf"
+        #     get_report(file_name)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(instance.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -892,7 +908,7 @@ class PurchaseEditSerializer(ModelSerializer):
             "document_type": "purchase",
             "document_id": instance.id,
             "task_type": "one_time",
-            "email": instance.email
+            "email": instance.customer.email
         }
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
@@ -947,9 +963,10 @@ class PayPurchaseSerializer(ModelSerializer):
 ############################################ estimate ########################################################################
 
 class EstimateCreateSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id = serializers.IntegerField(required=True)
 
 
     required_error = "{fieldname} is required."
@@ -957,23 +974,26 @@ class EstimateCreateSerializer(ModelSerializer):
     class Meta:
         model = Estimate
         fields = [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
+                "customer_id", "taxable", "estimate_pref", "logo_path", "due_date", "po_number",
                     "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
 
 
     def save(self, request):
         new_estimate = Estimate()
-        new_estimate.first_name = self.validated_data["first_name"]
-        new_estimate.last_name = self.validated_data["last_name"]
-        new_estimate.address = self.validated_data["address"]
-        new_estimate.email = self.validated_data["email"]
-        new_estimate.phone_number = self.validated_data["phone_number"]
+        # new_estimate.first_name = self.validated_data["first_name"]
+        # new_estimate.last_name = self.validated_data["last_name"]
+        # new_estimate.address = self.validated_data["address"]
+        # new_estimate.email = self.validated_data["email"]
+        # new_estimate.phone_number = self.validated_data["phone_number"]
+        new_estimate.customer = Customer.objects.get(id=self.validated_data['customer_id'])
         new_estimate.taxable = self.validated_data["taxable"]
         new_estimate.estimate_pref = self.validated_data["estimate_pref"]
         new_estimate.logo_path = self.validated_data["logo_path"]
         new_estimate.estimate_number = get_number(request, 'estimate')
         new_estimate.estimate_date = self.validated_data["estimate_date"]
+        new_estimate.po_number = self.validated_data["po_number"]
+        new_estimate.due_date = self.validated_data["due_date"]
         new_estimate.ship_to = self.validated_data["ship_to"]
         new_estimate.shipping_address = self.validated_data["shipping_address"]
         new_estimate.bill_to = self.validated_data["bill_to"]
@@ -998,13 +1018,13 @@ class EstimateCreateSerializer(ModelSerializer):
 
         new_estimate.save()
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            file_name = f"Estimate for {new_estimate.email}.pdf"
-            get_report(file_name)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(new_estimate.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     file_name = f"Estimate for {new_estimate.email}.pdf"
+        #     get_report(file_name)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(new_estimate.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -1012,7 +1032,7 @@ class EstimateCreateSerializer(ModelSerializer):
             "document_type": "estimate",
             "document_id": new_estimate.id,
             "task_type": "one_time",
-            "email": new_estimate.email
+            "email": new_estimate.customer.email
         }
 
         new_schedule = ScheduleForm(schedule_details)
@@ -1024,10 +1044,11 @@ class EstimateCreateSerializer(ModelSerializer):
 
 
 class EstimateSerailizer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
     class Meta:
         model = Estimate
         fields = [
-                "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
+                "id", "customer", "taxable", "estimate_pref", "logo_path", "po_number", "due_date",
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1036,9 +1057,10 @@ class EstimateSerailizer(serializers.ModelSerializer):
 
 
 class EstimateEditSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id = serializers.IntegerField(required=True)
 
 
     required_error = "{fieldname} is required."
@@ -1046,22 +1068,25 @@ class EstimateEditSerializer(ModelSerializer):
     class Meta:
         model = Estimate
         fields = [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "estimate_pref", "logo_path", 
+                "customer_id", "taxable", "estimate_pref", "logo_path", "po_number", "due_date",
                     "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
 
 
     def update(self, instance, validated_data):
-        instance.first_name = validated_data["first_name"]
-        instance.last_name = validated_data["last_name"]
-        instance.address = validated_data["address"]
-        instance.email = validated_data["email"]
-        instance.phone_number = validated_data["phone_number"]
+        # instance.first_name = validated_data["first_name"]
+        # instance.last_name = validated_data["last_name"]
+        # instance.address = validated_data["address"]
+        # instance.email = validated_data["email"]
+        # instance.phone_number = validated_data["phone_number"]
+        instance.customer = Customer.objects.get(id=validated_data['customer_id'])
         instance.taxable = validated_data["taxable"]
         instance.estimate_pref = validated_data["estimate_pref"]
         instance.logo_path = validated_data["logo_path"]
         instance.estimate_date = validated_data["estimate_date"]
+        instance.due_date = validated_data["due_date"]
+        instance.po_number = validated_data["po_number"]
         instance.ship_to = validated_data["ship_to"]
         instance.shipping_address = validated_data["shipping_address"]
         instance.bill_to = validated_data["bill_to"]
@@ -1084,13 +1109,13 @@ class EstimateEditSerializer(ModelSerializer):
 
         instance.save()
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            file_name = f"Estimate for {instance.email}.pdf"
-            get_report(file_name)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(instance.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     file_name = f"Estimate for {instance.email}.pdf"
+        #     get_report(file_name)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(instance.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -1098,7 +1123,7 @@ class EstimateEditSerializer(ModelSerializer):
             "document_type": "estimate",
             "document_id": instance.id,
             "task_type": "one_time",
-            "email": instance.email
+            "email": instance.customer.email
         }
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
@@ -1155,16 +1180,17 @@ class PayEstimateSerializer(ModelSerializer):
 
 
 class QuoteCreateSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id = serializers.IntegerField(required=True)
 
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Quote
-        fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
+        fields = [ "customer_id", "taxable", "quote_pref", "logo_path", "due_date",
                     "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes",  "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
                         
@@ -1173,16 +1199,18 @@ class QuoteCreateSerializer(ModelSerializer):
 
     def save(self, request):
         new_quote = Quote()
-        new_quote.first_name = self.validated_data["first_name"]
-        new_quote.last_name = self.validated_data["last_name"]
-        new_quote.address = self.validated_data["address"]
-        new_quote.email = self.validated_data["email"]
-        new_quote.phone_number = self.validated_data["phone_number"]
+        # new_quote.first_name = self.validated_data["first_name"]
+        # new_quote.last_name = self.validated_data["last_name"]
+        # new_quote.address = self.validated_data["address"]
+        # new_quote.email = self.validated_data["email"]
+        # new_quote.phone_number = self.validated_data["phone_number"]
+        new_quote.customer = Customer.objects.get(id=self.validated_data['customer_id'])
         new_quote.taxable = self.validated_data["taxable"]
         new_quote.quote_pref = self.validated_data["quote_pref"]
         new_quote.logo_path = self.validated_data["logo_path"]
         new_quote.quote_number = get_number(request, 'quote')
         new_quote.quote_date = self.validated_data["quote_date"]
+        new_quote.due_date = self.validated_data["due_date"]
         new_quote.po_number = self.validated_data["po_number"]
         new_quote.ship_to = self.validated_data["ship_to"]
         new_quote.shipping_address = self.validated_data["shipping_address"]
@@ -1209,13 +1237,13 @@ class QuoteCreateSerializer(ModelSerializer):
         new_quote.save()
 
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            file_name = f"Quote for {new_quote.email}.pdf"
-            get_report(file_name)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(Invoice.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     file_name = f"Quote for {new_quote.email}.pdf"
+        #     get_report(file_name)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(Invoice.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -1223,7 +1251,7 @@ class QuoteCreateSerializer(ModelSerializer):
             "document_type": "quote",
             "document_id": new_quote.id,
             "task_type": "one_time",
-            "email": new_quote.email
+            "email": new_quote.customer.email
         }
 
         new_schedule = ScheduleForm(schedule_details)
@@ -1235,10 +1263,11 @@ class QuoteCreateSerializer(ModelSerializer):
 
 
 class QuoteSerailizer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
     class Meta:
         model = Quote
         fields = [
-                "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
+                "id", "customer", "taxable", "quote_pref", "logo_path", 
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1247,9 +1276,10 @@ class QuoteSerailizer(serializers.ModelSerializer):
 
 
 class QuoteEditSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id = serializers.IntegerField(required=True)
 
 
     required_error = "{fieldname} is required."
@@ -1257,7 +1287,7 @@ class QuoteEditSerializer(ModelSerializer):
     class Meta:
         model = Quote
         fields = [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "quote_pref", "logo_path", 
+               "customer_id", "taxable", "quote_pref", "logo_path", "due_date",
                     "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
         
@@ -1265,15 +1295,17 @@ class QuoteEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
-        instance.first_name = validated_data["first_name"]
-        instance.last_name = validated_data["last_name"]
-        instance.address = validated_data["address"]
-        instance.email = validated_data["email"]
-        instance.phone_number = validated_data["phone_number"]
+        # instance.first_name = validated_data["first_name"]
+        # instance.last_name = validated_data["last_name"]
+        # instance.address = validated_data["address"]
+        # instance.email = validated_data["email"]
+        # instance.phone_number = validated_data["phone_number"]
+        instance.customer = Customer.objects.get(id=validated_data['customer_id'])
         instance.taxable = validated_data["taxable"]
         instance.quote_pref = validated_data["quote_pref"]
         instance.logo_path = validated_data["logo_path"]
         instance.quote_date = validated_data["quote_date"]
+        instance.due_date = validated_data["due_date"]
         instance.po_number = validated_data["po_number"]
         instance.ship_to = validated_data["ship_to"]
         instance.shipping_address = validated_data["shipping_address"]
@@ -1297,13 +1329,13 @@ class QuoteEditSerializer(ModelSerializer):
 
         instance.save()
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            file_name = f"Quote for {instance.email}.pdf"
-            get_report(file_name)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(Invoice.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     file_name = f"Quote for {instance.email}.pdf"
+        #     get_report(file_name)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(Invoice.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -1311,7 +1343,7 @@ class QuoteEditSerializer(ModelSerializer):
             "document_type": "quote",
             "document_id": instance.id,
             "task_type": "one_time",
-            "email": instance.email
+            "email": instance.customer.email
         }
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
@@ -1371,16 +1403,17 @@ class PayQuoteSerializer(ModelSerializer):
 
 
 class CNCreateSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id = serializers.IntegerField(required=True)
 
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = CreditNote
-        fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
+        fields = [ "customer_id", "taxable", "cn_pref", "logo_path", 
                     "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]       
 
@@ -1389,11 +1422,13 @@ class CNCreateSerializer(ModelSerializer):
 
     def save(self, request):
         new_credit = CreditNote()
-        new_credit.first_name = self.validated_data["first_name"]
-        new_credit.last_name = self.validated_data["last_name"]
-        new_credit.address = self.validated_data["address"]
-        new_credit.email = self.validated_data["email"]
-        new_credit.phone_number = self.validated_data["phone_number"]
+        # new_credit.first_name = self.validated_data["first_name"]
+        # new_credit.last_name = self.validated_data["last_name"]
+        # new_credit.address = self.validated_data["address"]
+        # new_credit.email = self.validated_data["email"]
+        # new_credit.phone_number = self.validated_data["phone_number"]
+        new_credit.customer = Customer.objects.get(id=self.validated_data['customer_id'])
+
         new_credit.taxable = self.validated_data["taxable"]
         new_credit.cn_pref = self.validated_data["cn_pref"]
         new_credit.logo_path = self.validated_data["logo_path"]
@@ -1423,13 +1458,13 @@ class CNCreateSerializer(ModelSerializer):
 
         new_credit.save()
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            file_name = f"Credit Note for {new_credit.email}.pdf"
-            get_report(file_name)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(Invoice.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     file_name = f"Credit Note for {new_credit.email}.pdf"
+        #     get_report(file_name)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(Invoice.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -1437,7 +1472,7 @@ class CNCreateSerializer(ModelSerializer):
             "document_type": "credit_note",
             "document_id": new_credit.id,
             "task_type": "one_time",
-            "email": new_credit.email
+            "email": new_credit.customer.email
         }
 
         new_schedule = ScheduleForm(schedule_details)
@@ -1449,10 +1484,11 @@ class CNCreateSerializer(ModelSerializer):
 
 
 class CreditNoteSerailizer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
     class Meta:
         model = CreditNote
         fields = [
-                "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
+                "id", "customer", "taxable", "cn_pref", "logo_path", 
                     "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes",  "item_list", "quantity_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1461,9 +1497,10 @@ class CreditNoteSerailizer(serializers.ModelSerializer):
 
 
 class CNEditSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id = serializers.IntegerField(required=True)
 
 
     required_error = "{fieldname} is required."
@@ -1471,7 +1508,7 @@ class CNEditSerializer(ModelSerializer):
     class Meta:
         model = CreditNote
         fields = [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "cn_pref", "logo_path", 
+                "customer_id", "taxable", "cn_pref", "logo_path", 
                     "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
@@ -1480,11 +1517,12 @@ class CNEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
-        instance.first_name = validated_data["first_name"]
-        instance.last_name = validated_data["last_name"]
-        instance.address = validated_data["address"]
-        instance.email = validated_data["email"]
-        instance.phone_number = validated_data["phone_number"]
+        # instance.first_name = validated_data["first_name"]
+        # instance.last_name = validated_data["last_name"]
+        # instance.address = validated_data["address"]
+        # instance.email = validated_data["email"]
+        # instance.phone_number = validated_data["phone_number"]
+        instance.customer = Customer.objects.get(id=validated_data['customer_id'])
         instance.taxable = validated_data["taxable"]
         instance.cn_pref = validated_data["cn_pref"]
         instance.logo_path = validated_data["logo_path"]
@@ -1511,13 +1549,13 @@ class CNEditSerializer(ModelSerializer):
 
         instance.save()
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            file_name = f"Credit Note for {instance.email}.pdf"
-            get_report(file_name)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(Invoice.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     file_name = f"Credit Note for {instance.email}.pdf"
+        #     get_report(file_name)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(Invoice.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -1525,7 +1563,7 @@ class CNEditSerializer(ModelSerializer):
             "document_type": "credit_note",
             "document_id": instance.id,
             "task_type": "one_time",
-            "email": instance.email
+            "email": instance.customer.email
         }
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
@@ -1589,16 +1627,17 @@ class PayCNSerializer(ModelSerializer):
 
 
 class REceiptCreateSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id = serializers.IntegerField(required=True)
 
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Receipt
-        fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
+        fields = [ "customer_id", "taxable", "receipt_pref", "logo_path", 
                     "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
         
@@ -1607,11 +1646,12 @@ class REceiptCreateSerializer(ModelSerializer):
 
     def save(self, request):
         new_receipt = Receipt()
-        new_receipt.first_name = self.validated_data["first_name"]
-        new_receipt.last_name = self.validated_data["last_name"]
-        new_receipt.address = self.validated_data["address"]
-        new_receipt.email = self.validated_data["email"]
-        new_receipt.phone_number = self.validated_data["phone_number"]
+        # new_receipt.first_name = self.validated_data["first_name"]
+        # new_receipt.last_name = self.validated_data["last_name"]
+        # new_receipt.address = self.validated_data["address"]
+        # new_receipt.email = self.validated_data["email"]
+        # new_receipt.phone_number = self.validated_data["phone_number"]
+        new_receipt.customer = Customer.objects.get(id=self.validated_data['customer_id'])
         new_receipt.taxable = self.validated_data["taxable"]
         new_receipt.receipt_pref = self.validated_data["receipt_pref"]
         new_receipt.logo_path = self.validated_data["logo_path"]
@@ -1643,13 +1683,13 @@ class REceiptCreateSerializer(ModelSerializer):
 
         new_receipt.save()
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            file_name = f"Receipt for {new_receipt.email}.pdf"
-            get_report(file_name)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(Invoice.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     file_name = f"Receipt for {new_receipt.email}.pdf"
+        #     get_report(file_name)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(Invoice.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -1657,7 +1697,7 @@ class REceiptCreateSerializer(ModelSerializer):
             "document_type": "receipt",
             "document_id": new_receipt.id,
             "task_type": "one_time",
-            "email": new_receipt.email
+            "email": new_receipt.customer.email
         }
 
         new_schedule = ScheduleForm(schedule_details)
@@ -1669,10 +1709,11 @@ class REceiptCreateSerializer(ModelSerializer):
 
 
 class ReceiptSerailizer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
     class Meta:
         model = Receipt
         fields = [
-                "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
+                "id", "customer", "taxable", "receipt_pref", "logo_path", 
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1681,9 +1722,10 @@ class ReceiptSerailizer(serializers.ModelSerializer):
 
 
 class ReceiptEditSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id = serializers.IntegerField(required=True)
 
 
     required_error = "{fieldname} is required."
@@ -1691,7 +1733,7 @@ class ReceiptEditSerializer(ModelSerializer):
     class Meta:
         model = Receipt
         fields = [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "receipt_pref", "logo_path", 
+                "customer_id", "taxable", "receipt_pref", "logo_path", 
                     "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
@@ -1700,11 +1742,12 @@ class ReceiptEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
-        instance.first_name = validated_data["first_name"]
-        instance.last_name = validated_data["last_name"]
-        instance.address = validated_data["address"]
-        instance.email = validated_data["email"]
-        instance.phone_number = validated_data["phone_number"]
+        # instance.first_name = validated_data["first_name"]
+        # instance.last_name = validated_data["last_name"]
+        # instance.address = validated_data["address"]
+        # instance.email = validated_data["email"]
+        # instance.phone_number = validated_data["phone_number"]
+        instance.customer = Customer.objects.get(id=validated_data['customer_id'])
         instance.taxable = validated_data["taxable"]
         instance.receipt_pref = validated_data["receipt_pref"]
         instance.logo_path = validated_data["logo_path"]
@@ -1733,13 +1776,13 @@ class ReceiptEditSerializer(ModelSerializer):
 
         instance.save()
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            file_name = f"Receipt for {instance.email}.pdf"
-            get_report(file_name)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(Invoice.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     file_name = f"Receipt for {instance.email}.pdf"
+        #     get_report(file_name)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(Invoice.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -1747,7 +1790,7 @@ class ReceiptEditSerializer(ModelSerializer):
             "document_type": "receipt",
             "document_id": instance.id,
             "task_type": "one_time",
-            "email": instance.email
+            "email": instance.customer.email
         }
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
@@ -1809,16 +1852,17 @@ class PayReceiptSerializer(ModelSerializer):
 ################################################# delivery note ############################################################################
 
 class DNCreateSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id = serializers.IntegerField(required=True)
 
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = DeliveryNote
-        fields = [ "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
+        fields = [ "customer_id", "taxable", "dn_pref", "logo_path", 
                     "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
         
@@ -1827,11 +1871,12 @@ class DNCreateSerializer(ModelSerializer):
 
     def save(self, request):
         new_delivery = DeliveryNote()
-        new_delivery.first_name = self.validated_data["first_name"]
-        new_delivery.last_name = self.validated_data["last_name"]
-        new_delivery.address = self.validated_data["address"]
-        new_delivery.email = self.validated_data["email"]
-        new_delivery.phone_number = self.validated_data["phone_number"]
+        # new_delivery.first_name = self.validated_data["first_name"]
+        # new_delivery.last_name = self.validated_data["last_name"]
+        # new_delivery.address = self.validated_data["address"]
+        # new_delivery.email = self.validated_data["email"]
+        # new_delivery.phone_number = self.validated_data["phone_number"]
+        new_delivery.customer = Customer.objects.get(id=self.validated_data['customer_id'])
         new_delivery.taxable = self.validated_data["taxable"]
         new_delivery.dn_pref = self.validated_data["dn_pref"]
         new_delivery.logo_path = self.validated_data["logo_path"]
@@ -1861,13 +1906,13 @@ class DNCreateSerializer(ModelSerializer):
 
         new_delivery.save()
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            file_name = f"Delivery Note for {new_delivery.email}.pdf"
-            get_report(file_name)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(Invoice.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     file_name = f"Delivery Note for {new_delivery.email}.pdf"
+        #     get_report(file_name)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(Invoice.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -1875,7 +1920,7 @@ class DNCreateSerializer(ModelSerializer):
             "document_type": "delivery_note",
             "document_id": new_delivery.id,
             "task_type": "one_time",
-            "email": new_delivery.email
+            "email": new_delivery.customer.email
         }
 
         new_schedule = ScheduleForm(schedule_details)
@@ -1887,10 +1932,11 @@ class DNCreateSerializer(ModelSerializer):
 
 
 class DNSerailizer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
     class Meta:
         model = DeliveryNote
         fields = [
-                "id", "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
+                "id", "customer", "taxable", "dn_pref", "logo_path", 
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1899,9 +1945,10 @@ class DNSerailizer(serializers.ModelSerializer):
 
 
 class DNEditSerializer(ModelSerializer):
-    item_list = serializers.ListField()
-    send_email = serializers.BooleanField(default=False)
-    download = serializers.BooleanField(default=False)
+    item_list = serializers.ListField(required=True)
+    send_email = serializers.BooleanField(required=True)
+    download = serializers.BooleanField(required=True)
+    customer_id = serializers.IntegerField(required=True)
 
 
     required_error = "{fieldname} is required."
@@ -1909,7 +1956,7 @@ class DNEditSerializer(ModelSerializer):
     class Meta:
         model = DeliveryNote
         fields = [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "dn_pref", "logo_path", 
+                "customer_id", "taxable", "dn_pref", "logo_path", 
                     "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
@@ -1918,11 +1965,12 @@ class DNEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
-        instance.first_name = validated_data["first_name"]
-        instance.last_name = validated_data["last_name"]
-        instance.address = validated_data["address"]
-        instance.email = validated_data["email"]
-        instance.phone_number = validated_data["phone_number"]
+        # instance.first_name = validated_data["first_name"]
+        # instance.last_name = validated_data["last_name"]
+        # instance.address = validated_data["address"]
+        # instance.email = validated_data["email"]
+        # instance.phone_number = validated_data["phone_number"]
+        instance.customer = Customer.objects.get(id=validated_data['customer_id'])
         instance.taxable = validated_data["taxable"]
         instance.dn_pref = validated_data["dn_pref"]
         instance.logo_path = validated_data["logo_path"]
@@ -1949,13 +1997,13 @@ class DNEditSerializer(ModelSerializer):
 
         instance.save()
 
-        if self.validated_data['send_email']:
-            # for sending email when creating a new document
-            file_name = f"Delivery Note for {instance.email}.pdf"
-            get_report(file_name)
-            body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-            subject = "Transaction Receipt"
-            send_my_email(Invoice.email, body, subject, file_name)
+        # if self.validated_data['send_email']:
+        #     # for sending email when creating a new document
+        #     file_name = f"Delivery Note for {instance.email}.pdf"
+        #     get_report(file_name)
+        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+        #     subject = "Transaction Receipt"
+        #     send_my_email(Invoice.email, body, subject, file_name)
             
         # date, docuemnt_type, document_id, task_type [one time or periodic], email
         schedule_details = {
@@ -1963,7 +2011,7 @@ class DNEditSerializer(ModelSerializer):
             "document_type": "delivery_note",
             "document_id": instance.id,
             "task_type": "one_time",
-            "email": instance.email
+            "email": instance.customer.email
         }
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():

@@ -62,7 +62,7 @@ class Customer(models.Model):
 
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.vendor.first_name})"
+        return f"{self.customer.first_name} {self.customer.last_name} - {self.vendor.business_name}"
 
 
 
@@ -70,11 +70,14 @@ class Customer(models.Model):
 
 
 class Invoice(models.Model):
-    first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    address = models.CharField("Address", max_length=500, null=True, blank=True)
-    email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
+    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
+    # address = models.CharField("Address", max_length=500, null=True, blank=True)
+    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
+    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+
     
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
@@ -107,7 +110,7 @@ class Invoice(models.Model):
 
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.vendor.first_name})"    
+        return f"{self.customer.first_name} {self.customer.last_name} - {self.vendor.business_name}"    
 
 
 
@@ -115,11 +118,14 @@ class Invoice(models.Model):
 
 
 class ProformaInvoice(models.Model):
-    first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    address = models.CharField("Address", max_length=500, null=True, blank=True)
-    email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
+    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
+    # address = models.CharField("Address", max_length=500, null=True, blank=True)
+    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
+    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
     logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
@@ -143,7 +149,7 @@ class ProformaInvoice(models.Model):
 
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.vendor.first_name})"  
+        return f"{self.customer.first_name} {self.customer.last_name} - {self.vendor.business_name}"  
 
 
 
@@ -152,11 +158,14 @@ class ProformaInvoice(models.Model):
 
 
 class PurchaseOrder(models.Model):
-    first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    address = models.CharField("Address", max_length=500, null=True, blank=True)
-    email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
+    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
+    # address = models.CharField("Address", max_length=500, null=True, blank=True)
+    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
+    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     po_pref = models.CharField("Purchase Order Preference", max_length=15, blank=False, null=False)
     logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
@@ -182,7 +191,7 @@ class PurchaseOrder(models.Model):
 
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.vendor.first_name})"
+        return f"{self.customer.first_name} {self.customer.last_name} - {self.vendor.business_name}"
 
 
 
@@ -190,17 +199,21 @@ class PurchaseOrder(models.Model):
 
 
 class Estimate(models.Model):
-    first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    address = models.CharField("Address", max_length=500, null=True, blank=True)
-    email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
+    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
+    # address = models.CharField("Address", max_length=500, null=True, blank=True)
+    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
+    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     estimate_pref = models.CharField("Estimate Preference", max_length=15, blank=False, null=False, default="a")
     logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
 
     estimate_number = models.CharField("Estimate number", blank=False, null=False, max_length=2048)
     estimate_date = models.DateField("Estimate Date", blank=False, null=False)
+    po_number = models.CharField("PO Number", blank=False, null=False, max_length=1024, default=1)
     due_date = models.DateField("Due Date", blank=False, null=False)
 
     ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
@@ -222,7 +235,7 @@ class Estimate(models.Model):
 
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.vendor.first_name})"
+        return f"{self.customer.first_name} {self.customer.last_name} - {self.vendor.business_name}"
 
 
 
@@ -232,17 +245,21 @@ class Estimate(models.Model):
 
 
 class Quote(models.Model):
-    first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    address = models.CharField("Address", max_length=500, null=True, blank=True)
-    email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
+    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
+    # address = models.CharField("Address", max_length=500, null=True, blank=True)
+    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
+    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     quote_pref = models.CharField("Quote Preference", max_length=15, blank=False, null=False)
     logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
 
     quote_number = models.CharField("Quote number", blank=False, null=False, max_length=2048)
     quote_date = models.DateField("Quote Date", blank=False, null=False)
+    due_date = models.DateField("Due Date", blank=False, null=False, default=datetime.now())
     po_number = models.CharField("PO number", blank=False, null=False, max_length=2048)
     ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
     shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
@@ -264,7 +281,7 @@ class Quote(models.Model):
 
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.vendor.first_name})"
+        return f"{self.customer.first_name} {self.customer.last_name} - {self.vendor.business_name}"
 
 
 
@@ -275,11 +292,14 @@ class Quote(models.Model):
 
 
 class Receipt(models.Model):
-    first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    address = models.CharField("Address", max_length=500, null=True, blank=True)
-    email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
+    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
+    # address = models.CharField("Address", max_length=500, null=True, blank=True)
+    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
+    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     receipt_pref = models.CharField("Receipt Preference", max_length=15, blank=False, null=False)
     logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
@@ -308,7 +328,7 @@ class Receipt(models.Model):
 
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.vendor.first_name})"
+        return f"{self.customer.first_name} {self.customer.last_name} - {self.vendor.business_name}"
 
 
 
@@ -320,11 +340,14 @@ class Receipt(models.Model):
 
 
 class CreditNote(models.Model):
-    first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    address = models.CharField("Address", max_length=500, null=True, blank=True)
-    email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
+    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
+    # address = models.CharField("Address", max_length=500, null=True, blank=True)
+    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
+    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     cn_pref = models.CharField("Credit Note Preference", max_length=15, blank=False, null=False)
     logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
@@ -351,7 +374,7 @@ class CreditNote(models.Model):
 
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.vendor.first_name})"
+        return f"{self.customer.first_name} {self.customer.last_name} - {self.vendor.business_name}"
 
 
 
@@ -366,11 +389,14 @@ class CreditNote(models.Model):
 
 
 class DeliveryNote(models.Model):
-    first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    address = models.CharField("Address", max_length=500, null=True, blank=True)
-    email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
+    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
+    # address = models.CharField("Address", max_length=500, null=True, blank=True)
+    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
+    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     dn_pref = models.CharField("Delivery Note Preference", max_length=15, blank=False, null=False)
     logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
@@ -397,7 +423,7 @@ class DeliveryNote(models.Model):
 
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.vendor.first_name})"
+        return f"{self.customer.first_name} {self.customer.last_name} - {self.vendor.business_name}"
 
 
 
