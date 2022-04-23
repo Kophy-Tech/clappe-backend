@@ -389,6 +389,7 @@ def edit_invoice(request, id):
             if invoice.vendor == request.user:
                 serialized_invoice = InvoiceSerializer(invoice)
                 context['message'] = serialized_invoice.data
+                context["message"].pop("quantity_list")
                 context['message']['item_list'] = custom_item_serializer(invoice.item_list, invoice.quantity_list)
 
                 return Response(context, status=status.HTTP_200_OK)
@@ -613,6 +614,7 @@ def edit_proforma(request, id):
             if proforma.vendor == request.user:
                 serialized_proforma = ProformerInvoiceSerailizer(proforma)
                 context['message'] = serialized_proforma.data
+                context["message"].pop("quantity_list")
                 context['message']['item_list'] = custom_item_serializer(proforma.item_list, proforma.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -830,6 +832,7 @@ def edit_purchaseorder(request, id):
             if purchase.vendor == request.user:
                 serialized_purchase = PurchaseOrderSerailizer(purchase)
                 context['message'] = serialized_purchase.data
+                context["message"].pop("quantity_list")
                 context['message']['item_list'] = custom_item_serializer(purchase.item_list, purchase.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1056,6 +1059,7 @@ def edit_estimate(request, id):
             if estimate.vendor == request.user:
                 serialized_estimate = EstimateSerailizer(estimate)
                 context['message'] = serialized_estimate.data
+                context["message"].pop("quantity_list")
                 context['message']['item_list'] = custom_item_serializer(estimate.item_list, estimate.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1410,6 +1414,7 @@ def edit_quote(request, id):
             if quote.vendor == request.user:
                 serialized_quote = QuoteSerailizer(quote)
                 context['message'] = serialized_quote.data
+                context["message"].pop("quantity_list")
                 context['message']['item_list'] = custom_item_serializer(quote.item_list, quote.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1633,6 +1638,7 @@ def edit_receipt(request, id):
             if receipt.vendor == request.user:
                 serialized_receipt = ReceiptSerailizer(receipt)
                 context['message'] = serialized_receipt.data
+                context["message"].pop("quantity_list")
                 context['message']['item_list'] = custom_item_serializer(receipt.item_list, receipt.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1859,6 +1865,7 @@ def edit_credit(request, id):
             if credit.vendor == request.user:
                 serialized_credit = CreditNoteSerailizer(credit)
                 context['message'] = serialized_credit.data
+                context["message"].pop("quantity_list")
                 context['message']['item_list'] = custom_item_serializer(credit.item_list, credit.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -2080,6 +2087,7 @@ def edit_delivery(request, id):
             if delivery.vendor == request.user:
                 serialized_delivery = DNSerailizer(delivery)
                 context['message'] = serialized_delivery.data
+                context["message"].pop("quantity_list")
                 context['message']['item_list'] = custom_item_serializer(delivery.item_list, delivery.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 

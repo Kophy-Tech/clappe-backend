@@ -422,10 +422,10 @@ class InvoiceCreate(ModelSerializer):
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    # customer = CustomerSerializer(read_only=True)
     class Meta:
         model = Invoice
-        fields = [ "id", "customer","invoice_number",
+        fields = [ "id", "customer_id","invoice_number",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes", "quantity_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list", "notes", "terms"]
 
@@ -642,11 +642,11 @@ class ProformaCreateSerializer(ModelSerializer):
 
 
 class ProformerInvoiceSerailizer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    # customer = CustomerSerializer(read_only=True)
     class Meta:
         model = ProformaInvoice
         fields = [
-                "id", "customer", 
+                "id", "customer_id", 
                     "invoice_number", "invoice_date", "po_number", "due_date", "notes", "item_list", "quantity_list",
                     "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
 
@@ -858,11 +858,11 @@ class PurchaseCreateSerializer(ModelSerializer):
 
 
 class PurchaseOrderSerailizer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    # customer = CustomerSerializer(read_only=True)
     class Meta:
         model = PurchaseOrder
         fields = [
-                "id", "customer", 
+                "id", "customer_id", 
                     "po_number", "po_date", "due_date", "ship_to", "notes", "shipping_address",  "item_list", "quantity_list",
                     "item_total", "tax", "add_charges", "grand_total",  "status", "terms"]
 
@@ -1068,11 +1068,11 @@ class EstimateCreateSerializer(ModelSerializer):
 
 
 class EstimateSerailizer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    # customer = CustomerSerializer(read_only=True)
     class Meta:
         model = Estimate
         fields = [
-                "id", "customer", "po_number", "due_date",
+                "id", "customer_id", "po_number", "due_date",
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1287,11 +1287,11 @@ class QuoteCreateSerializer(ModelSerializer):
 
 
 class QuoteSerailizer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    # customer = CustomerSerializer(read_only=True)
     class Meta:
         model = Quote
         fields = [
-                "id", "customer", 
+                "id", "customer_id", 
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1508,11 +1508,11 @@ class CNCreateSerializer(ModelSerializer):
 
 
 class CreditNoteSerailizer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    # customer = CustomerSerializer(read_only=True)
     class Meta:
         model = CreditNote
         fields = [
-                "id", "customer", 
+                "id", "customer_id", 
                     "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes",  "item_list", "quantity_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1733,11 +1733,11 @@ class REceiptCreateSerializer(ModelSerializer):
 
 
 class ReceiptSerailizer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    # customer = CustomerSerializer(read_only=True)
     class Meta:
         model = Receipt
         fields = [
-                "id", "customer", 
+                "id", "customer_id", 
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1956,11 +1956,11 @@ class DNCreateSerializer(ModelSerializer):
 
 
 class DNSerailizer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    # customer = CustomerSerializer(read_only=True)
     class Meta:
         model = DeliveryNote
         fields = [
-                "id", "customer",
+                "id", "customer_id",
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
