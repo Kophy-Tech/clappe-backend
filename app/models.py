@@ -84,8 +84,8 @@ class Invoice(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
 
     
-    taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
+    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
+    # invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
     # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
     # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
     invoice_number = models.CharField("Invoice number", blank=False, null=False, max_length=2048)
@@ -132,8 +132,8 @@ class ProformaInvoice(models.Model):
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
 
-    taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
+    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
+    # invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
     # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
     # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
     invoice_number = models.CharField("Invoice number", blank=False, null=False, max_length=2048)
@@ -173,8 +173,8 @@ class PurchaseOrder(models.Model):
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
 
-    taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    po_pref = models.CharField("Purchase Order Preference", max_length=15, blank=False, null=False)
+    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
+    # po_pref = models.CharField("Purchase Order Preference", max_length=15, blank=False, null=False)
     # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
     # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
 
@@ -215,8 +215,8 @@ class Estimate(models.Model):
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
 
-    taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    estimate_pref = models.CharField("Estimate Preference", max_length=15, blank=False, null=False, default="a")
+    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
+    # estimate_pref = models.CharField("Estimate Preference", max_length=15, blank=False, null=False, default="a")
     # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
     # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
 
@@ -262,8 +262,8 @@ class Quote(models.Model):
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
 
-    taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    quote_pref = models.CharField("Quote Preference", max_length=15, blank=False, null=False)
+    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
+    # quote_pref = models.CharField("Quote Preference", max_length=15, blank=False, null=False)
     # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
     # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
 
@@ -310,8 +310,8 @@ class Receipt(models.Model):
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
 
-    taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    receipt_pref = models.CharField("Receipt Preference", max_length=15, blank=False, null=False)
+    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
+    # receipt_pref = models.CharField("Receipt Preference", max_length=15, blank=False, null=False)
     # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
     # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
 
@@ -359,8 +359,8 @@ class CreditNote(models.Model):
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
 
-    taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    cn_pref = models.CharField("Credit Note Preference", max_length=15, blank=False, null=False)
+    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
+    # cn_pref = models.CharField("Credit Note Preference", max_length=15, blank=False, null=False)
     # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
     # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
 
@@ -409,8 +409,8 @@ class DeliveryNote(models.Model):
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
 
-    taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    dn_pref = models.CharField("Delivery Note Preference", max_length=15, blank=False, null=False)
+    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
+    # dn_pref = models.CharField("Delivery Note Preference", max_length=15, blank=False, null=False)
     # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
     # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
 

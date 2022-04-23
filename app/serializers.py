@@ -338,7 +338,7 @@ class InvoiceCreate(ModelSerializer):
     class Meta:
         model = Invoice
         fields = [
-            "taxable","invoice_pref", "customer_id",
+            "customer_id",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","item_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "send_email", "download", "terms"]
 
@@ -348,8 +348,8 @@ class InvoiceCreate(ModelSerializer):
         new_invoice = Invoice()
         new_invoice.customer = Customer.objects.get(id=self.validated_data['customer_id'])
 
-        new_invoice.taxable = self.validated_data["taxable"]
-        new_invoice.invoice_pref = self.validated_data["invoice_pref"]
+        # new_invoice.taxable = self.validated_data["taxable"]
+        # new_invoice.invoice_pref = self.validated_data["invoice_pref"]
         # new_invoice.logo_path = self.validated_data["logo_path"]
         new_invoice.invoice_number = get_number(request, 'invoice')
         new_invoice.invoice_date = self.validated_data['invoice_date']
@@ -425,7 +425,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
     customer = CustomerSerializer(read_only=True)
     class Meta:
         model = Invoice
-        fields = [ "id", "customer","taxable","invoice_pref","invoice_number",
+        fields = [ "id", "customer","invoice_number",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes", "quantity_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list", "notes", "terms"]
 
@@ -446,7 +446,7 @@ class InvoiceEditSerializer(ModelSerializer):
     class Meta:
         model = Invoice
         fields = [
-            "customer_id","taxable","invoice_pref",
+            "customer_id",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "item_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "send_email", "download", "terms"]
 
@@ -459,8 +459,8 @@ class InvoiceEditSerializer(ModelSerializer):
         # instance.phone_number = validated_data["phone_number"]
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
 
-        instance.taxable = validated_data["taxable"]
-        instance.invoice_pref = validated_data["invoice_pref"]
+        # instance.taxable = validated_data["taxable"]
+        # instance.invoice_pref = validated_data["invoice_pref"]
         # instance.logo_path = validated_data["logo_path"]
         instance.invoice_date = validated_data['invoice_date']
         instance.po_number = validated_data['po_number']
@@ -573,7 +573,7 @@ class ProformaCreateSerializer(ModelSerializer):
     class Meta:
         model = ProformaInvoice
         fields = [
-                "customer_id", "taxable", "invoice_pref", 
+                "customer_id", 
                 "invoice_date", "po_number", "due_date", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
 
@@ -588,8 +588,8 @@ class ProformaCreateSerializer(ModelSerializer):
 
         new_proforma.customer = Customer.objects.get(id=self.validated_data['customer_id'])
 
-        new_proforma.taxable = self.validated_data["taxable"]
-        new_proforma.invoice_pref = self.validated_data["invoice_pref"]
+        # new_proforma.taxable = self.validated_data["taxable"]
+        # new_proforma.invoice_pref = self.validated_data["invoice_pref"]
         # new_proforma.logo_path = self.validated_data["logo_path"]
         new_proforma.invoice_number = get_number(request, 'proforma')
         new_proforma.invoice_date = self.validated_data["invoice_date"]
@@ -646,7 +646,7 @@ class ProformerInvoiceSerailizer(serializers.ModelSerializer):
     class Meta:
         model = ProformaInvoice
         fields = [
-                "id", "customer", "taxable", "invoice_pref", 
+                "id", "customer", 
                     "invoice_number", "invoice_date", "po_number", "due_date", "notes", "item_list", "quantity_list",
                     "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
 
@@ -664,7 +664,7 @@ class ProformaEditSerializer(ModelSerializer):
     class Meta:
         model = ProformaInvoice
         fields = [
-                "customer_id", "taxable", "invoice_pref", 
+                "customer_id", 
                     "invoice_date", "po_number", "due_date", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
@@ -680,8 +680,8 @@ class ProformaEditSerializer(ModelSerializer):
 
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
 
-        instance.taxable = validated_data["taxable"]
-        instance.invoice_pref = validated_data["invoice_pref"]
+        # instance.taxable = validated_data["taxable"]
+        # instance.invoice_pref = validated_data["invoice_pref"]
         # instance.logo_path = validated_data["logo_path"]
         instance.invoice_date = validated_data["invoice_date"]
         instance.po_number = validated_data["po_number"]
@@ -789,7 +789,7 @@ class PurchaseCreateSerializer(ModelSerializer):
     class Meta:
         model = PurchaseOrder
         fields = [
-                "customer_id", "taxable", "po_pref", 
+                "customer_id", 
                     "po_date", "ship_to", "notes", "shipping_address", "item_list", "due_date",
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
 
@@ -804,8 +804,8 @@ class PurchaseCreateSerializer(ModelSerializer):
         # new_purchaseorder.phone_number = self.validated_data["phone_number"]
         new_purchaseorder.customer = Customer.objects.get(id=self.validated_data['customer_id'])
 
-        new_purchaseorder.taxable = self.validated_data["taxable"]
-        new_purchaseorder.po_pref = self.validated_data["po_pref"]
+        # new_purchaseorder.taxable = self.validated_data["taxable"]
+        # new_purchaseorder.po_pref = self.validated_data["po_pref"]
         # new_purchaseorder.logo_path = self.validated_data["logo_path"]
         new_purchaseorder.po_number = get_number(request, 'purchase_order')
         new_purchaseorder.po_date = self.validated_data["po_date"]
@@ -862,7 +862,7 @@ class PurchaseOrderSerailizer(serializers.ModelSerializer):
     class Meta:
         model = PurchaseOrder
         fields = [
-                "id", "customer", "taxable", "po_pref", 
+                "id", "customer", 
                     "po_number", "po_date", "due_date", "ship_to", "notes", "shipping_address",  "item_list", "quantity_list",
                     "item_total", "tax", "add_charges", "grand_total",  "status", "terms"]
 
@@ -882,7 +882,7 @@ class PurchaseEditSerializer(ModelSerializer):
     class Meta:
         model = PurchaseOrder
         fields = [
-                "customer_id", "taxable", "po_pref", 
+                "customer_id", 
                     "po_date", "due_date", "ship_to", "notes", "shipping_address", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
@@ -896,8 +896,8 @@ class PurchaseEditSerializer(ModelSerializer):
         # instance.email = validated_data["email"]
         # instance.phone_number = validated_data["phone_number"]
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
-        instance.taxable = validated_data["taxable"]
-        instance.po_pref = validated_data["po_pref"]
+        # instance.taxable = validated_data["taxable"]
+        # instance.po_pref = validated_data["po_pref"]
         # instance.logo_path = validated_data["logo_path"]
         instance.po_date = validated_data["po_date"]
         instance.notes = validated_data["notes"]
@@ -998,7 +998,7 @@ class EstimateCreateSerializer(ModelSerializer):
     class Meta:
         model = Estimate
         fields = [
-                "customer_id", "taxable", "estimate_pref", "due_date", "po_number",
+                "customer_id", "due_date", "po_number",
                     "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
 
@@ -1011,8 +1011,8 @@ class EstimateCreateSerializer(ModelSerializer):
         # new_estimate.email = self.validated_data["email"]
         # new_estimate.phone_number = self.validated_data["phone_number"]
         new_estimate.customer = Customer.objects.get(id=self.validated_data['customer_id'])
-        new_estimate.taxable = self.validated_data["taxable"]
-        new_estimate.estimate_pref = self.validated_data["estimate_pref"]
+        # new_estimate.taxable = self.validated_data["taxable"]
+        # new_estimate.estimate_pref = self.validated_data["estimate_pref"]
         # new_estimate.logo_path = self.validated_data["logo_path"]
         new_estimate.estimate_number = get_number(request, 'estimate')
         new_estimate.estimate_date = self.validated_data["estimate_date"]
@@ -1072,7 +1072,7 @@ class EstimateSerailizer(serializers.ModelSerializer):
     class Meta:
         model = Estimate
         fields = [
-                "id", "customer", "taxable", "estimate_pref", "po_number", "due_date",
+                "id", "customer", "po_number", "due_date",
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1092,7 +1092,7 @@ class EstimateEditSerializer(ModelSerializer):
     class Meta:
         model = Estimate
         fields = [
-                "customer_id", "taxable", "estimate_pref", "po_number", "due_date",
+                "customer_id", "po_number", "due_date",
                     "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
@@ -1105,8 +1105,8 @@ class EstimateEditSerializer(ModelSerializer):
         # instance.email = validated_data["email"]
         # instance.phone_number = validated_data["phone_number"]
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
-        instance.taxable = validated_data["taxable"]
-        instance.estimate_pref = validated_data["estimate_pref"]
+        # instance.taxable = validated_data["taxable"]
+        # instance.estimate_pref = validated_data["estimate_pref"]
         # instance.logo_path = validated_data["logo_path"]
         instance.estimate_date = validated_data["estimate_date"]
         instance.due_date = validated_data["due_date"]
@@ -1214,7 +1214,7 @@ class QuoteCreateSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Quote
-        fields = [ "customer_id", "taxable", "quote_pref", "due_date",
+        fields = [ "customer_id", "due_date",
                     "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes",  "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
                         
@@ -1229,8 +1229,8 @@ class QuoteCreateSerializer(ModelSerializer):
         # new_quote.email = self.validated_data["email"]
         # new_quote.phone_number = self.validated_data["phone_number"]
         new_quote.customer = Customer.objects.get(id=self.validated_data['customer_id'])
-        new_quote.taxable = self.validated_data["taxable"]
-        new_quote.quote_pref = self.validated_data["quote_pref"]
+        # new_quote.taxable = self.validated_data["taxable"]
+        # new_quote.quote_pref = self.validated_data["quote_pref"]
         # new_quote.logo_path = self.validated_data["logo_path"]
         new_quote.quote_number = get_number(request, 'quote')
         new_quote.quote_date = self.validated_data["quote_date"]
@@ -1291,7 +1291,7 @@ class QuoteSerailizer(serializers.ModelSerializer):
     class Meta:
         model = Quote
         fields = [
-                "id", "customer", "taxable", "quote_pref", 
+                "id", "customer", 
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1311,7 +1311,7 @@ class QuoteEditSerializer(ModelSerializer):
     class Meta:
         model = Quote
         fields = [
-               "customer_id", "taxable", "quote_pref", "due_date",
+               "customer_id", "due_date",
                     "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
         
@@ -1325,8 +1325,8 @@ class QuoteEditSerializer(ModelSerializer):
         # instance.email = validated_data["email"]
         # instance.phone_number = validated_data["phone_number"]
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
-        instance.taxable = validated_data["taxable"]
-        instance.quote_pref = validated_data["quote_pref"]
+        # instance.taxable = validated_data["taxable"]
+        # instance.quote_pref = validated_data["quote_pref"]
         # instance.logo_path = validated_data["logo_path"]
         instance.quote_date = validated_data["quote_date"]
         instance.due_date = validated_data["due_date"]
@@ -1437,7 +1437,7 @@ class CNCreateSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = CreditNote
-        fields = [ "customer_id", "taxable", "cn_pref", 
+        fields = [ "customer_id", 
                     "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]       
 
@@ -1453,8 +1453,8 @@ class CNCreateSerializer(ModelSerializer):
         # new_credit.phone_number = self.validated_data["phone_number"]
         new_credit.customer = Customer.objects.get(id=self.validated_data['customer_id'])
 
-        new_credit.taxable = self.validated_data["taxable"]
-        new_credit.cn_pref = self.validated_data["cn_pref"]
+        # new_credit.taxable = self.validated_data["taxable"]
+        # new_credit.cn_pref = self.validated_data["cn_pref"]
         # new_credit.logo_path = self.validated_data["logo_path"]
         new_credit.cn_number = get_number(request, 'credit_note')
         new_credit.cn_date = self.validated_data["cn_date"]
@@ -1512,7 +1512,7 @@ class CreditNoteSerailizer(serializers.ModelSerializer):
     class Meta:
         model = CreditNote
         fields = [
-                "id", "customer", "taxable", "cn_pref", 
+                "id", "customer", 
                     "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes",  "item_list", "quantity_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1532,7 +1532,7 @@ class CNEditSerializer(ModelSerializer):
     class Meta:
         model = CreditNote
         fields = [
-                "customer_id", "taxable", "cn_pref", 
+                "customer_id", 
                     "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
@@ -1547,8 +1547,8 @@ class CNEditSerializer(ModelSerializer):
         # instance.email = validated_data["email"]
         # instance.phone_number = validated_data["phone_number"]
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
-        instance.taxable = validated_data["taxable"]
-        instance.cn_pref = validated_data["cn_pref"]
+        # instance.taxable = validated_data["taxable"]
+        # instance.cn_pref = validated_data["cn_pref"]
         # instance.logo_path = validated_data["logo_path"]
         instance.cn_date = validated_data["cn_date"]
         instance.po_number = validated_data["po_number"]
@@ -1661,7 +1661,7 @@ class REceiptCreateSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Receipt
-        fields = [ "customer_id", "taxable", "receipt_pref", 
+        fields = [ "customer_id", 
                     "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
         
@@ -1676,8 +1676,8 @@ class REceiptCreateSerializer(ModelSerializer):
         # new_receipt.email = self.validated_data["email"]
         # new_receipt.phone_number = self.validated_data["phone_number"]
         new_receipt.customer = Customer.objects.get(id=self.validated_data['customer_id'])
-        new_receipt.taxable = self.validated_data["taxable"]
-        new_receipt.receipt_pref = self.validated_data["receipt_pref"]
+        # new_receipt.taxable = self.validated_data["taxable"]
+        # new_receipt.receipt_pref = self.validated_data["receipt_pref"]
         # new_receipt.logo_path = self.validated_data["logo_path"]
         new_receipt.receipt_number = get_number(request, 'receipt')
         new_receipt.receipt_date = self.validated_data["receipt_date"]
@@ -1737,7 +1737,7 @@ class ReceiptSerailizer(serializers.ModelSerializer):
     class Meta:
         model = Receipt
         fields = [
-                "id", "customer", "taxable", "receipt_pref", 
+                "id", "customer", 
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1757,7 +1757,7 @@ class ReceiptEditSerializer(ModelSerializer):
     class Meta:
         model = Receipt
         fields = [
-                "customer_id", "taxable", "receipt_pref", 
+                "customer_id", 
                     "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
@@ -1772,8 +1772,8 @@ class ReceiptEditSerializer(ModelSerializer):
         # instance.email = validated_data["email"]
         # instance.phone_number = validated_data["phone_number"]
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
-        instance.taxable = validated_data["taxable"]
-        instance.receipt_pref = validated_data["receipt_pref"]
+        # instance.taxable = validated_data["taxable"]
+        # instance.receipt_pref = validated_data["receipt_pref"]
         # instance.logo_path = validated_data["logo_path"]
         instance.receipt_date = validated_data["receipt_date"]
         instance.po_number = validated_data["po_number"]
@@ -1886,7 +1886,7 @@ class DNCreateSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = DeliveryNote
-        fields = [ "customer_id", "taxable", "dn_pref", 
+        fields = [ "customer_id",
                     "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
         
@@ -1901,8 +1901,8 @@ class DNCreateSerializer(ModelSerializer):
         # new_delivery.email = self.validated_data["email"]
         # new_delivery.phone_number = self.validated_data["phone_number"]
         new_delivery.customer = Customer.objects.get(id=self.validated_data['customer_id'])
-        new_delivery.taxable = self.validated_data["taxable"]
-        new_delivery.dn_pref = self.validated_data["dn_pref"]
+        # new_delivery.taxable = self.validated_data["taxable"]
+        # new_delivery.dn_pref = self.validated_data["dn_pref"]
         # new_delivery.logo_path = self.validated_data["logo_path"]
         new_delivery.dn_number = get_number(request, 'delivery_note')
         new_delivery.dn_date = self.validated_data["dn_date"]
@@ -1960,7 +1960,7 @@ class DNSerailizer(serializers.ModelSerializer):
     class Meta:
         model = DeliveryNote
         fields = [
-                "id", "customer", "taxable", "dn_pref", 
+                "id", "customer",
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1980,7 +1980,7 @@ class DNEditSerializer(ModelSerializer):
     class Meta:
         model = DeliveryNote
         fields = [
-                "customer_id", "taxable", "dn_pref", 
+                "customer_id",
                     "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
@@ -1995,8 +1995,8 @@ class DNEditSerializer(ModelSerializer):
         # instance.email = validated_data["email"]
         # instance.phone_number = validated_data["phone_number"]
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
-        instance.taxable = validated_data["taxable"]
-        instance.dn_pref = validated_data["dn_pref"]
+        # instance.taxable = validated_data["taxable"]
+        # instance.dn_pref = validated_data["dn_pref"]
         # instance.logo_path = validated_data["logo_path"]
         instance.dn_date = validated_data["dn_date"]
         instance.po_number = validated_data["po_number"]
