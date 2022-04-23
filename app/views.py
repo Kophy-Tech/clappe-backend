@@ -1,11 +1,12 @@
 #django imports
 from datetime import datetime
-import os
+import os, io, cloudinary
 from django.contrib.auth import authenticate
 from django.http import FileResponse
 
 #rest_frameworf imports
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -27,7 +28,11 @@ from app.my_email import send_my_email
 from .authentication import get_access_token, MyAuthentication
 from .models import JWT, CreditNote, Customer, DeliveryNote, Estimate, Invoice, Item, MyUsers, ProformaInvoice, PurchaseOrder, Quote, Receipt
 
-import io
+
+
+
+
+
 
 
 
@@ -2210,6 +2215,7 @@ def pay_delivery(request):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def change_profile(request):
 
     if request.method == "GET":
@@ -2223,9 +2229,17 @@ def change_profile(request):
         form = ProfileSerializer(instance=request.user, data=request.data)
         if form.is_valid():
             updated_profile = form.update(request.user, form.validated_data)
-
             context['message'] = "Success"
             context['profile'] = {**form.validated_data}
+            if "photo_path" in context['profile'].keys():
+                context['profile']['photo_path'] = updated_profile.photo_path
+            
+            if "logo_path" in context['profile'].keys():
+                # context['profile']['photo_path'] = updated_profile.photo_path
+                context['profile']['logo_path'] = updated_profile.logo_path
+            
+            if "signature" in context['profile'].keys():
+                context['profile']['signature'] = updated_profile.signature
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -2235,7 +2249,7 @@ def change_profile(request):
             errors_list = [k for k in new_errors.values()]
             context = {'message': errors_list[0], 'errors': new_errors}
 
-            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -2307,7 +2321,7 @@ def change_preference(request):
         pref_ser = PreferenceSerializer(instance=my_preference, data=request.data)
 
         if pref_ser.is_valid():
-            result = pref_ser.update(request)
+            result = pref_ser.update(request.user)
 
             context['message'] = "Preference Saved successfully"
             context['preference'] = {**pref_ser.validated_data}

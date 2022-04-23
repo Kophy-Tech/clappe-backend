@@ -1,5 +1,8 @@
 import os
 from pathlib import Path
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +41,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_celery_results',
     'django_celery_beat',
+    'cloudinary',
 ]
 
 MIDDLEWARE = [
@@ -167,3 +171,13 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+
+
+
+# adding cloudinary config
+cloudinary.config( 
+  cloud_name = os.environ.get( 'CLOUDINARY_NAME'), 
+  api_key = os.environ.get('CLOUDINARY_KEY'),
+  api_secret = os.environ.get('CLOUDINARY_SECRET'),
+  secure = True
+)
