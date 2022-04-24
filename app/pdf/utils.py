@@ -1,12 +1,37 @@
 from reportlab.lib import colors
 from reportlab.lib.units import cm
 from reportlab.lib.pagesizes import A4
-import textwrap
+import textwrap, requests, os
 
 
 background_color = colors.Color(0.1, 0.1, 1)
 
 page_number = 1
+
+
+
+
+
+def draw_image(pdf, image_url, email, x, y, image_type):
+    r = requests.get(image_url)
+    if r.status_code == 200:
+        with open(f"{email}_{image_type}.png", 'wb') as f:
+            for chunk in r.iter_content(1024):
+                f.write(chunk)
+
+        pdf.saveState()
+        pdf.rotate(180)
+        if image_type == "logo":
+            pdf.drawImage(f"{email}_{image_type}.png", -x, -y, 100, 100)
+        else:
+            pdf.drawImage(f"{email}_{image_type}.png", -x, -y, 160, 50)
+        pdf.restoreState()
+        
+        os.remove(f"{email}_{image_type}.png")
+
+    return pdf
+
+
 
 
 
@@ -38,7 +63,7 @@ def draw_wrapped_line(pdf, text, length, x_pos, y_pos, y_offset):
 
 
 
-def add_another_page(pdf, data, initial_total, currency, term):
+def add_another_page(pdf, data, initial_total, currency, term, request):
     new_total= initial_total + 0
     global page_number
     page_number += 1
@@ -88,7 +113,8 @@ def add_another_page(pdf, data, initial_total, currency, term):
 
     if len(data) > 49:
         pdf.drawCentredString((A4[0]-15)/2, 805, f"Page {page_number}")
-        pdf = add_another_page(pdf, data[50:], new_total, currency, term)
+        pdf = add_another_page(pdf, data[50:], new_total, currency, term, request)
+
     else:
 
         # rectangle for amount
@@ -105,8 +131,11 @@ def add_another_page(pdf, data, initial_total, currency, term):
         pdf.drawCentredString((A4[0]-15)/2, 805, f"Page {page_number}")
 
         # box for signature
-        pdf.rect(-15, box_height+70, 100, 100)
-        pdf.drawString(-15, box_height+80, "Signature")
+        # pdf.rect(-15, box_height+70, 100, 100)
+        # pdf.drawString(-15, box_height+80, "Signature")
+
+        if request.user.signature:
+            pdf = draw_image(pdf, request.user.signature, request.user.email, 565, box_height+45+70, 'signature')
 
     return pdf
 
@@ -116,7 +145,7 @@ def add_another_page(pdf, data, initial_total, currency, term):
 
 
 
-def add_other_details(pdf, document, start_y, document_type, currency, terms):
+def add_other_details(pdf, document, start_y, document_type, currency, terms, request):
     # accept the document object and return the details already added to the pdf
 
     documents = {'invoice': "invoice_number",
@@ -152,13 +181,13 @@ def add_other_details(pdf, document, start_y, document_type, currency, terms):
     total_amount = 0
     item_list = document['item_list']
     item_list_len = len(item_list)
-    # item_list_len = 13
+    # item_list_len = 170
     # item_list = [i for i in range(1, item_list_len+1)]
 
 
 
     for i in range(item_list_len):
-        if i == 31:
+        if i == 29:
             break
         else:
             # quantity
@@ -175,25 +204,29 @@ def add_other_details(pdf, document, start_y, document_type, currency, terms):
 
     
 
-    if item_list_len > 31:
+    if item_list_len > 29:
         # call the function to handle the next page
-        # global page_number
-        # pdf.drawCentredString(350, 820, f"Page {page_number}")
         pdf.drawCentredString((A4[0]-15)/2, 805, "Page 1")
-        pdf = add_another_page(pdf, item_list[31: ], total_amount, currency, terms)
+        pdf = add_another_page(pdf, item_list[31: ], total_amount, currency, terms, request)
 
     else:
         # global page_number
         # rectangle for amount
-        pdf.rect(-15, 740, 585, 50)
-        pdf.drawString(-5, 750, "Thank you for your business.")
-        draw_wrapped_line(pdf, terms, 95, -5, 760, 10)
+        pdf.rect(-15, 710, 585, 50)
+        pdf.drawString(-5, 725, "Thank you for your business.")
+        draw_wrapped_line(pdf, terms, 95, -5, 735, 10)
         # pdf.drawString(9, 770, data['terms'])
-        pdf.line(400, 740, 400, 790)
+        pdf.line(400, 710, 400, 760)
         pdf.setFont('Times-Roman', 20)
-        pdf.drawCentredString(425, 770, "Total")
+        pdf.drawCentredString(425, 730, "Total")
         pdf.setFont('Times-Roman', 10)
-        pdf.drawCentredString(530, 770, f"{currency} {total_amount}")
+        pdf.drawCentredString(530, 730, f"{currency} {total_amount}")
+
+        if request.user.signature:
+            print(request.user.logo_path)
+            print(request.user.signature)
+            pdf = draw_image(pdf, request.user.signature, request.user.email, 565, 800, 'signature')
+
 
         pdf.drawCentredString((A4[0]-15)/2, 805, "Page 1")
 

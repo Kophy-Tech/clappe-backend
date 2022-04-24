@@ -37,6 +37,10 @@ class MyUsers(AbstractUser):
     other_payment = models.CharField("Other Payment", max_length=100, null=True, blank=True)
 
 
+
+    # USERNAME_FIELD = "email"
+
+
     def __str__(self):
         return self.first_name + ' ' + self.last_name + '-' 
 
@@ -65,9 +69,12 @@ class Customer(models.Model):
 
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
 
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
+
 
     def __str__(self):
-        return f"{self.customer.first_name} {self.customer.last_name} - {self.vendor.business_name}"
+        return f"{self.first_name} {self.last_name} - {self.vendor.business_name}"
 
 
 
@@ -113,6 +120,8 @@ class Invoice(models.Model):
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
 
     terms = models.CharField(max_length=5000, default="", blank=True, null=True)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -153,6 +162,8 @@ class ProformaInvoice(models.Model):
     status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
     terms = models.CharField(max_length=5000, default="", blank=True, null=True)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -180,7 +191,7 @@ class PurchaseOrder(models.Model):
 
     po_number = models.CharField("PO number", blank=False, null=False, max_length=2048)
     po_date = models.DateField("Purchase Order Date", blank=False, null=False)
-    due_date = models.DateField("Due Date", blank=False, null=False, default=timezone.now())
+    due_date = models.DateField("Due Date", blank=False, null=False, default=timezone.now)
     ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
     shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
@@ -196,6 +207,8 @@ class PurchaseOrder(models.Model):
     status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
     terms = models.CharField(max_length=5000, default="", blank=True, null=True)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -241,6 +254,8 @@ class Estimate(models.Model):
     status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
     terms = models.CharField(max_length=5000, default="", blank=True, null=True)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -269,7 +284,7 @@ class Quote(models.Model):
 
     quote_number = models.CharField("Quote number", blank=False, null=False, max_length=2048)
     quote_date = models.DateField("Quote Date", blank=False, null=False)
-    due_date = models.DateField("Due Date", blank=False, null=False, default=timezone.now())
+    due_date = models.DateField("Due Date", blank=False, null=False, default=timezone.now)
     po_number = models.CharField("PO number", blank=False, null=False, max_length=2048)
     ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
     shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
@@ -288,6 +303,8 @@ class Quote(models.Model):
     status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
     terms = models.CharField(max_length=5000, default="", blank=True, null=True)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -336,6 +353,8 @@ class Receipt(models.Model):
     status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
     terms = models.CharField(max_length=5000, default="", blank=True, null=True)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -383,6 +402,8 @@ class CreditNote(models.Model):
     status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
     terms = models.CharField(max_length=5000, default="", blank=True, null=True)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -433,6 +454,8 @@ class DeliveryNote(models.Model):
     status = models.CharField("Status", max_length=20, blank=True, null=True, default='New')
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
     terms = models.CharField(max_length=5000, default="", blank=True, null=True)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -457,6 +480,8 @@ class PayInvoice(models.Model):
     paid_amount = models.FloatField("Paid Amount", blank=False, null=False)
     payment_method = models.CharField("Payment Method", max_length=1024, blank=False, null=False)
     reference = models.CharField("Reference", max_length=1024, blank=False, null=False)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -471,6 +496,8 @@ class PayProforma(models.Model):
     paid_amount = models.FloatField("Paid Amount", blank=False, null=False)
     payment_method = models.CharField("Payment Method", max_length=1024, blank=False, null=False)
     reference = models.CharField("Reference", max_length=1024, blank=False, null=False)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -485,6 +512,8 @@ class PayPurchaseOrder(models.Model):
     paid_amount = models.FloatField("Paid Amount", blank=False, null=False)
     payment_method = models.CharField("Payment Method", max_length=1024, blank=False, null=False)
     reference = models.CharField("Reference", max_length=1024, blank=False, null=False)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -499,6 +528,8 @@ class PayEstimate(models.Model):
     paid_amount = models.FloatField("Paid Amount", blank=False, null=False)
     payment_method = models.CharField("Payment Method", max_length=1024, blank=False, null=False)
     reference = models.CharField("Reference", max_length=1024, blank=False, null=False)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -516,6 +547,8 @@ class PayQuote(models.Model):
     paid_amount = models.FloatField("Paid Amount", blank=False, null=False)
     payment_method = models.CharField("Payment Method", max_length=1024, blank=False, null=False)
     reference = models.CharField("Reference", max_length=1024, blank=False, null=False)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -535,6 +568,8 @@ class PayReceipt(models.Model):
     paid_amount = models.FloatField("Paid Amount", blank=False, null=False)
     payment_method = models.CharField("Payment Method", max_length=1024, blank=False, null=False)
     reference = models.CharField("Reference", max_length=1024, blank=False, null=False)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -553,6 +588,8 @@ class PayCreditNote(models.Model):
     paid_amount = models.FloatField("Paid Amount", blank=False, null=False)
     payment_method = models.CharField("Payment Method", max_length=1024, blank=False, null=False)
     reference = models.CharField("Reference", max_length=1024, blank=False, null=False)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -570,6 +607,8 @@ class PayDeliveryNote(models.Model):
     paid_amount = models.FloatField("Paid Amount", blank=False, null=False)
     payment_method = models.CharField("Payment Method", max_length=1024, blank=False, null=False)
     reference = models.CharField("Reference", max_length=1024, blank=False, null=False)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
     def __str__(self):
@@ -589,6 +628,8 @@ class Item(models.Model):
     cost_price = models.FloatField("Cost Price", blank=False, null=False)
     sales_price = models.FloatField("Sales Price", blank=False, null=False)
     sales_tax = models.FloatField("Sales Tax", blank=False, null=False)
+    date_created = models.DateTimeField("Date created", auto_now_add=True)
+    date_modified = models.DateTimeField("Date modified", auto_now=True)
 
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
 

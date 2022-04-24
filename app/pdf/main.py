@@ -5,7 +5,7 @@ from reportlab.lib import colors
 from datetime import datetime
 
 
-from app.pdf.utils import add_other_details, draw_wrapped_line
+from app.pdf.utils import add_other_details, draw_wrapped_line, draw_image
 
 # sauce code: 138235
 
@@ -13,17 +13,7 @@ def get_report(buffer, document, currency, document_type, request, terms):
 
     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
-    documents = {'invoice': "invoice_number",
-                "proforma invoice": "invoice_number",
-                "purchase order": "po_number",
-                "estimate": "estimate_number",
-                "quote": "quote_number",
-                "receipt": "receipt_number",
-                "credit note": "cn_number",
-                "delivery note": "dn_number"
-                }
 
-    # doc_number_key = documents[document_type]
 
     file_name = f"{document_type.title()} for {request.user.email} - {now}.pdf"
 
@@ -48,8 +38,14 @@ def get_report(buffer, document, currency, document_type, request, terms):
 
     # aspect for company name
     # pdf.rect(-15, 0, 280, 140)
-    pdf.rect(-15, 0, 100, 100)
-    pdf.drawString(10, 30, "logo")
+    # pdf.rect(-15, 0, 100, 100)
+
+    if request.user.logo_path:
+        pdf = draw_image(pdf, request.user.logo_path, request.user.email, 85, 100, "logo")
+            
+
+
+    # pdf.drawString(10, 30, "logo")
     pdf.setFont('Times-Roman', 20)
     pdf = draw_wrapped_line(pdf, request.user.business_name, 100, 90, 20, 10)
     pdf.setFont('Times-Roman', 10)
@@ -89,19 +85,19 @@ def get_report(buffer, document, currency, document_type, request, terms):
 
 
     # big rectangle for the details
-    pdf.rect(-15, 240, 585, 500)
+    pdf.rect(-15, 240, 585, 470)
     pdf.line(-15, 270, 570, 270)
     pdf.drawCentredString(9, 260, "Qty")
-    pdf.line(30, 240, 30, 740)
+    pdf.line(30, 240, 30, 710)
     pdf.drawString(200, 260, "Description")
-    pdf.line(400, 240, 400, 740)
+    pdf.line(400, 240, 400, 710)
     pdf.drawCentredString(445, 260, "Rate")
-    pdf.line(490, 240, 490, 740)
+    pdf.line(490, 240, 490, 710)
     pdf.drawCentredString(530, 260, "Amount")
 
     
     # adding the additional details
-    pdf = add_other_details(pdf, document, 268, document_type, currency, terms)
+    pdf = add_other_details(pdf, document, 268, document_type, currency, terms, request)
 
 
     

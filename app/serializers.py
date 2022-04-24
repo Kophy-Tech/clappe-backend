@@ -431,6 +431,16 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
 
 
+class InvoicePDFSerializer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
+    class Meta:
+        model = Invoice
+        fields = [ "id", "customer","invoice_number",
+            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes", "quantity_list",
+            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list", "notes", "terms"]
+
+
+
 
 
 
@@ -653,6 +663,20 @@ class ProformerInvoiceSerailizer(serializers.ModelSerializer):
 
 
 
+class ProformerInvoicePDFSerailizer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
+    class Meta:
+        model = ProformaInvoice
+        fields = [
+                "id", "customer", 
+                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "item_list", "quantity_list",
+                    "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
+
+
+
+
+
+
 class ProformaEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
@@ -869,6 +893,22 @@ class PurchaseOrderSerailizer(serializers.ModelSerializer):
 
 
 
+
+class PurchaseOrderPDFSerailizer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
+    class Meta:
+        model = PurchaseOrder
+        fields = [
+                "id", "customer", 
+                    "po_number", "po_date", "due_date", "ship_to", "notes", "shipping_address",  "item_list", "quantity_list",
+                    "item_total", "tax", "add_charges", "grand_total",  "status", "terms"]
+
+
+
+
+
+
+
 class PurchaseEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
@@ -1076,6 +1116,21 @@ class EstimateSerailizer(serializers.ModelSerializer):
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
+
+
+
+class EstimatePDFSerailizer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
+    class Meta:
+        model = Estimate
+        fields = [
+                "id", "customer", "po_number", "due_date",
+                    "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
+                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
+      
+
+
+
 
 
 
@@ -1294,7 +1349,22 @@ class QuoteSerailizer(serializers.ModelSerializer):
                 "id", "customer_id", 
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
-        
+
+
+
+
+class QuotePDFSerailizer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
+    class Meta:
+        model = Quote
+        fields = [
+                "id", "customer", 
+                    "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
+                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
+ 
+
+
+
 
 
 
@@ -1516,6 +1586,23 @@ class CreditNoteSerailizer(serializers.ModelSerializer):
                     "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes",  "item_list", "quantity_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
+
+
+
+class CreditNotePDFSerailizer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
+    class Meta:
+        model = CreditNote
+        fields = [
+                "id", "customer", 
+                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes",  "item_list", "quantity_list", 
+                    "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
+        
+
+
+
+
+
 
 
 
@@ -1745,6 +1832,27 @@ class ReceiptSerailizer(serializers.ModelSerializer):
 
 
 
+
+
+class ReceiptPDFSerailizer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
+    class Meta:
+        model = Receipt
+        fields = [
+                "id", "customer", 
+                    "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
+                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
+  
+
+
+
+
+
+
+
+
+
+
 class ReceiptEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
@@ -1964,6 +2072,26 @@ class DNSerailizer(serializers.ModelSerializer):
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
+
+
+
+
+
+
+class DNPDFSerailizer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
+    class Meta:
+        model = DeliveryNote
+        fields = [
+                "id", "customer",
+                    "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
+                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
+        
+
+
+
+
+
 
 
 
