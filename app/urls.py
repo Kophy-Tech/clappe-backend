@@ -1,10 +1,12 @@
 from django.urls import path
-from .views import all_estimate, all_invoice, all_items, all_purchaseorder, create_estimate, create_invoice, create_item, create_purchaseorder, \
-                    edit_estimate, edit_invoice, edit_item, edit_purchaseorder, home, pay_estimate, pay_invoice, pay_purchaseorder, \
+from .views import all_estimate, all_invoice, all_items, all_purchaseorder, create_estimate, create_invoice, create_item, \
+                    create_purchaseorder, credit_report, customer_report, delivery_report, \
+                    edit_estimate, edit_invoice, edit_item, edit_purchaseorder, estimate_report, home, invoice_report, item_report,\
+                    pay_estimate, pay_invoice, pay_purchaseorder, proforma_report, purchase_report, quote_report, receipt_report, \
                     signup, login, logout, customer, edit_customer, my_customer, user_profile, create_proforma, edit_proforma, \
                     pay_proforma, all_proforma, create_quote, edit_quote, all_quote, pay_quote, all_credit, create_credit, edit_credit, \
                     pay_credit, all_receipt, create_receipt, edit_receipt, pay_receipt, create_delivery, edit_delivery, all_delivery,\
-                    pay_delivery, change_profile, change_preference, change_password, change_payment, get_number
+                    pay_delivery, change_profile, change_preference, change_password, get_number
 
 
 
@@ -15,7 +17,7 @@ urlpatterns = [
     path('login', login, name='login'),
     path('logout', logout, name='logout'),
     path('profile', user_profile, name='profile'),
-    path('profile/payment', change_payment, name='change_payment'),
+    # path('profile/payment', change_payment, name='change_payment'),
     path('profile/password', change_password, name='change_password'),
     path('profile/preference', change_preference, name='change_preference'),
     path('profile/change', change_profile, name='change_profile'),
@@ -93,4 +95,15 @@ urlpatterns = [
 
     # other urls
     path("get_number", get_number, name="get_number"),
+
+    path("report/customer", customer_report, name="customer_report"),
+    path("report/invoice", invoice_report, name="invoice_report"),
+    path("report/proforma", proforma_report, name="proforma_report"),
+    path("report/purchase", purchase_report, name="purchase_report"),
+    path("report/estimate", estimate_report, name="estimate_report"),
+    path("report/quote", quote_report, name="quote_report"),
+    path("report/receipt", receipt_report, name="receipt_report"),
+    path("report/credit", credit_report, name="credit_report"),
+    path("report/delivery", delivery_report, name="delivery_report"),
+    path("report/item", item_report, name="item_report"),
 ]

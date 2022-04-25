@@ -126,7 +126,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MyUsers
-        fields = ['first_name', 'last_name', 'email', 'phone_number']
+        fields = ["photo_path","logo_path","signature","business_name","first_name","last_name","address","email","phone_number",
+                    "phone_number_type","other_phone_number","fax","business_number","tax_type","tax_rate","lang_pref","region",
+                    "email_report","currency","paypal","bank_transfer","e_transfer","other_payment"]
 
 
 
@@ -431,13 +433,13 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
 
 
-class InvoicePDFSerializer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
-    class Meta:
-        model = Invoice
-        fields = [ "id", "customer","invoice_number",
-            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes", "quantity_list",
-            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list", "notes", "terms"]
+# class InvoicePDFSerializer(serializers.ModelSerializer):
+#     customer = CustomerSerializer(read_only=True)
+#     class Meta:
+#         model = Invoice
+#         fields = [ "id", "customer","invoice_number",
+#             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes", "quantity_list",
+#             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list", "notes", "terms"]
 
 
 
@@ -663,14 +665,14 @@ class ProformerInvoiceSerailizer(serializers.ModelSerializer):
 
 
 
-class ProformerInvoicePDFSerailizer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
-    class Meta:
-        model = ProformaInvoice
-        fields = [
-                "id", "customer", 
-                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "item_list", "quantity_list",
-                    "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
+# class ProformerInvoicePDFSerailizer(serializers.ModelSerializer):
+#     customer = CustomerSerializer(read_only=True)
+#     class Meta:
+#         model = ProformaInvoice
+#         fields = [
+#                 "id", "customer", 
+#                     "invoice_number", "invoice_date", "po_number", "due_date", "notes", "item_list", "quantity_list",
+#                     "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
 
 
 
@@ -894,14 +896,14 @@ class PurchaseOrderSerailizer(serializers.ModelSerializer):
 
 
 
-class PurchaseOrderPDFSerailizer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
-    class Meta:
-        model = PurchaseOrder
-        fields = [
-                "id", "customer", 
-                    "po_number", "po_date", "due_date", "ship_to", "notes", "shipping_address",  "item_list", "quantity_list",
-                    "item_total", "tax", "add_charges", "grand_total",  "status", "terms"]
+# class PurchaseOrderPDFSerailizer(serializers.ModelSerializer):
+#     customer = CustomerSerializer(read_only=True)
+#     class Meta:
+#         model = PurchaseOrder
+#         fields = [
+#                 "id", "customer", 
+#                     "po_number", "po_date", "due_date", "ship_to", "notes", "shipping_address",  "item_list", "quantity_list",
+#                     "item_total", "tax", "add_charges", "grand_total",  "status", "terms"]
 
 
 
@@ -1119,14 +1121,14 @@ class EstimateSerailizer(serializers.ModelSerializer):
 
 
 
-class EstimatePDFSerailizer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
-    class Meta:
-        model = Estimate
-        fields = [
-                "id", "customer", "po_number", "due_date",
-                    "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
+# class EstimatePDFSerailizer(serializers.ModelSerializer):
+#     customer = CustomerSerializer(read_only=True)
+#     class Meta:
+#         model = Estimate
+#         fields = [
+#                 "id", "customer", "po_number", "due_date",
+#                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
+#                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
       
 
 
@@ -1353,14 +1355,14 @@ class QuoteSerailizer(serializers.ModelSerializer):
 
 
 
-class QuotePDFSerailizer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
-    class Meta:
-        model = Quote
-        fields = [
-                "id", "customer", 
-                    "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
+# class QuotePDFSerailizer(serializers.ModelSerializer):
+#     customer = CustomerSerializer(read_only=True)
+#     class Meta:
+#         model = Quote
+#         fields = [
+#                 "id", "customer", 
+#                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
+#                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
  
 
 
@@ -1589,14 +1591,14 @@ class CreditNoteSerailizer(serializers.ModelSerializer):
 
 
 
-class CreditNotePDFSerailizer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
-    class Meta:
-        model = CreditNote
-        fields = [
-                "id", "customer", 
-                    "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes",  "item_list", "quantity_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
+# class CreditNotePDFSerailizer(serializers.ModelSerializer):
+#     customer = CustomerSerializer(read_only=True)
+#     class Meta:
+#         model = CreditNote
+#         fields = [
+#                 "id", "customer", 
+#                     "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes",  "item_list", "quantity_list", 
+#                     "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
 
 
@@ -1834,14 +1836,14 @@ class ReceiptSerailizer(serializers.ModelSerializer):
 
 
 
-class ReceiptPDFSerailizer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
-    class Meta:
-        model = Receipt
-        fields = [
-                "id", "customer", 
-                    "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
+# class ReceiptPDFSerailizer(serializers.ModelSerializer):
+#     customer = CustomerSerializer(read_only=True)
+#     class Meta:
+#         model = Receipt
+#         fields = [
+#                 "id", "customer", 
+#                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
+#                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
   
 
 
@@ -2078,14 +2080,14 @@ class DNSerailizer(serializers.ModelSerializer):
 
 
 
-class DNPDFSerailizer(serializers.ModelSerializer):
-    customer = CustomerSerializer(read_only=True)
-    class Meta:
-        model = DeliveryNote
-        fields = [
-                "id", "customer",
-                    "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
-                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
+# class DNPDFSerailizer(serializers.ModelSerializer):
+#     customer = CustomerSerializer(read_only=True)
+#     class Meta:
+#         model = DeliveryNote
+#         fields = [
+#                 "id", "customer",
+#                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
+#                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
 
 
@@ -2314,7 +2316,7 @@ class PasswordChangeSerializer(serializers.Serializer):
 class PreferenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyUsers
-        fields = ["lang_pref", "region", "email_report", "currency"]
+        fields = ["lang_pref", "region", "email_report", "currency", "paypal", "bank_transfer", "e_transfer", "other_payment"]
 
 
     
@@ -2324,6 +2326,10 @@ class PreferenceSerializer(serializers.ModelSerializer):
         instance.region = self.validated_data.get("region", instance.region)
         instance.email_report = self.validated_data.get("email_report", instance.email_report)
         instance.currency = self.validated_data.get("currency", instance.currency)
+        instance.paypal = self.validated_data.get("paypal", instance.paypal)
+        instance.bank_transfer = self.validated_data.get("bank_transfer", instance.bank_transfer)
+        instance.e_transfer = self.validated_data.get("e_transfer", instance.e_transfer)
+        instance.other_payment = self.validated_data.get("other_payment", instance.other_payment)
 
         instance.save()
 
@@ -2332,25 +2338,23 @@ class PreferenceSerializer(serializers.ModelSerializer):
 
 
 
-class PaymentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MyUsers
-        fields = ["paypal", "bank_transfer", "e_transfer", "other_payment"]
+# class PaymentSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = MyUsers
+#         fields = ["paypal", "bank_transfer", "e_transfer", "other_payment"]
 
 
 
-    def update(self, request):
-        current_user = MyUsers.objects.get(id=request.user.id)
+#     def update(self, request):
+#         current_user = MyUsers.objects.get(id=request.user.id)
 
-        current_user.paypal = self.validated_data.get("paypal", None)
-        current_user.bank_transfer = self.validated_data.get("bank_transfer", None)
-        current_user.e_transfer = self.validated_data.get("e_transfer", None)
-        current_user.other_payment = self.validated_data.get("other_payment", None)
+#         current_user.paypal = self.validated_data.get("paypal", None)
+#         current_user.bank_transfer = self.validated_data.get("bank_transfer", None)
+#         current_user.e_transfer = self.validated_data.get("e_transfer", None)
+#         current_user.other_payment = self.validated_data.get("other_payment", None)
+#         current_user.save()
 
-
-        current_user.save()
-
-        return current_user
+#         return current_user
 
 
 

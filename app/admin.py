@@ -1,7 +1,8 @@
 from django.contrib import admin
 
-from .models import Customer, MyUsers, Invoice, ProformaInvoice, Estimate, PurchaseOrder, \
-                    PayInvoice, PayEstimate, PayProforma, PayPurchaseOrder, JWT, Item
+from .models import CreditNote, Customer, DeliveryNote, Item, MyUsers, Invoice, PayCreditNote, PayDeliveryNote, PayQuote,\
+                     PayReceipt, ProformaInvoice, Estimate, PurchaseOrder, PayInvoice, PayEstimate, PayProforma,\
+                     PayPurchaseOrder, Quote, Receipt, JWT
 # Register your models here.
 
 
@@ -17,3 +18,12 @@ admin.site.register(PayProforma)
 admin.site.register(PayPurchaseOrder)
 admin.site.register(Customer)
 admin.site.register(Item)
+
+admin.site.register(CreditNote)
+admin.site.register(DeliveryNote)
+admin.site.register(PayCreditNote)
+admin.site.register(PayDeliveryNote)
+admin.site.register(PayQuote)
+admin.site.register(PayReceipt)
+admin.site.register(Quote)
+admin.site.register(Receipt)
