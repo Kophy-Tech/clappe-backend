@@ -1,6 +1,6 @@
 #django imports
-from datetime import datetime
-import os, io, cloudinary
+from datetime import datetime, timedelta
+import os, io
 from django.contrib.auth import authenticate
 from django.http import FileResponse
 
@@ -483,15 +483,24 @@ def pay_invoice(request):
         context = {}
 
         if form.is_valid():
-            pay_invoice = form.save()
-            if pay_invoice:
-                context['message'] = "success"
-                context['pay_invoice'] = {"id": pay_invoice.id, **form.data}
+            try:
+                invoice = Invoice.objects.get(id=form.validated_data['invoice_id'])
+                if invoice.status == "Paid":
+                    context['message'] = "Invoice have been paid for already"
+                    return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
-                return Response(context, status=status.HTTP_200_OK)
-            else:
-                context['message'] = "Invalid Invoice ID"
-                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    pay_invoice = form.save(invoice)
+                    # if pay_invoice:
+                    context['message'] = "success"
+                    context['pay_invoice'] = {"id": pay_invoice.id, **form.data}
+
+                    return Response(context, status=status.HTTP_200_OK)
+                    # else:
+                    #     context['message'] = "Invalid Invoice ID"
+                    #     return Response(context, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                print(e)
 
         else:
             errors = {**form.errors}
@@ -707,15 +716,21 @@ def pay_proforma(request):
         context = {}
 
         if form.is_valid():
-            pay_proforma = form.save()
-            if pay_proforma:
-                context['message'] = "success"
-                context['pay_proforma'] = {"id": pay_proforma.id, **form.data}
+            try:
+                proforma = ProformaInvoice.objects.get(id=form.validated_data['proforma_id'])
+                if proforma.status == "Paid":
+                    context['message'] = "Proforma Invoice have been paid for already"
+                    return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
-                return Response(context, status=status.HTTP_200_OK)
-            else:
-                context['message'] = "Invalid Proforma ID"
-                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    pay_proforma = form.save(proforma)
+                    context['message'] = "success"
+                    context['pay_proforma'] = {"id": pay_proforma.id, **form.data}
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                print(e)
 
         else:
             errors = {**form.errors}
@@ -924,15 +939,21 @@ def pay_purchaseorder(request):
         context = {}
 
         if form.is_valid():
-            pay_purchase = form.save()
-            if pay_purchase:
-                context['message'] = "success"
-                context['pay_purchase'] = {"id": pay_purchase.id, **form.data}
+            try:
+                purchase = PurchaseOrder.objects.get(id=form.validated_data['purchase_id'])
+                if purchase.status == "Paid":
+                    context['message'] = "Purchase order have been paid for already"
+                    return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
-                return Response(context, status=status.HTTP_200_OK)
-            else:
-                context['message'] = "Invalid Purchase order ID"
-                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    Pay_purchase = form.save(purchase)
+                    context['message'] = "success"
+                    context['Pay_purchase'] = {"id": Pay_purchase.id, **form.data}
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                print(e)
 
         else:
             errors = {**form.errors}
@@ -941,6 +962,7 @@ def pay_purchaseorder(request):
             context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
 
     else:
         context = {}
@@ -1150,15 +1172,21 @@ def pay_estimate(request):
         context = {}
 
         if form.is_valid():
-            pay_estimate = form.save()
-            if pay_estimate:
-                context['message'] = "success"
-                context['pay_estimate'] = {"id": pay_estimate.id, **form.data}
+            try:
+                estimate = Estimate.objects.get(id=form.validated_data['estimate_id'])
+                if estimate.status == "Paid":
+                    context['message'] = "Estimate have been paid for already"
+                    return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
-                return Response(context, status=status.HTTP_200_OK)
-            else:
-                context['message'] = "Invalid Estimate ID"
-                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    pay_estimate = form.save(estimate)
+                    context['message'] = "success"
+                    context['pay_estimate'] = {"id": pay_estimate.id, **form.data}
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                print(e)
 
         else:
             errors = {**form.errors}
@@ -1167,6 +1195,7 @@ def pay_estimate(request):
             context = {'message': errors_list[0], 'errors': new_errors}
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
 
     else:
         context = {}
@@ -1506,15 +1535,21 @@ def pay_quote(request):
         context = {}
 
         if form.is_valid():
-            pay_quote = form.save()
-            if pay_quote:
-                context['message'] = "success"
-                context['pay_quote'] = {"id": pay_quote.id, **form.data}
+            try:
+                quote = Quote.objects.get(id=form.validated_data['quote_id'])
+                if quote.status == "Paid":
+                    context['message'] = "Quote have been paid for already"
+                    return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
-                return Response(context, status=status.HTTP_200_OK)
-            else:
-                context['message'] = "Invalid Quote ID"
-                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    pay_quote = form.save(quote)
+                    context['message'] = "success"
+                    context['pay_quote'] = {"id": pay_quote.id, **form.data}
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                print(e)
 
         else:
             errors = {**form.errors}
@@ -1730,15 +1765,21 @@ def pay_receipt(request):
         context = {}
 
         if form.is_valid():
-            pay_receipt = form.save()
-            if pay_receipt:
-                context['message'] = "success"
-                context['pay_receipt'] = {"id": pay_receipt.id, **form.data}
+            try:
+                receipt = Receipt.objects.get(id=form.validated_data['receipt_id'])
+                if receipt.status == "Paid":
+                    context['message'] = "Receipt have been paid for already"
+                    return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
-                return Response(context, status=status.HTTP_200_OK)
-            else:
-                context['message'] = "Invalid receipt ID"
-                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    pay_receipt = form.save(receipt)
+                    context['message'] = "success"
+                    context['pay_receipt'] = {"id": pay_receipt.id, **form.data}
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                print(e)
 
         else:
             errors = {**form.errors}
@@ -1956,15 +1997,21 @@ def pay_credit(request):
         context = {}
 
         if form.is_valid():
-            pay_credit = form.save()
-            if pay_credit:
-                context['message'] = "success"
-                context['pay_credit'] = {"id": pay_credit.id, **form.data}
+            try:
+                credit = CreditNote.objects.get(id=form.validated_data['credit_id'])
+                if credit.status == "Paid":
+                    context['message'] = "Credit Note have been paid for already"
+                    return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
-                return Response(context, status=status.HTTP_200_OK)
-            else:
-                context['message'] = "Invalid credit ID"
-                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    pay_credit = form.save(credit)
+                    context['message'] = "success"
+                    context['pay_credit'] = {"id": pay_credit.id, **form.data}
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                print(e)
 
         else:
             errors = {**form.errors}
@@ -2178,15 +2225,21 @@ def pay_delivery(request):
         context = {}
 
         if form.is_valid():
-            pay_delivery = form.save()
-            if pay_delivery:
-                context['message'] = "success"
-                context['pay_delivery'] = {"id": pay_delivery.id, **form.data}
+            try:
+                delivery = DeliveryNote.objects.get(id=form.validated_data['delivery_id'])
+                if delivery.status == "Paid":
+                    context['message'] = "Delivery Note have been paid for already"
+                    return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
-                return Response(context, status=status.HTTP_200_OK)
-            else:
-                context['message'] = "Invalid delivery ID"
-                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    pay_delivery = form.save(delivery)
+                    context['message'] = "success"
+                    context['pay_delivery'] = {"id": pay_delivery.id, **form.data}
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                print(e)
 
         else:
             errors = {**form.errors}
@@ -2459,30 +2512,300 @@ def get_number(request):
 def customer_report(request):
     context = {}
 
-    report_type = request.query_params.get("type", None)
+    # report_type = request.query_params.get("type", None)
     measure = request.query_params.get("measure", None)
     start_date = request.query_params.get("start", None)
     end_date = request.query_params.get("end", None)
 
-    if start_date:
-        if end_date:
-            customers = Customer.objects.filter(vendor=request.user.id)\
-                                        .filter(date_created__gte=start_date)\
-                                        .filter(date_created__lte=end_date).all()
-            if len(customers) > 0:
-                # serialize them
-                pass
+    if measure != "searchable window":
+
+        if start_date:
+            if end_date:
+                
+                # 1.1
+                if measure == "customer search":
+                    customers = Customer.objects.filter(vendor=request.user.id)\
+                                                .filter(date_created__gte=start_date)\
+                                                .filter(date_created__lte=end_date).order_by("first_name").all()
+                    if len(customers) > 0:
+                        customer_ser = CustomerSerializer(customers, many=True)
+                        context["message"] = customer_ser.data
+                        return Response(context, status=status.HTTP_200_OK)
+
+                    else:
+                        context["message"] = "No customers were created within this date range"
+                        return Response(context, status=status.HTTP_404_NOT_FOUND)
+                
+                # 1.2
+                elif measure == "purchase summary":
+                    context = {}
+                    customers = Customer.objects.filter(vendor=request.user.id)\
+                                                .order_by("first_name").all().values_list("id", flat=True)
+                    for id in list(customers):
+
+                        invoices = Invoice.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                        proformas = ProformaInvoice.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        proforma_ser = ProformerInvoiceSerailizer(proformas, many=True)
+
+                        purchases = PurchaseOrder.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        purchase_ser = PurchaseOrderSerailizer(purchases, many=True)
+
+                        estimates = Estimate.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        estimate_ser = EstimateSerailizer(estimates, many=True)
+
+                        quotes = Quote.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        quote_ser = QuoteSerailizer(quotes, many=True)
+
+                        receipts = Receipt.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        receipt_ser = ReceiptSerailizer(receipts, many=True)
+
+                        credits = CreditNote.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        credit_ser = CreditNoteSerailizer(credits, many=True)
+
+                        deliverys = DeliveryNote.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        delivery_ser = DNSerailizer(deliverys, many=True)
+
+                        context["customer_id"] = id
+                        context[id]['invoice'] = invoice_ser.data
+                        context[id]['proforma'] = proforma_ser.data
+                        context[id]['estimate'] = estimate_ser.data
+                        context[id]['quote'] = quote_ser.data
+                        context[id]['receipt'] = receipt_ser.data
+                        context[id]['credit'] = credit_ser.data
+                        context[id]['purchase'] = purchase_ser.data
+                        context[id]['delivery'] = delivery_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+                
+                # 1.3
+                elif measure == "transactions":
+                    context = {}
+                    customers = Customer.objects.filter(vendor=request.user.id)\
+                                                .order_by("first_name").all().values_list("id", flat=True)
+                    for id in list(customers):
+
+                        invoices = Invoice.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                        proformas = ProformaInvoice.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        proforma_ser = ProformerInvoiceSerailizer(proformas, many=True)
+
+                        purchases = PurchaseOrder.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        purchase_ser = PurchaseOrderSerailizer(purchases, many=True)
+
+                        estimates = Estimate.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        estimate_ser = EstimateSerailizer(estimates, many=True)
+
+                        quotes = Quote.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        quote_ser = QuoteSerailizer(quotes, many=True)
+
+                        receipts = Receipt.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        receipt_ser = ReceiptSerailizer(receipts, many=True)
+
+                        credits = CreditNote.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        credit_ser = CreditNoteSerailizer(credits, many=True)
+
+                        deliverys = DeliveryNote.objects.filter(ucstomer_id=id)\
+                                                    .filter(date_created__lte=end_date)\
+                                                    .filter(date_created__gte=start_date).order_by("date_created")
+                        delivery_ser = DNSerailizer(deliverys, many=True)
+
+                        context["customer_id"] = id
+
+                        context[id]['invoice'] = invoice_ser.data
+                        context[id]['invoice']["total_number"] = len(invoice_ser.data)
+                        total_amount = 0
+                        for inv in invoice_ser.data:
+                            total_amount += int(inv['grand_total'])
+                        context[id]['invoice']["total_amount"] = total_amount
+
+                        context[id]['proforma'] = proforma_ser.data
+                        context[id]['proforma']["total_number"] = len(proforma_ser.data)
+                        total_amount = 0
+                        for inv in proforma_ser.data:
+                            total_amount += int(inv['grand_total'])
+                        context[id]['proforma']["total_amount"] = total_amount
+
+                        context[id]['estimate'] = estimate_ser.data
+                        context[id]['estimate']["total_number"] = len(estimate_ser.data)
+                        total_amount = 0
+                        for inv in estimate_ser.data:
+                            total_amount += int(inv['grand_total'])
+                        context[id]['estimate']["total_amount"] = total_amount
+
+                        context[id]['quote'] = quote_ser.data
+                        context[id]['quote']["total_number"] = len(quote_ser.data)
+                        total_amount = 0
+                        for inv in quote_ser.data:
+                            total_amount += int(inv['grand_total'])
+                        context[id]['quote']["total_amount"] = total_amount
+
+                        context[id]['receipt'] = receipt_ser.data
+                        context[id]['receipt']["total_number"] = len(receipt_ser.data)
+                        total_amount = 0
+                        for inv in receipt_ser.data:
+                            total_amount += int(inv['grand_total'])
+                        context[id]['receipt']["total_amount"] = total_amount
+
+                        context[id]['credit'] = credit_ser.data
+                        context[id]['credit']["total_number"] = len(credit_ser.data)
+                        total_amount = 0
+                        for inv in credit_ser.data:
+                            total_amount += int(inv['grand_total'])
+                        context[id]['credit']["total_amount"] = total_amount
+
+                        context[id]['purchase'] = purchase_ser.data
+                        context[id]['purchase']["total_number"] = len(purchase_ser.data)
+                        total_amount = 0
+                        for inv in purchase_ser.data:
+                            total_amount += int(inv['grand_total'])
+                        context[id]['purchase']["total_amount"] = total_amount
+
+                        context[id]['delivery'] = delivery_ser.data
+                        context[id]['delivery']["total_number"] = len(delivery_ser.data)
+                        total_amount = 0
+                        for inv in delivery_ser.data:
+                            total_amount += int(inv['grand_total'])
+                        context[id]['delivery']["total_amount"] = total_amount
+
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                
+                # 1.4
+                elif measure == "company name":
+                    customers = Customer.objects.filter(vendor=request.user.id)\
+                                                .filter(date_created__gte=start_date)\
+                                                .filter(date_created__lte=end_date).order_by("business_name").all()
+                    if len(customers) > 0:
+                        customer_ser = CustomerSerializer(customers, many=True)
+                        context["message"] = customer_ser.data
+
+                        return Response(context, status=status.HTTP_200_OK)
+
+                    else:
+                        context["message"] = "No customers were created within this date range"
+                        return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+                # 1.5
+                elif measure == "customer name":
+                    customers = Customer.objects.filter(vendor=request.user.id)\
+                                                .filter(date_created__gte=start_date)\
+                                                .filter(date_created__lte=end_date).order_by("first_name").all()
+                    if len(customers) > 0:
+                        customer_ser = CustomerSerializer(customers, many=True)
+                        context["message"] = customer_ser.data
+                        
+                        return Response(context, status=status.HTTP_200_OK)
+
+                    else:
+                        context["message"] = "No customers were created within this date range"
+                        return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+                # 1.6
+                elif measure == "customer and company":
+                    customers = Customer.objects.filter(vendor=request.user.id)\
+                                                .filter(date_created__gte=start_date)\
+                                                .filter(date_created__lte=end_date).order_by("first_name", "business_name").all()
+                    if len(customers) > 0:
+                        customer_ser = CustomerSerializer(customers, many=True)
+                        context["message"] = customer_ser.data
+                        
+                        return Response(context, status=status.HTTP_200_OK)
+
+                    else:
+                        context["message"] = "No customers were created within this date range"
+                        return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+                # 1.8
+                elif measure == "customer and company":
+                    customers = Customer.objects.filter(vendor=request.user.id)\
+                                                .filter(date_created__gte=start_date)\
+                                                .filter(date_created__lte=end_date).order_by("phone_number").all()
+                    if len(customers) > 0:
+                        customer_ser = CustomerSerializer(customers, many=True)
+                        context["message"] = customer_ser.data
+                        
+                        return Response(context, status=status.HTTP_200_OK)
+
+                    else:
+                        context["message"] = "No customers were created within this date range"
+                        return Response(context, status=status.HTTP_404_NOT_FOUND)
+                
+                else:
+                    context["message"] = "Incorrect measure"
+                    return Response(context, status=status.HTTP_200_OK)
+
             else:
-                pass
+
+                context['message'] = "If you set start date, you have to set end date too"
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
         else:
-
-            context['message'] = "If you set start date, you have to set end date too"
+            context["message"] = "I think you need to pass a date range..."
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
+    
+    else:
+        # 1.7
+        customers = Customer.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all()
+        if len(customers) > 0:
+            customer_name = customers.order_by("first_name")
+            customer_company = customers.order_by("business_name")
+            customer_phone = customers.order_by("phone_number")
 
+            # customer_ser = CustomerSerializer(customers, many=True)
+            customer_name_ser = CustomerSerializer(customer_name, many=True)
+            customer_company_ser = CustomerSerializer(customer_company, many=True)
+            customer_phone_ser = CustomerSerializer(customer_phone, many=True)
 
+            context["message"]['by_name'] = customer_name_ser.data
+            context["message"]['by_company'] = customer_company_ser.data
+            context["message"]['by_phone'] = customer_phone_ser.data
+            
+            return Response(context, status=status.HTTP_200_OK)
 
+        else:
+            context["message"] = "No customers were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+        
 
-    return Response(context, status=status.HTTP_200_OK)
     
 
 
@@ -2492,8 +2815,2125 @@ def customer_report(request):
 @permission_classes((IsAuthenticated, ))
 def invoice_report(request):
     context = {}
+    measure = request.query_params.get("measure", None)
+    start_date = request.query_params.get("start", None)
+    end_date = request.query_params.get("end", None)
 
-    return Response(context, status=status.HTTP_200_OK)
+    # 2.1
+    if measure == "invoice search":
+        invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+        if len(invoices) > 0:
+            invoice_ser = InvoiceSerializer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No invoices were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # 2.2
+    elif measure == "amount search":
+        invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = InvoiceSerializer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No invoices were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+
+    # 2.3
+    elif measure == "per customer":
+        invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = InvoiceSerializer(invoices, many=True)
+            total_data = {}
+            for inv in invoice_ser.data:
+                full_name = inv['customer']['first_name'] + " " + inv['customer']['last_name']
+                if full_name in total_data:
+                    total_data[full_name] += float(inv['grand_total'])
+                else:
+                    total_data[full_name] = 0
+            
+            final_data = []
+            for k,v in total_data.items():
+                final_data.append({"full_name": k, "total_amount": v})
+
+            context['message'] = final_data
+
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No invoices were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # 2.4
+    elif measure == "total per date":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                # for inv in invoice_ser.data:
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())
+
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                        
+                    # context[key] = invoice_ser.data
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No invoices were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No invoices were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[key] = total_amount
+                # context['message'] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No invoices were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+    # 2.5
+    elif measure == "count invoice email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                emailed_count = Invoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                emailed_count = Invoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            emailed_count = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = emailed_count
+            return Response(context, status=status.HTTP_200_OK)
+    
+
+    # 2.6
+    elif measure == "detail invoice email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(emailed=True)
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True)
+
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)\
+                                                .order_by("date_created")
+
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No invoices were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+
+    # 2.7
+    elif measure == "count invoice overdue":
+
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                overdue_count = Invoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(status="Overdue").count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                overdue_count = Invoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Overdue").count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = overdue_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    overdue_count = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue").count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = overdue_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                overdue_count = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = overdue_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    overdue_count = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue").count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = overdue_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                overdue_count = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue").count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = overdue_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            overdue_count = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue").count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = overdue_count
+            return Response(context, status=status.HTTP_200_OK)
+
+
+    # 2.8
+    elif measure == "detail invoice overdue":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Overdue")\
+                                            .order_by("date_created")
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Overdue")\
+                                            .order_by("date_created")
+
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue")\
+                                                .order_by("date_created")
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue")\
+                                                .order_by("date_created")
+
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No invoices were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+    
+    # 2.9
+    elif measure == "detail invoice pending":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Pending")\
+                                            .order_by("date_created")
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Pending")\
+                                            .order_by("date_created")
+
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending")\
+                                                .order_by("date_created")
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending")\
+                                                .order_by("date_created")
+
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No invoices were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    # 2.10
+    elif measure == "detail inovice paid":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Paid")\
+                                            .order_by("date_created")
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Paid")\
+                                            .order_by("date_created")
+
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Paid")\
+                                                .order_by("date_created")
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Paid")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Paid")\
+                                                .order_by("date_created")
+
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Paid")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Paid")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No invoices were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+
+    # 2.11
+    elif measure == "detail invoice unpaid":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Unpaid")\
+                                            .order_by("date_created")
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Unpaid")\
+                                            .order_by("date_created")
+
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Unpaid")\
+                                                .order_by("date_created")
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Unpaid")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Unpaid")\
+                                                .order_by("date_created")
+
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Unpaid")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Unpaid")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No invoices were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    # 2.12
+    elif measure == "detail sales tax":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                # for inv in invoice_ser.data:
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())
+
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                        
+                    # context[key] = invoice_ser.data
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No invoices were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No invoices were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[key] = total_amount
+                # context['message'] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No invoices were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+    # 2.13
+    elif measure == "different sales tax":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices_percent = Invoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(discount_type="percent")\
+                                            .order_by("date_created")
+                
+                invoices_value = Invoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(discount_type="value")\
+                                            .order_by("date_created")
+
+                invoice_pser = InvoiceSerializer(invoices_percent, many=True)
+                invoice_vser = InvoiceSerializer(invoices_value, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')]['percent'] = invoice_pser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')]['value'] = invoice_vser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices_percent = Invoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(discount_type="percent")\
+                                            .order_by("date_created")
+
+                invoices_value = Invoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(discount_type="value")\
+                                            .order_by("date_created")
+
+                invoice_pser = InvoiceSerializer(invoices_percent, many=True)
+                invoice_vser = InvoiceSerializer(invoices_value, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')]['percent'] = invoice_pser.data
+                context[current_time.strftime('%Y-%m-%d')]['value'] = invoice_vser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices_percent = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(discount_type="percent")\
+                                                .order_by("date_created")
+
+                    invoices_value = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(discount_type="value")\
+                                                .order_by("date_created")
+
+                    invoice_pser = InvoiceSerializer(invoices_percent, many=True)
+                    invoice_vser = InvoiceSerializer(invoices_value, many=True)
+
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+
+                    context[key]['percent'] = invoice_pser.data                     
+                    context[key]['value'] = invoice_vser.data
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices_percent = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(discount_type="percent")\
+                            .order_by("date_created")
+
+                invoices_value = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(discount_type="value")\
+                            .order_by("date_created")
+
+                # if len(invoices_percent) > 0:
+                invoice_pser = InvoiceSerializer(invoices_percent, many=True)
+                invoice_vser = InvoiceSerializer(invoices_value, many=True)
+                key = f"{start_date} - {end_date}"
+
+                context[key]['percent'] = invoice_pser.data
+                context[key]['value'] = invoice_vser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+
+                # else:
+                #     context["message"] = "No emailed invoices within this date range"
+                #     return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices_percent = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(discount_type="percent")\
+                                                .order_by("date_created")
+                    
+                    invoices_value = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(discount_type="value")\
+                                                .order_by("date_created")
+
+                    invoice_pser = InvoiceSerializer(invoices_percent, many=True)
+                    invoice_vser = InvoiceSerializer(invoices_value, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key]['percent'] = invoice_pser.data
+                    context[key]['value'] = invoice_vser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices_percent = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(discount_type="percent")\
+                            .order_by("date_created")
+
+                invoices_value = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(discount_type="value")\
+                            .order_by("date_created")
+
+                # if len(invoices) > 0:
+                invoice_pser = InvoiceSerializer(invoices_percent, many=True)
+                invoice_vser = InvoiceSerializer(invoices_value, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key]['percent'] = invoice_pser.data
+                context[key]['value'] = invoice_vser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+                # else:
+                #     context["message"] = "No emailed invoices within this date range"
+                #     return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices_percent = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(discount_type="percent")\
+                            .order_by("date_created")
+
+            invoices_value = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(discount_type="value")\
+                            .order_by("date_created")
+
+            # if len(invoices) > 0:
+            invoice_pser = InvoiceSerializer(invoices_percent, many=True)
+            invoice_vser = InvoiceSerializer(invoices_percent, many=True)
+            key = f"{start_date} - {end_date}"
+
+            # total_amount = 0
+            # for inv in invoice_ser.data:
+            #         total_amount += float(inv['grand_total'])
+
+            # context[key] = total_amount
+            context[key]['percent'] = invoice_pser.data
+            context[key]['value'] = invoice_vser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+            # else:
+            #     context["message"] = "No invoices were created within this date range"
+            #     return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    # 2.14
+    elif measure == "detail recurring invoice":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(recurring=True)
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Invoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(recurring=True)
+
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(recurring=True)
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(recurring=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(recurring=True)\
+                                                .order_by("date_created")
+
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(recurring=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = InvoiceSerializer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Invoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(recurring=True)\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = InvoiceSerializer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No invoices were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
    
 
 
@@ -2502,8 +4942,1101 @@ def invoice_report(request):
 @permission_classes((IsAuthenticated, ))
 def proforma_report(request):
     context = {}
+    measure = request.query_params.get("measure", None)
+    start_date = request.query_params.get("start", None)
+    end_date = request.query_params.get("end", None)
 
-    return Response(context, status=status.HTTP_200_OK)
+    # 3.1
+    if measure == "proforma search":
+        invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+        if len(invoices) > 0:
+            invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No proforma invoice was created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # 3.2
+    elif measure == "amount search":
+        invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No proforma invoice was created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+
+    # 3.3
+    elif measure == "per customer":
+        invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+            total_data = {}
+            for inv in invoice_ser.data:
+                full_name = inv['customer']['first_name'] + " " + inv['customer']['last_name']
+                if full_name in total_data:
+                    total_data[full_name] += float(inv['grand_total'])
+                else:
+                    total_data[full_name] = 0
+            
+            final_data = []
+            for k,v in total_data.items():
+                final_data.append({"full_name": k, "total_amount": v})
+
+            context['message'] = final_data
+
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No proforma invoice was created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # 3.4
+    elif measure == "total per date":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)
+                invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+
+                # for inv in invoice_ser.data:
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())
+
+                invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                        
+                    # context[key] = invoice_ser.data
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No proforma invoice was created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No proforma invoice was created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[key] = total_amount
+                # context['message'] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No invoices were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+    # 3.5
+    elif measure == "count proforma email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                emailed_count = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                emailed_count = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            emailed_count = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = emailed_count
+            return Response(context, status=status.HTTP_200_OK)
+    
+
+    # 3.6
+    elif measure == "detail proforma email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(emailed=True)
+                invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True)
+
+                invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)\
+                                                .order_by("date_created")
+
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No invoices were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+
+    # 3.7
+    elif measure == "count proforma overdue":
+
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                overdue_count = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(status="Overdue").count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                overdue_count = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Overdue").count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = overdue_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    overdue_count = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue").count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = overdue_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                overdue_count = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = overdue_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    overdue_count = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue").count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = overdue_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                overdue_count = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue").count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = overdue_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            overdue_count = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue").count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = overdue_count
+            return Response(context, status=status.HTTP_200_OK)
+
+
+    # 3.8
+    elif measure == "detail proforma overdue":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Overdue")\
+                                            .order_by("date_created")
+                invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Overdue")\
+                                            .order_by("date_created")
+
+                invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue")\
+                                                .order_by("date_created")
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue")\
+                                                .order_by("date_created")
+
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No invoices were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+    
+    # 3.9
+    elif measure == "detail proforma pending":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Pending")\
+                                            .order_by("date_created")
+                invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Pending")\
+                                            .order_by("date_created")
+
+                invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending")\
+                                                .order_by("date_created")
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending")\
+                                                .order_by("date_created")
+
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No invoices were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
    
 
 
@@ -2512,8 +6045,1101 @@ def proforma_report(request):
 @permission_classes((IsAuthenticated, ))
 def purchase_report(request):
     context = {}
+    measure = request.query_params.get("measure", None)
+    start_date = request.query_params.get("start", None)
+    end_date = request.query_params.get("end", None)
 
-    return Response(context, status=status.HTTP_200_OK)
+    # 4.1
+    if measure == "purchase search":
+        invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+        if len(invoices) > 0:
+            invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No purchase orders were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # 4.2
+    elif measure == "amount search":
+        invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No purchase orders were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+
+    # 4.3
+    elif measure == "per customer":
+        invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+            total_data = {}
+            for inv in invoice_ser.data:
+                full_name = inv['customer']['first_name'] + " " + inv['customer']['last_name']
+                if full_name in total_data:
+                    total_data[full_name] += float(inv['grand_total'])
+                else:
+                    total_data[full_name] = 0
+            
+            final_data = []
+            for k,v in total_data.items():
+                final_data.append({"full_name": k, "total_amount": v})
+
+            context['message'] = final_data
+
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No purchase orders were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # 4.4
+    elif measure == "total per date":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)
+                invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+
+                # for inv in invoice_ser.data:
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())
+
+                invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                        
+                    # context[key] = invoice_ser.data
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No invoices were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No invoices were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[key] = total_amount
+                # context['message'] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No purchase orders were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+    # 4.5
+    elif measure == "count purchase email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                emailed_count = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                emailed_count = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            emailed_count = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = emailed_count
+            return Response(context, status=status.HTTP_200_OK)
+    
+
+    # 4.6
+    elif measure == "detail purchase email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(emailed=True)
+                invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True)
+
+                invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No purchase orders were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)\
+                                                .order_by("date_created")
+
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No purchase orders were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No invoices were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+
+    # 4.7
+    elif measure == "count purchase overdue":
+
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                overdue_count = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(status="Overdue").count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                overdue_count = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Overdue").count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = overdue_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    overdue_count = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue").count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = overdue_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                overdue_count = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = overdue_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    overdue_count = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue").count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = overdue_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                overdue_count = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue").count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = overdue_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            overdue_count = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue").count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = overdue_count
+            return Response(context, status=status.HTTP_200_OK)
+
+
+    # 4.8
+    elif measure == "detail purchase overdue":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Overdue")\
+                                            .order_by("date_created")
+                invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Overdue")\
+                                            .order_by("date_created")
+
+                invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue")\
+                                                .order_by("date_created")
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No purchase orders were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue")\
+                                                .order_by("date_created")
+
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No purchase orders were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No purchase orders were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+    
+    # 4.9
+    elif measure == "detail purchase pending":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Pending")\
+                                            .order_by("date_created")
+                invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Pending")\
+                                            .order_by("date_created")
+
+                invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending")\
+                                                .order_by("date_created")
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No purchase orders were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending")\
+                                                .order_by("date_created")
+
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No purchase orders were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No purchase orders were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
 
 
 
@@ -2522,8 +7148,1107 @@ def purchase_report(request):
 @permission_classes((IsAuthenticated, ))
 def estimate_report(request):
     context = {}
+    measure = request.query_params.get("measure", None)
+    start_date = request.query_params.get("start", None)
+    end_date = request.query_params.get("end", None)
 
-    return Response(context, status=status.HTTP_200_OK)
+    # 5.1
+    if measure == "estimate search":
+        invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+        if len(invoices) > 0:
+            invoice_ser = EstimateSerailizer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No estimates were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # 5.2
+    elif measure == "amount search":
+        invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = EstimateSerailizer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No estimates were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+
+    # 5.3
+    elif measure == "per customer":
+        invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = EstimateSerailizer(invoices, many=True)
+            total_data = {}
+            for inv in invoice_ser.data:
+                full_name = inv['customer']['first_name'] + " " + inv['customer']['last_name']
+                if full_name in total_data:
+                    total_data[full_name] += float(inv['grand_total'])
+                else:
+                    total_data[full_name] = 0
+            
+            final_data = []
+            for k,v in total_data.items():
+                final_data.append({"full_name": k, "total_amount": v})
+
+            context['message'] = final_data
+
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No estimates were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # 5.4
+    elif measure == "total per date":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Estimate.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)
+                invoice_ser = EstimateSerailizer(invoices, many=True)
+
+                # for inv in invoice_ser.data:
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Estimate.objects.filter(date_created__date=current_time.date())
+
+                invoice_ser = EstimateSerailizer(invoices, many=True)
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                        
+                    # context[key] = invoice_ser.data
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No estimates were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No estimates were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = EstimateSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[key] = total_amount
+                # context['message'] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No estimates were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+    # 5.5
+    elif measure == "count estimate email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                emailed_count = Estimate.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                emailed_count = Estimate.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = Estimate.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = Estimate.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            emailed_count = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = emailed_count
+            return Response(context, status=status.HTTP_200_OK)
+    
+
+    # 5.6
+    elif measure == "detail estimate email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Estimate.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(emailed=True)
+                invoice_ser = EstimateSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Estimate.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True)
+
+                invoice_ser = EstimateSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)\
+                                                .order_by("date_created")
+
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No estimates were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = EstimateSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No estimates were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+
+    # 5.7
+    elif measure == "count estimate overdue":
+
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                overdue_count = Estimate.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(status="Overdue").count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                overdue_count = Estimate.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Overdue").count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = overdue_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    overdue_count = Estimate.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue").count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = overdue_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                overdue_count = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = overdue_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    overdue_count = Estimate.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue").count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = overdue_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                overdue_count = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue").count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = overdue_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            overdue_count = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue").count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = overdue_count
+            return Response(context, status=status.HTTP_200_OK)
+
+
+    # 5.8
+    elif measure == "detail estimate overdue":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Estimate.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Overdue")\
+                                            .order_by("date_created")
+                invoice_ser = EstimateSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Estimate.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Overdue")\
+                                            .order_by("date_created")
+
+                invoice_ser = EstimateSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue")\
+                                                .order_by("date_created")
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue")\
+                                                .order_by("date_created")
+
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed invoices within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = EstimateSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No estimates were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+    
+    # 5.9
+    elif measure == "detail estimate pending":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Estimate.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Pending")\
+                                            .order_by("date_created")
+                invoice_ser = EstimateSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Estimate.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Pending")\
+                                            .order_by("date_created")
+
+                invoice_ser = EstimateSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending")\
+                                                .order_by("date_created")
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed estimate within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending")\
+                                                .order_by("date_created")
+
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = EstimateSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed estimate within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Estimate.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = EstimateSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No estimates were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+    # 5.10
+    # elif measure == "detial estimate accepted":
+
+
+
 
 
 
@@ -2532,8 +8257,1101 @@ def estimate_report(request):
 @permission_classes((IsAuthenticated, ))
 def quote_report(request):
     context = {}
+    measure = request.query_params.get("measure", None)
+    start_date = request.query_params.get("start", None)
+    end_date = request.query_params.get("end", None)
 
-    return Response(context, status=status.HTTP_200_OK)
+    # 6.1
+    if measure == "quote search":
+        invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+        if len(invoices) > 0:
+            invoice_ser = QuoteSerailizer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No quotes were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # 6.2
+    elif measure == "amount search":
+        invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = QuoteSerailizer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No quotes were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+
+    # 6.3
+    elif measure == "per customer":
+        invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = QuoteSerailizer(invoices, many=True)
+            total_data = {}
+            for inv in invoice_ser.data:
+                full_name = inv['customer']['first_name'] + " " + inv['customer']['last_name']
+                if full_name in total_data:
+                    total_data[full_name] += float(inv['grand_total'])
+                else:
+                    total_data[full_name] = 0
+            
+            final_data = []
+            for k,v in total_data.items():
+                final_data.append({"full_name": k, "total_amount": v})
+
+            context['message'] = final_data
+
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No quotes were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # 6.4
+    elif measure == "total per date":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Quote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)
+                invoice_ser = QuoteSerailizer(invoices, many=True)
+
+                # for inv in invoice_ser.data:
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Quote.objects.filter(date_created__date=current_time.date())
+
+                invoice_ser = QuoteSerailizer(invoices, many=True)
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                        
+                    # context[key] = invoice_ser.data
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No quotes were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No quotes were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = QuoteSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[key] = total_amount
+                # context['message'] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No quotes were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+    # 6.5
+    elif measure == "count quote email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                emailed_count = Quote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                emailed_count = Quote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = Quote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = Quote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            emailed_count = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = emailed_count
+            return Response(context, status=status.HTTP_200_OK)
+    
+
+    # 6.6
+    elif measure == "detail quote email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Quote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(emailed=True)
+                invoice_ser = QuoteSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Quote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True)
+
+                invoice_ser = QuoteSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed quotes within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)\
+                                                .order_by("date_created")
+
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed quotes within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = QuoteSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No quote were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+
+    # 6.7
+    elif measure == "count quote overdue":
+
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                overdue_count = Quote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(status="Overdue").count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                overdue_count = Quote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Overdue").count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = overdue_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    overdue_count = Quote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue").count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = overdue_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                overdue_count = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = overdue_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    overdue_count = Quote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue").count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = overdue_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                overdue_count = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue").count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = overdue_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            overdue_count = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue").count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = overdue_count
+            return Response(context, status=status.HTTP_200_OK)
+
+
+    # 6.8
+    elif measure == "detail quote overdue":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Quote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Overdue")\
+                                            .order_by("date_created")
+                invoice_ser = QuoteSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Quote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Overdue")\
+                                            .order_by("date_created")
+
+                invoice_ser = QuoteSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue")\
+                                                .order_by("date_created")
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No overdue quotes within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue")\
+                                                .order_by("date_created")
+
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No overdue quotes within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = QuoteSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No overdue were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+    
+    # 6.9
+    elif measure == "detail quote pending":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Quote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Pending")\
+                                            .order_by("date_created")
+                invoice_ser = QuoteSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Quote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Pending")\
+                                            .order_by("date_created")
+
+                invoice_ser = QuoteSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending")\
+                                                .order_by("date_created")
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No pending quote within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending")\
+                                                .order_by("date_created")
+
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = QuoteSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No pending quote within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Quote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = QuoteSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No pending quote within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
 
 
 
@@ -2543,8 +9361,575 @@ def quote_report(request):
 @permission_classes((IsAuthenticated, ))
 def receipt_report(request):
     context = {}
+    measure = request.query_params.get("measure", None)
+    start_date = request.query_params.get("start", None)
+    end_date = request.query_params.get("end", None)
 
-    return Response(context, status=status.HTTP_200_OK)
+    # 7.1
+    if measure == "receipt search":
+        invoices = Receipt.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+        if len(invoices) > 0:
+            invoice_ser = ReceiptSerailizer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No receipts were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # 7.2
+    elif measure == "amount search":
+        invoices = Receipt.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = ReceiptSerailizer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No receipts were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+
+    # 7.3
+    elif measure == "per customer":
+        invoices = Receipt.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = ReceiptSerailizer(invoices, many=True)
+            total_data = {}
+            for inv in invoice_ser.data:
+                full_name = inv['customer']['first_name'] + " " + inv['customer']['last_name']
+                if full_name in total_data:
+                    total_data[full_name] += float(inv['grand_total'])
+                else:
+                    total_data[full_name] = 0
+            
+            final_data = []
+            for k,v in total_data.items():
+                final_data.append({"full_name": k, "total_amount": v})
+
+            context['message'] = final_data
+
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No receipts were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # 7.4
+    elif measure == "total per date":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Receipt.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)
+                invoice_ser = ReceiptSerailizer(invoices, many=True)
+
+                # for inv in invoice_ser.data:
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Receipt.objects.filter(date_created__date=current_time.date())
+
+                invoice_ser = ReceiptSerailizer(invoices, many=True)
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Receipt.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = ReceiptSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                        
+                    # context[key] = invoice_ser.data
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Receipt.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = ReceiptSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No receipts were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Receipt.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = ReceiptSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Receipt.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = ReceiptSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No receipts were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Receipt.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = ReceiptSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[key] = total_amount
+                # context['message'] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No receipts were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+    # 7.5
+    elif measure == "count receipt email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                emailed_count = Receipt.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                emailed_count = Receipt.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = Receipt.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = Receipt.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = Receipt.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = Receipt.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            emailed_count = Receipt.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = emailed_count
+            return Response(context, status=status.HTTP_200_OK)
+    
+
+    # 7.6
+    elif measure == "detail receipt email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = Receipt.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(emailed=True)
+                invoice_ser = ReceiptSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = Receipt.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True)
+
+                invoice_ser = ReceiptSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Receipt.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)
+                    invoice_ser = ReceiptSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Receipt.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = ReceiptSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed receipts within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = Receipt.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)\
+                                                .order_by("date_created")
+
+                    invoice_ser = ReceiptSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = Receipt.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = ReceiptSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed receipts within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = Receipt.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = ReceiptSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No emailed receipts within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
 
 
 
@@ -2555,8 +9940,904 @@ def receipt_report(request):
 @permission_classes((IsAuthenticated, ))
 def credit_report(request):
     context = {}
+    measure = request.query_params.get("measure", None)
+    start_date = request.query_params.get("start", None)
+    end_date = request.query_params.get("end", None)
 
-    return Response(context, status=status.HTTP_200_OK)
+    # 8.1
+    if measure == "credit search":
+        invoices = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+        if len(invoices) > 0:
+            invoice_ser = CreditNoteSerailizer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No credit notes were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # 8.2
+    elif measure == "amount search":
+        invoices = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = CreditNoteSerailizer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No credit notes were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+
+    # 8.3
+    elif measure == "per customer":
+        invoices = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = CreditNoteSerailizer(invoices, many=True)
+            total_data = {}
+            for inv in invoice_ser.data:
+                full_name = inv['customer']['first_name'] + " " + inv['customer']['last_name']
+                if full_name in total_data:
+                    total_data[full_name] += float(inv['grand_total'])
+                else:
+                    total_data[full_name] = 0
+            
+            final_data = []
+            for k,v in total_data.items():
+                final_data.append({"full_name": k, "total_amount": v})
+
+            context['message'] = final_data
+
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No credit notes were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # 8.4
+    elif measure == "total per date":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)
+                invoice_ser = CreditNoteSerailizer(invoices, many=True)
+
+                # for inv in invoice_ser.data:
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = CreditNote.objects.filter(date_created__date=current_time.date())
+
+                invoice_ser = CreditNoteSerailizer(invoices, many=True)
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = CreditNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                        
+                    # context[key] = invoice_ser.data
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No credit notes were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = CreditNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)
+                    invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    total_amount = 0
+                    for inv in invoice_ser.data:
+                            total_amount += float(inv['grand_total'])
+
+                    context[key] = total_amount
+                    # context['message'] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No credit notes were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                total_amount = 0
+                for inv in invoice_ser.data:
+                        total_amount += float(inv['grand_total'])
+
+                context[key] = total_amount
+                # context['message'] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No credit notes were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+    # 8.5
+    elif measure == "count credit email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                emailed_count = CreditNote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                emailed_count = CreditNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = CreditNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = CreditNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            emailed_count = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = emailed_count
+            return Response(context, status=status.HTTP_200_OK)
+    
+
+    # 8.6
+    elif measure == "detail credit email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(emailed=True)
+                invoice_ser = CreditNoteSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True)
+
+                invoice_ser = CreditNoteSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = CreditNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)
+                    invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed credit notes within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = CreditNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)\
+                                                .order_by("date_created")
+
+                    invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed credit notes within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No credit notes were created within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+
+    # 8.7
+    elif measure == "count estimate pending":
+
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                overdue_count = CreditNote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(status="Pending").count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                overdue_count = CreditNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Pending").count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = overdue_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    overdue_count = CreditNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending").count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = overdue_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                overdue_count = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = overdue_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    overdue_count = CreditNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending").count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = overdue_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                overdue_count = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending").count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = overdue_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            overdue_count = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending").count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = overdue_count
+            return Response(context, status=status.HTTP_200_OK)
+
+
+    # 8.8
+    elif measure == "detail invoice pending":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Pending")\
+                                            .order_by("date_created")
+                invoice_ser = CreditNoteSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Pending")\
+                                            .order_by("date_created")
+
+                invoice_ser = CreditNoteSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = CreditNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending")\
+                                                .order_by("date_created")
+                    invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No pending credit note within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = CreditNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending")\
+                                                .order_by("date_created")
+
+                    invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No pending credit note within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = CreditNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = CreditNoteSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No pending credit note within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
 
 
 
@@ -2567,8 +10848,1101 @@ def credit_report(request):
 @permission_classes((IsAuthenticated, ))
 def delivery_report(request):
     context = {}
+    measure = request.query_params.get("measure", None)
+    start_date = request.query_params.get("start", None)
+    end_date = request.query_params.get("end", None)
 
-    return Response(context, status=status.HTTP_200_OK)
+    # 9.1
+    if measure == "delivery search":
+        invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+        if len(invoices) > 0:
+            invoice_ser = DNSerailizer(invoices, many=True)
+            context['message'] = invoice_ser.data
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No delivery notes were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # # 9.2
+    # elif measure == "amount search":
+    #     invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+    #                         .filter(date_created__gte=start_date)\
+    #                         .filter(date_created__lte=end_date).all().order_by("date_created")
+
+    #     if len(invoices) > 0:
+    #         invoice_ser = DNSerailizer(invoices, many=True)
+    #         context['message'] = invoice_ser.data
+
+    #         return Response(context, status=status.HTTP_200_OK)
+
+    #     else:
+    #         context["message"] = "No invoices were created within this date range"
+    #         return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+
+    # 9.2
+    elif measure == "per customer":
+        invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+
+        if len(invoices) > 0:
+            invoice_ser = DNSerailizer(invoices, many=True)
+            total_data = {}
+            for inv in invoice_ser.data:
+                full_name = inv['customer']['first_name'] + " " + inv['customer']['last_name']
+                if full_name in total_data:
+                    total_data[full_name] += float(inv['grand_total'])
+                else:
+                    total_data[full_name] = 0
+            
+            final_data = []
+            for k,v in total_data.items():
+                final_data.append({"full_name": k, "total_amount": v})
+
+            context['message'] = final_data
+
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No delivery notes were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+    # # 9.4
+    # elif measure == "total per date":
+    #     context = {}
+    #     how = request.query_params.get("how")
+
+    #     if how == "hour":
+    #         start_time = datetime.strptime(start_date, "%Y-%m-%d")
+    #         end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+    #         interval = (end_time - start_time)
+    #         total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+    #         # total_data = {}
+    #         for hour in range(0, total_hours+1):
+    #             current_time = start_time + timedelta(hours=hour)
+    #             invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
+    #                                       .filter(date_created__hour=current_time.hour)
+    #             invoice_ser = DNSerailizer(invoices, many=True)
+
+    #             # for inv in invoice_ser.data:
+    #             total_amount = 0
+    #             for inv in invoice_ser.data:
+    #                     total_amount += float(inv['grand_total'])
+
+    #             context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+            
+    #         return Response(context, status=status.HTTP_200_OK)
+        
+    #     elif how == "day":
+    #         start_time = datetime.strptime(start_date, "%Y-%m-%d")
+    #         end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+    #         interval = (end_time - start_time)
+    #         total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+    #         # total_data = {}
+    #         for day in range(0, total_days+1):
+    #             current_time = start_time + timedelta(days=day)
+    #             invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())
+
+    #             invoice_ser = DNSerailizer(invoices, many=True)
+
+    #             total_amount = 0
+    #             for inv in invoice_ser.data:
+    #                     total_amount += float(inv['grand_total'])
+
+    #             context[current_time.strftime('%Y-%m-%d')] = total_amount
+                
+    #         return Response(context, status=status.HTTP_200_OK)
+        
+    #     elif how == "week":
+    #         start_time = datetime.strptime(start_date, "%Y-%m-%d")
+    #         end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+    #         interval = (end_time - start_time)
+    #         total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+    #         if total_weeks > 0:
+    #             for week in range(0, total_weeks+1):
+    #                 start_time += timedelta(weeks=week)
+    #                 current_week = start_time + timedelta(weeks=week+1)
+
+    #                 if current_week > end_time:
+    #                     current_week = end_time
+
+    #                 invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
+    #                                             .filter(date_created__lte=current_week)
+    #                 invoice_ser = DNSerailizer(invoices, many=True)
+    #                 key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+    #                 total_amount = 0
+    #                 for inv in invoice_ser.data:
+    #                         total_amount += float(inv['grand_total'])
+
+    #                 context[key] = total_amount
+                        
+    #                 # context[key] = invoice_ser.data
+                
+    #             return Response(context, status=status.HTTP_200_OK)
+
+    #         else:
+    #             invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+    #                         .filter(date_created__gte=start_date)\
+    #                         .filter(date_created__lte=end_date).all().order_by("date_created")
+
+    #             if len(invoices) > 0:
+    #                 invoice_ser = DNSerailizer(invoices, many=True)
+    #                 key = f"{start_date} - {end_date}"
+
+    #                 total_amount = 0
+    #                 for inv in invoice_ser.data:
+    #                         total_amount += float(inv['grand_total'])
+
+    #                 context[key] = total_amount
+    #                     # context['message'] = invoice_ser.data
+
+    #                 return Response(context, status=status.HTTP_200_OK)
+
+    #             else:
+    #                 context["message"] = "No delivery notes were created within this date range"
+    #                 return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+    #         # return Response(context, status=status.HTTP_200_OK)
+        
+    #     elif how == "months":
+    #         start_time = datetime.strptime(start_date, "%Y-%m-%d")
+    #         end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+    #         interval = (end_time - start_time)
+    #         total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+    #         if total_months > 0:
+    #             for week in range(0, total_months+1):
+    #                 start_time += timedelta(weeks=week*4)
+    #                 current_week = start_time + timedelta(weeks=(week+1)*4)
+
+    #                 if current_week > end_time:
+    #                     current_week = end_time
+
+    #                 invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
+    #                                             .filter(date_created__lte=current_week)
+    #                 invoice_ser = DNSerailizer(invoices, many=True)
+    #                 key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+    #                 # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+    #                 total_amount = 0
+    #                 for inv in invoice_ser.data:
+    #                         total_amount += float(inv['grand_total'])
+
+    #                 context[key] = total_amount
+    #                 # context[key] = invoice_ser.data
+    #             return Response(context, status=status.HTTP_200_OK)
+
+    #         else:
+    #             invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+    #                         .filter(date_created__gte=start_date)\
+    #                         .filter(date_created__lte=end_date).all().order_by("date_created")
+
+    #             if len(invoices) > 0:
+    #                 invoice_ser = DNSerailizer(invoices, many=True)
+    #                 key = f"{start_date} - {end_date}"
+
+    #                 total_amount = 0
+    #                 for inv in invoice_ser.data:
+    #                         total_amount += float(inv['grand_total'])
+
+    #                 context[key] = total_amount
+    #                 # context['message'] = invoice_ser.data
+
+    #                 return Response(context, status=status.HTTP_200_OK)
+
+    #             else:
+    #                 context["message"] = "No delivery notes were created within this date range"
+    #                 return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+    #         # return Response(context, status=status.HTTP_200_OK)
+        
+
+    #     elif how == "custom date":
+    #         invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+    #                         .filter(date_created__gte=start_date)\
+    #                         .filter(date_created__lte=end_date).all().order_by("date_created")
+
+    #         if len(invoices) > 0:
+    #             invoice_ser = DNSerailizer(invoices, many=True)
+    #             key = f"{start_date} - {end_date}"
+
+    #             total_amount = 0
+    #             for inv in invoice_ser.data:
+    #                     total_amount += float(inv['grand_total'])
+
+    #             context[key] = total_amount
+    #             # context['message'] = invoice_ser.data
+
+    #             return Response(context, status=status.HTTP_200_OK)
+
+    #         else:
+    #             context["message"] = "No delivery notes were created within this date range"
+    #             return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+    # 9.3
+    elif measure == "count delivery email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                emailed_count = DeliveryNote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                emailed_count = DeliveryNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True).count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    emailed_count = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True).count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = emailed_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                emailed_count = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = emailed_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            emailed_count = DeliveryNote.objects.filter(vendor=request.user.id)\
+                                .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True).count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = emailed_count
+            return Response(context, status=status.HTTP_200_OK)
+    
+
+    # 9.4
+    elif measure == "detail invoice email":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                              .filter(emailed=True)
+                invoice_ser = DNSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(emailed=True)
+
+                invoice_ser = DNSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)
+                    invoice_ser = DNSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = DNSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed delivery note within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                            current_week = end_time
+
+                    invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(emailed=True)\
+                                                .order_by("date_created")
+
+                    invoice_ser = DNSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = DNSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No emailed delivery note within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(emailed=True)\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = DNSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No emailed delivery note within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+    
+
+    # 9.5
+    elif measure == "count delivery overdue":
+
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                overdue_count = DeliveryNote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(status="Overdue").count()
+                
+                context[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+                
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                
+                overdue_count = DeliveryNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Overdue").count()
+                
+                context[current_time.strftime('%Y-%m-%d')] = overdue_count
+
+                
+
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    overdue_count = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue").count()
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = overdue_count
+                            
+                    
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                overdue_count = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = overdue_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    overdue_count = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue").count()
+                    
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    context[key] = overdue_count
+                    
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                overdue_count = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue").count()
+
+                key = f"{start_date} - {end_date}"
+                context[key] = overdue_count
+                return Response(context, status=status.HTTP_200_OK)
+                
+        
+
+        elif how == "custom date":
+            overdue_count = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                                .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue").count()
+                
+            key = f"{start_date} - {end_date}"
+            context[key] = overdue_count
+            return Response(context, status=status.HTTP_200_OK)
+
+    # 9.6
+    elif measure == "detail delivery overdue":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Overdue")\
+                                            .order_by("date_created")
+                invoice_ser = DNSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Overdue")\
+                                            .order_by("date_created")
+
+                invoice_ser = DNSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue")\
+                                                .order_by("date_created")
+                    invoice_ser = DNSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = DNSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No overdue delivery note within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue")\
+                                                .order_by("date_created")
+
+                    invoice_ser = DNSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = DNSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No overdue delivery note within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = DNSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No overdue delivery note within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+
+    # 9.7
+    elif measure == "detail delivery pending":
+        context = {}
+        how = request.query_params.get("how")
+
+        if how == "hour":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_hours = int((interval.days*1440 + interval.seconds/60)/60)
+
+            # total_data = {}
+            for hour in range(0, total_hours+1):
+                current_time = start_time + timedelta(hours=hour)
+                invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
+                                          .filter(date_created__hour=current_time.hour)\
+                                          .filter(status="Pending")\
+                                            .order_by("date_created")
+                invoice_ser = DNSerailizer(invoices, many=True)
+
+                # context['message'] = invoice_ser.data
+                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+
+                # # for inv in invoice_ser.data:
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+            
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "day":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
+
+            # total_data = {}
+            for day in range(0, total_days+1):
+                current_time = start_time + timedelta(days=day)
+                invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(status="Pending")\
+                                            .order_by("date_created")
+
+                invoice_ser = DNSerailizer(invoices, many=True)
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                
+            return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "week":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
+
+            if total_weeks > 0:
+                for week in range(0, total_weeks+1):
+                    start_time += timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending")\
+                                                .order_by("date_created")
+                    invoice_ser = DNSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    context[key] = invoice_ser.data                        
+                
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = DNSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No pending delivery note within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "months":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
+
+            if total_months > 0:
+                for week in range(0, total_months+1):
+                    start_time += timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+
+                    if current_week > end_time:
+                        current_week = end_time
+
+                    invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Pending")\
+                                                .order_by("date_created")
+
+                    invoice_ser = DNSerailizer(invoices, many=True)
+                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = DNSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    # total_amount = 0
+                    # for inv in invoice_ser.data:
+                    #         total_amount += float(inv['grand_total'])
+
+                    # context[key] = total_amount
+                    context[key] = invoice_ser.data
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No pending delivery note within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+
+        elif how == "custom date":
+            invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Pending")\
+                            .order_by("date_created")
+
+            if len(invoices) > 0:
+                invoice_ser = DNSerailizer(invoices, many=True)
+                key = f"{start_date} - {end_date}"
+
+                # total_amount = 0
+                # for inv in invoice_ser.data:
+                #         total_amount += float(inv['grand_total'])
+
+                # context[key] = total_amount
+                context[key] = invoice_ser.data
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                context["message"] = "No pending delivery note within this date range"
+                return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
 
 
 
@@ -2579,5 +11953,78 @@ def delivery_report(request):
 @permission_classes((IsAuthenticated, ))
 def item_report(request):
     context = {}
+
+    measure = request.query_params.get("measure", None)
+    start_date = request.query_params.get("start", None)
+    end_date = request.query_params.get("end", None)
+
+
+    # 10.1
+    if measure == "item search":
+        items = Item.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created")
+        
+        if len(items) > 0:
+            item_ser = ItemSerializer(items, many=True)
+
+            context['message'] = item_ser.data
+            
+            return Response(context, status=status.HTTP_200_OK)
+        else:
+            context["message"] = "No items were created within this date range"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+    # 10.2
+    elif measure == "sales price search":
+
+        items = Item.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .order_by("sales_price")\
+                            .order_by("date_created")
+        if len(items) > 0:
+            item_ser = ItemSerializer(items, many=True)
+            context['message'] = item_ser.data
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No items matched the given parameters"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+    
+
+    # 10.4
+    elif measure == "items total":
+        items_count = Item.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date).all().order_by("date_created").count()
+        context["message"] = items_count
+        return Response(context, status=status.HTTP_200_OK)
+
+
+
+    # 10.5
+    elif measure == "sales price range":
+        upper_price = request.query_params.get("upper_price")
+        lower_price = request.query_params.get("lower_price")
+
+        items = Item.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(sales_price__gte=lower_price)\
+                            .filter(sales_price__lte=upper_price)\
+                            .order_by("date_created")
+        if len(items) > 0:
+            item_ser = ItemSerializer(items, many=True)
+            context['message'] = item_ser.data
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No items matched the given parameters"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
 
     return Response(context, status=status.HTTP_200_OK)

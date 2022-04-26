@@ -89,6 +89,8 @@ class Invoice(models.Model):
     # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+    emailed = models.BooleanField(default=False)
+    recurring = models.BooleanField(default=False)
 
     
     # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
@@ -140,6 +142,8 @@ class ProformaInvoice(models.Model):
     # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+    emailed = models.BooleanField(default=False)
+    recurring = models.BooleanField(default=False)
 
     # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     # invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
@@ -183,6 +187,8 @@ class PurchaseOrder(models.Model):
     # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+    emailed = models.BooleanField(default=False)
+    recurring = models.BooleanField(default=False)
 
     # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     # po_pref = models.CharField("Purchase Order Preference", max_length=15, blank=False, null=False)
@@ -227,6 +233,8 @@ class Estimate(models.Model):
     # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+    emailed = models.BooleanField(default=False)
+    recurring = models.BooleanField(default=False)
 
     # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     # estimate_pref = models.CharField("Estimate Preference", max_length=15, blank=False, null=False, default="a")
@@ -276,6 +284,8 @@ class Quote(models.Model):
     # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+    emailed = models.BooleanField(default=False)
+    recurring = models.BooleanField(default=False)
 
     # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     # quote_pref = models.CharField("Quote Preference", max_length=15, blank=False, null=False)
@@ -326,6 +336,8 @@ class Receipt(models.Model):
     # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+    emailed = models.BooleanField(default=False)
+    recurring = models.BooleanField(default=False)
 
     # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     # receipt_pref = models.CharField("Receipt Preference", max_length=15, blank=False, null=False)
@@ -377,6 +389,8 @@ class CreditNote(models.Model):
     # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+    emailed = models.BooleanField(default=False)
+    recurring = models.BooleanField(default=False)
 
     # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     # cn_pref = models.CharField("Credit Note Preference", max_length=15, blank=False, null=False)
@@ -429,6 +443,8 @@ class DeliveryNote(models.Model):
     # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
+    emailed = models.BooleanField(default=False)
+    recurring = models.BooleanField(default=False)
 
     # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     # dn_pref = models.CharField("Delivery Note Preference", max_length=15, blank=False, null=False)
@@ -630,6 +646,7 @@ class Item(models.Model):
     sales_tax = models.FloatField("Sales Tax", blank=False, null=False)
     date_created = models.DateTimeField("Date created", auto_now_add=True)
     date_modified = models.DateTimeField("Date modified", auto_now=True)
+    sku = models.CharField("SKU", max_length=15, blank=True, null=True, unique=True)
 
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
 

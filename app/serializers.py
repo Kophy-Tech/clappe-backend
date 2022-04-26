@@ -1,3 +1,4 @@
+import json
 from rest_framework import serializers
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.hashers import check_password
@@ -7,8 +8,10 @@ from .models import CreditNote, Customer, DeliveryNote, Item, MyUsers, Invoice, 
                     Estimate, PurchaseOrder, PayInvoice, PayEstimate, PayProforma, PayPurchaseOrder, Quote, Receipt
 
 from .forms import ScheduleForm
+from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
-import cloudinary, requests
+import cloudinary, string
+from random import choices
 
 
 
@@ -21,6 +24,14 @@ CURRENCY_MAPPING = {
     "Naira": "₦",
 
 }
+
+
+def get_sku():
+    all_xter = string.ascii_uppercase + string.digits
+    sku = ''.join(choices(all_xter, k=8))
+
+    return sku
+
 
 
 
@@ -253,7 +264,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 class ItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item
-        fields = ["id", "name", "description", "cost_price", "sales_price", "sales_tax"]
+        fields = ["id", "name", "description", "cost_price", "sales_price", "sales_tax", "sku"]
 
 
 
@@ -266,7 +277,7 @@ class CreateItemSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Item
-        fields = ["name", "description", "cost_price", "sales_price", "sales_tax"]
+        fields = ["name", "description", "cost_price", "sales_price", "sales_tax", "sku"]
         
 
 
@@ -278,6 +289,8 @@ class CreateItemSerializer(ModelSerializer):
         new_item.cost_price = self.validated_data['cost_price']
         new_item.sales_price = self.validated_data['sales_price']
         new_item.sales_tax = self.validated_data['sales_tax']
+
+        new_item.sku = self.validated_data.get("sku", get_sku())
 
         new_item.vendor = request.user
 
@@ -539,13 +552,8 @@ class PayInvoiceSerializer(ModelSerializer):
         fields = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "invoice_id"]
 
 
-    def save(self):
+    def save(self, invoice):
 
-        try:
-            invoice = Invoice.objects.get(id=self.validated_data['invoice_id'])
-        except Exception as e:
-            print(e)
-            return None
         pay_invoice = PayInvoice()
         pay_invoice.payment_type = self.validated_data["payment_type"]
         pay_invoice.paid_date = self.validated_data["paid_date"]
@@ -557,8 +565,10 @@ class PayInvoiceSerializer(ModelSerializer):
         invoice.save()
         pay_invoice.invoice = invoice
         
-
         pay_invoice.save()
+
+        my_task = PeriodicTask.objects.get(args=json.dumps([invoice.id, "invoice"]))
+        my_task.delete()
 
         return pay_invoice
 
@@ -766,13 +776,13 @@ class PayProformaSerializer(ModelSerializer):
         fields = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "proforma_id"]
 
 
-    def save(self):
+    def save(self, proforma):
 
-        try:
-            proforma = ProformaInvoice.objects.get(id=self.validated_data['proforma_id'])
-        except Exception as e:
-            print(e)
-            return None
+        # try:
+        #     proforma = ProformaInvoice.objects.get(id=self.validated_data['proforma_id'])
+        # except Exception as e:
+        #     print(e)
+        #     return None
 
         pay_proforma = PayProforma()
         pay_proforma.payment_type = self.validated_data["payment_type"]
@@ -784,9 +794,11 @@ class PayProformaSerializer(ModelSerializer):
         proforma.status = "Paid"
         proforma.save()
         pay_proforma.proforma = proforma
-        
 
         pay_proforma.save()
+
+        my_task = PeriodicTask.objects.get(args=json.dumps([proforma.id, "proforma"]))
+        my_task.delete()
 
         return pay_proforma
 
@@ -996,13 +1008,7 @@ class PayPurchaseSerializer(ModelSerializer):
         fields = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "purchase_id"]
 
 
-    def save(self):
-
-        try:
-            purchase_order = PurchaseOrder.objects.get(id=self.validated_data['purchase_id'])
-        except Exception as e:
-            print(e)
-            return None
+    def save(self, purchase_order):
 
         pay_purchase = PayPurchaseOrder()
         pay_purchase.payment_type = self.validated_data["payment_type"]
@@ -1014,9 +1020,11 @@ class PayPurchaseSerializer(ModelSerializer):
         purchase_order.status = "Paid"
         purchase_order.save()
         pay_purchase.purchase_order = purchase_order
-        
 
         pay_purchase.save()
+
+        my_task = PeriodicTask.objects.get(args=json.dumps([purchase_order.id, "purchase"]))
+        my_task.delete()
 
         return pay_purchase
 
@@ -1226,13 +1234,7 @@ class PayEstimateSerializer(ModelSerializer):
         fields = ["payment_type", "paid_date", "paid_amount", "payment_method", "reference", "estimate_id"]
 
 
-    def save(self):
-
-        try:
-            estimate = Estimate.objects.get(id=self.validated_data['estimate_id'])
-        except Exception as e:
-            print(e)
-            return None
+    def save(self, estimate):
 
         pay_estimate = PayEstimate()
         pay_estimate.payment_type = self.validated_data["payment_type"]
@@ -1244,9 +1246,10 @@ class PayEstimateSerializer(ModelSerializer):
         estimate.status = "Paid"
         estimate.save()
         pay_estimate.estimate = estimate
-        
-
         pay_estimate.save()
+
+        my_task = PeriodicTask.objects.get(args=json.dumps([estimate.id, "estimate"]))
+        my_task.delete()
 
         return pay_estimate
 
@@ -1462,13 +1465,7 @@ class PayQuoteSerializer(ModelSerializer):
         
 
 
-    def save(self):
-
-        try:
-            quote = Quote.objects.get(id=self.validated_data['quote_id'])
-        except Exception as e:
-            print(e)
-            return None
+    def save(self, quote):
 
         pay_quote = PayQuote()
         pay_quote.payment_type = self.validated_data["payment_type"]
@@ -1480,9 +1477,11 @@ class PayQuoteSerializer(ModelSerializer):
         quote.status = "Paid"
         quote.save()
         pay_quote.quote = quote
-        
 
         pay_quote.save()
+
+        my_task = PeriodicTask.objects.get(args=json.dumps([quote.id, "quote"]))
+        my_task.delete()
 
         return pay_quote
 
@@ -1699,13 +1698,7 @@ class PayCNSerializer(ModelSerializer):
         
 
 
-    def save(self):
-
-        try:
-            credit = CreditNote.objects.get(id=self.validated_data['credit_id'])
-        except Exception as e:
-            print(e)
-            return None
+    def save(self, credit):
 
         pay_credit = PayCreditNote()
         pay_credit.payment_type = self.validated_data["payment_type"]
@@ -1717,9 +1710,11 @@ class PayCNSerializer(ModelSerializer):
         credit.status = "Paid"
         credit.save()
         pay_credit.credit_note = credit
-        
 
         pay_credit.save()
+
+        my_task = PeriodicTask.objects.get(args=json.dumps([credit.id, "credit_note"]))
+        my_task.delete()
 
         return pay_credit
 
@@ -1947,13 +1942,7 @@ class PayReceiptSerializer(ModelSerializer):
         
 
 
-    def save(self):
-
-        try:
-            receipt = Receipt.objects.get(id=self.validated_data['receipt_id'])
-        except Exception as e:
-            print(e)
-            return None
+    def save(self, receipt):
 
         pay_receipt = PayReceipt()
         pay_receipt.payment_type = self.validated_data["payment_type"]
@@ -1965,9 +1954,11 @@ class PayReceiptSerializer(ModelSerializer):
         receipt.status = "Paid"
         receipt.save()
         pay_receipt.receipt = receipt
-        
 
         pay_receipt.save()
+
+        my_task = PeriodicTask.objects.get(args=json.dumps([receipt.id, "receipt"]))
+        my_task.delete()
 
         return pay_receipt
 
@@ -2188,14 +2179,7 @@ class PayDNSerializer(ModelSerializer):
         
 
 
-    def save(self):
-
-        try:
-            delivery = DeliveryNote.objects.get(id=self.validated_data['delivery_id'])
-        except Exception as e:
-            print(e)
-            return None
-
+    def save(self, delivery):
         pay_delivery = PayDeliveryNote()
         pay_delivery.payment_type = self.validated_data["payment_type"]
         pay_delivery.paid_date = self.validated_data["paid_date"]
@@ -2206,9 +2190,11 @@ class PayDNSerializer(ModelSerializer):
         delivery.status = "Paid"
         delivery.save()
         pay_delivery.delivery_note = delivery
-        
 
         pay_delivery.save()
+
+        my_task = PeriodicTask.objects.get(args=json.dumps([delivery.id, "delivery_note"]))
+        my_task.delete()
 
         return pay_delivery
 
