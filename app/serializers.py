@@ -11,6 +11,7 @@ from .forms import ScheduleForm
 from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
 import cloudinary, string
+from datetime import timedelta
 from random import choices
 
 
@@ -220,19 +221,19 @@ class CustomerEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
-        instance.first_name = validated_data["first_name"]
-        instance.last_name = validated_data["last_name"]
-        instance.business_name = validated_data["business_name"]
-        instance.address = validated_data["address"]
-        instance.email = validated_data["email"]
-        instance.phone_number = validated_data["phone_number"]
-        instance.taxable = validated_data["taxable"]
-        instance.invoice_pref = validated_data["invoice_pref"]
-        # instance.logo_path = validated_data["logo_path"]
-        instance.ship_to = validated_data["ship_to"]
-        instance.shipping_address = validated_data["shipping_address"]
-        instance.billing_address = validated_data["billing_address"]
-        instance.notes = validated_data["notes"]
+        instance.first_name = validated_data.get("first_name", instance.first_name)
+        instance.last_name = validated_data.get("last_name", instance.last_name)
+        instance.business_name = validated_data.get("business_name", instance.business_name)
+        instance.address = validated_data.get("address", instance.address)
+        instance.email = validated_data.get("email", instance.email)
+        instance.phone_number = validated_data.get("phone_number", instance.phone_number)
+        instance.taxable = validated_data.get("taxable", instance.taxable)
+        instance.invoice_pref = validated_data.get("invoice_pref", instance.invoice_pref)
+        
+        instance.ship_to = validated_data.get("ship_to", instance.ship_to)
+        instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
+        instance.billing_address = validated_data.get("billing_address", instance.billing_address)
+        instance.notes = validated_data.get("notes", instance.notes)
 
         instance.save()
 
@@ -300,11 +301,11 @@ class CreateItemSerializer(ModelSerializer):
 
 
     def update(self, instance):
-        instance.name = self.validated_data['name']
-        instance.description = self.validated_data['description']
-        instance.cost_price = self.validated_data['cost_price']
-        instance.sales_price = self.validated_data['sales_price']
-        instance.sales_tax = self.validated_data['sales_tax']
+        instance.name = self.validated_data.get('name', instance.name)
+        instance.description = self.validated_data.get('description', instance.description)
+        instance.cost_price = self.validated_data.get('cost_price', instance.cost_price)
+        instance.sales_price = self.validated_data.get('sales_price', instance.sales_price)
+        instance.sales_tax = self.validated_data.get('sales_tax', instance.sales_tax)
 
         instance.save()
 
@@ -375,8 +376,8 @@ class InvoiceCreate(ModelSerializer):
         new_invoice.shipping_address = self.validated_data["shipping_address"]
         new_invoice.bill_to = self.validated_data["bill_to"]
         new_invoice.billing_address = self.validated_data["billing_address"]
-        new_invoice.notes = self.validated_data["notes"]
-        new_invoice.terms = self.validated_data["terms"]
+        new_invoice.notes = self.validated_data.get("notes", "")
+        new_invoice.terms = self.validated_data.get("terms", "")
 
 
         item_list = self.validated_data['item_list']
@@ -387,13 +388,13 @@ class InvoiceCreate(ModelSerializer):
         new_invoice.quantity_list = quantities
 
         new_invoice.item_total = self.validated_data["item_total"]
-        new_invoice.tax = self.validated_data["tax"]
-        new_invoice.add_charges = self.validated_data["add_charges"]
+        new_invoice.tax = self.validated_data.get("tax", 0)
+        new_invoice.add_charges = self.validated_data.get("add_charges", 0)
         new_invoice.sub_total = self.validated_data["sub_total"]
         new_invoice.discount_type = self.validated_data["discount_type"]
         new_invoice.discount_amount = self.validated_data["discount_amount"]
         new_invoice.grand_total = self.validated_data["grand_total"]
-        new_invoice.status = "Unpaid"
+        new_invoice.status = "Pending"
         
         new_invoice.vendor = request.user
 
@@ -428,6 +429,20 @@ class InvoiceCreate(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _, _ = new_schedule.save()
+
+        second_schedule_details = {
+            "date": new_invoice.due_date + timedelta(weeks=24),
+            "document_type": "invoice",
+            "document_id": new_invoice.id,
+            "task_type": "one_time",
+            "email": new_invoice.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.save()
+
+
 
 
         return new_invoice
@@ -470,10 +485,8 @@ class InvoiceEditSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Invoice
-        fields = [
-            "customer_id",
-            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "item_list",
-            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "send_email", "download", "terms"]
+        fields = ["customer_id", "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "item_list",
+                    "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "send_email", "download", "terms"]
 
 
     def update(self, instance, validated_data, request):
@@ -487,16 +500,16 @@ class InvoiceEditSerializer(ModelSerializer):
         # instance.taxable = validated_data["taxable"]
         # instance.invoice_pref = validated_data["invoice_pref"]
         # instance.logo_path = validated_data["logo_path"]
-        instance.invoice_date = validated_data['invoice_date']
-        instance.po_number = validated_data['po_number']
-        instance.due_date = validated_data['due_date']
+        instance.invoice_date = validated_data.get('invoice_date', instance.invoice_date)
+        instance.po_number = validated_data.get('po_number', instance.po_number)
+        instance.due_date = validated_data.get('due_date', instance.due_date)
 
-        instance.ship_to = validated_data["ship_to"]
-        instance.shipping_address = validated_data["shipping_address"]
-        instance.bill_to = validated_data["bill_to"]
-        instance.billing_address = validated_data["billing_address"]
-        instance.notes = validated_data["notes"]
-        instance.terms = validated_data["terms"]
+        instance.ship_to = validated_data.get("ship_to", instance.ship_to)
+        instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
+        instance.bill_to = validated_data.get("bill_to", instance.bill_to)
+        instance.billing_address = validated_data.get("billing_address", instance.billing_address)
+        instance.notes = validated_data.get("notes", instance.notes)
+        instance.terms = validated_data.get("terms", instance.terms)
 
         item_list = validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -506,13 +519,13 @@ class InvoiceEditSerializer(ModelSerializer):
         instance.quantity_list = quantities
 
 
-        instance.item_total = validated_data["item_total"]
-        instance.tax = validated_data["tax"]
-        instance.add_charges = validated_data["add_charges"]
-        instance.sub_total = validated_data["sub_total"]
-        instance.discount_type = validated_data["discount_type"]
-        instance.discount_amount = validated_data["discount_amount"]
-        instance.grand_total = validated_data["grand_total"]
+        instance.item_total = validated_data.get("item_total", instance.item_total)
+        instance.tax = validated_data.get("tax", instance.tax)
+        instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+        instance.sub_total = validated_data.get("sub_total", instance.sub_total)
+        instance.discount_type = validated_data.get("discount_type", instance.discount_type)
+        instance.discount_amount = validated_data.get("discount_amount", instance.discount_amount)
+        instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
 
         instance.save()
@@ -539,7 +552,23 @@ class InvoiceEditSerializer(ModelSerializer):
         if new_schedule.is_valid():
             _ = new_schedule.update()
 
+
+        second_schedule_details = {
+            "date": instance.due_date + timedelta(weeks=24),
+            "document_type": "invoice",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.update()
+
+
         return instance
+
+        
 
 
 
@@ -617,8 +646,8 @@ class ProformaCreateSerializer(ModelSerializer):
         new_proforma.invoice_date = self.validated_data["invoice_date"]
         new_proforma.po_number = self.validated_data["po_number"]
         new_proforma.due_date = self.validated_data["due_date"]
-        new_proforma.notes = self.validated_data["notes"]
-        new_proforma.terms = self.validated_data["terms"]
+        new_proforma.notes = self.validated_data.get("notes", "")
+        new_proforma.terms = self.validated_data.get("terms", "")
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -629,9 +658,10 @@ class ProformaCreateSerializer(ModelSerializer):
 
 
         new_proforma.item_total = self.validated_data["item_total"]
-        new_proforma.tax = self.validated_data["tax"]
-        new_proforma.add_charges = self.validated_data["add_charges"]
+        new_proforma.tax = self.validated_data.get("tax", 0)
+        new_proforma.add_charges = self.validated_data.get("add_charges", 0)
         new_proforma.grand_total = self.validated_data["grand_total"]
+        new_proforma.status = "Pending"
 
         new_proforma.vendor = request.user
 
@@ -658,6 +688,21 @@ class ProformaCreateSerializer(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _, _ = new_schedule.save()
+
+
+        second_schedule_details = {
+            "date": new_proforma.due_date + timedelta(weeks=24),
+            "document_type": "proforma",
+            "document_id": new_proforma.id,
+            "task_type": "one_time",
+            "email": new_proforma.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.save()
+
+
 
         return new_proforma
 
@@ -699,9 +744,7 @@ class ProformaEditSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = ProformaInvoice
-        fields = [
-                "customer_id", 
-                    "invoice_date", "po_number", "due_date", "notes", "item_list", 
+        fields = ["customer_id", "invoice_date", "po_number", "due_date", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
 
@@ -719,11 +762,11 @@ class ProformaEditSerializer(ModelSerializer):
         # instance.taxable = validated_data["taxable"]
         # instance.invoice_pref = validated_data["invoice_pref"]
         # instance.logo_path = validated_data["logo_path"]
-        instance.invoice_date = validated_data["invoice_date"]
-        instance.po_number = validated_data["po_number"]
-        instance.due_date = validated_data["due_date"]
-        instance.notes = validated_data["notes"]
-        instance.terms = validated_data["terms"]
+        instance.invoice_date = validated_data.get("invoice_date", instance.invoice_date)
+        instance.po_number = validated_data.get("po_number", instance.po_number)
+        instance.due_date = validated_data.get("due_date", instance.due_date)
+        instance.notes = validated_data.get("notes", instance.notes)
+        instance.terms = validated_data.get("terms", instance.terms)
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -733,10 +776,10 @@ class ProformaEditSerializer(ModelSerializer):
         instance.quantity_list = quantities
 
 
-        instance.item_total = validated_data["item_total"]
-        instance.tax = validated_data["tax"]
-        instance.add_charges = validated_data["add_charges"]
-        instance.grand_total = validated_data["grand_total"]
+        instance.item_total = validated_data.get("item_total", instance.item_total)
+        instance.tax = validated_data.get("tax", instance.tax)
+        instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+        instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
         instance.save()
 
@@ -759,6 +802,19 @@ class ProformaEditSerializer(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _ = new_schedule.update()
+
+        
+        second_schedule_details = {
+            "date": instance.due_date + timedelta(weeks=24),
+            "document_type": "proforma",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.update()
 
         return instance
 
@@ -849,9 +905,9 @@ class PurchaseCreateSerializer(ModelSerializer):
         new_purchaseorder.po_date = self.validated_data["po_date"]
         new_purchaseorder.due_date = self.validated_data["due_date"]
         new_purchaseorder.ship_to = self.validated_data["ship_to"]
-        new_purchaseorder.notes = self.validated_data["notes"]
+        new_purchaseorder.notes = self.validated_data.get("notes", "")
         new_purchaseorder.shipping_address = self.validated_data["shipping_address"]
-        new_purchaseorder.terms = self.validated_data["terms"]
+        new_purchaseorder.terms = self.validated_data.get("terms", "")
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -862,9 +918,11 @@ class PurchaseCreateSerializer(ModelSerializer):
 
 
         new_purchaseorder.item_total = self.validated_data["item_total"]
-        new_purchaseorder.tax = self.validated_data["tax"]
-        new_purchaseorder.add_charges = self.validated_data["add_charges"]
+        new_purchaseorder.tax = self.validated_data.get("tax", 0)
+        new_purchaseorder.add_charges = self.validated_data.get("add_charges", 0)
         new_purchaseorder.grand_total = self.validated_data["grand_total"]
+        
+        new_purchaseorder.status = "Pending"
 
         new_purchaseorder.vendor = request.user
 
@@ -890,6 +948,19 @@ class PurchaseCreateSerializer(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _, _ = new_schedule.save()
+
+        
+        second_schedule_details = {
+            "date": new_purchaseorder.due_date + timedelta(weeks=24),
+            "document_type": "purchase",
+            "document_id": new_purchaseorder.id,
+            "task_type": "one_time",
+            "email": new_purchaseorder.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.save()
 
         return new_purchaseorder
 
@@ -935,9 +1006,7 @@ class PurchaseEditSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = PurchaseOrder
-        fields = [
-                "customer_id", 
-                    "po_date", "due_date", "ship_to", "notes", "shipping_address", "item_list", 
+        fields = ["customer_id", "po_date", "due_date", "ship_to", "notes", "shipping_address", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
 
@@ -953,9 +1022,9 @@ class PurchaseEditSerializer(ModelSerializer):
         # instance.taxable = validated_data["taxable"]
         # instance.po_pref = validated_data["po_pref"]
         # instance.logo_path = validated_data["logo_path"]
-        instance.po_date = validated_data["po_date"]
-        instance.notes = validated_data["notes"]
-        instance.terms = validated_data["terms"]
+        instance.po_date = validated_data.get("po_date", instance.po_date)
+        instance.notes = validated_data.get("notes", instance.notes)
+        instance.terms = validated_data.get("terms", instance.terms)
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -965,10 +1034,10 @@ class PurchaseEditSerializer(ModelSerializer):
         instance.quantity_list = quantities
 
 
-        instance.item_total = validated_data["item_total"]
-        instance.tax = validated_data["tax"]
-        instance.add_charges = validated_data["add_charges"]
-        instance.grand_total = validated_data["grand_total"]
+        instance.item_total = validated_data.get("item_total", instance.item_total)
+        instance.tax = validated_data.get("tax", instance.tax)
+        instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+        instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
         instance.save()
 
@@ -991,6 +1060,19 @@ class PurchaseEditSerializer(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _ = new_schedule.update()
+
+
+        second_schedule_details = {
+            "date": instance.due_date + timedelta(weeks=24),
+            "document_type": "purchase",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.update()
 
         return instance
 
@@ -1072,8 +1154,8 @@ class EstimateCreateSerializer(ModelSerializer):
         new_estimate.shipping_address = self.validated_data["shipping_address"]
         new_estimate.bill_to = self.validated_data["bill_to"]
         new_estimate.billing_address = self.validated_data["billing_address"]
-        new_estimate.notes = self.validated_data["notes"]
-        new_estimate.terms = self.validated_data["terms"]
+        new_estimate.notes = self.validated_data.get("notes", "")
+        new_estimate.terms = self.validated_data.get("terms", "")
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1084,9 +1166,11 @@ class EstimateCreateSerializer(ModelSerializer):
 
 
         new_estimate.item_total = self.validated_data["item_total"]
-        new_estimate.tax = self.validated_data["tax"]
-        new_estimate.add_charges = self.validated_data["add_charges"]
+        new_estimate.tax = self.validated_data.get("tax", 0)
+        new_estimate.add_charges = self.validated_data.get("add_charges", 0)
         new_estimate.grand_total = self.validated_data["grand_total"]
+
+        new_estimate.status = "Pending"
 
         new_estimate.vendor = request.user
 
@@ -1112,6 +1196,19 @@ class EstimateCreateSerializer(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _, _ = new_schedule.save()
+
+        
+        second_schedule_details = {
+            "date": new_estimate.due_date + timedelta(weeks=24),
+            "document_type": "estimate",
+            "document_id": new_estimate.id,
+            "task_type": "one_time",
+            "email": new_estimate.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.save()
 
         return new_estimate
 
@@ -1156,9 +1253,7 @@ class EstimateEditSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Estimate
-        fields = [
-                "customer_id", "po_number", "due_date",
-                    "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
+        fields = ["customer_id", "po_number", "due_date", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
 
@@ -1173,15 +1268,15 @@ class EstimateEditSerializer(ModelSerializer):
         # instance.taxable = validated_data["taxable"]
         # instance.estimate_pref = validated_data["estimate_pref"]
         # instance.logo_path = validated_data["logo_path"]
-        instance.estimate_date = validated_data["estimate_date"]
-        instance.due_date = validated_data["due_date"]
-        instance.po_number = validated_data["po_number"]
-        instance.ship_to = validated_data["ship_to"]
-        instance.shipping_address = validated_data["shipping_address"]
-        instance.bill_to = validated_data["bill_to"]
-        instance.billing_address = validated_data["billing_address"]
-        instance.notes = validated_data["notes"]
-        instance.terms = validated_data["terms"]
+        instance.estimate_date = validated_data.get("estimate_date", instance.estimate_date)
+        instance.due_date = validated_data.get("due_date", instance.due_date)
+        instance.po_number = validated_data.get("po_number", instance.po_number)
+        instance.ship_to = validated_data.get("ship_to", instance.ship_to)
+        instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
+        instance.bill_to = validated_data.get("bill_to", instance.bill_to)
+        instance.billing_address = validated_data.get("billing_address", instance.billing_address)
+        instance.notes = validated_data.get("notes", instance.notes)
+        instance.terms = validated_data.get("terms", instance.terms)
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1191,10 +1286,10 @@ class EstimateEditSerializer(ModelSerializer):
         instance.quantity_list = quantities
 
 
-        instance.item_total = validated_data["item_total"]
-        instance.tax = validated_data["tax"]
-        instance.add_charges = validated_data["add_charges"]
-        instance.grand_total = validated_data["grand_total"]
+        instance.item_total = validated_data.get("item_total", instance.item_total)
+        instance.tax = validated_data.get("tax", instance.tax)
+        instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+        instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
         instance.save()
 
@@ -1217,6 +1312,19 @@ class EstimateEditSerializer(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _ = new_schedule.update()
+
+        
+        second_schedule_details = {
+            "date": instance.due_date + timedelta(weeks=24),
+            "document_type": "estimate",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.update()
 
         return instance
 
@@ -1300,8 +1408,8 @@ class QuoteCreateSerializer(ModelSerializer):
         new_quote.shipping_address = self.validated_data["shipping_address"]
         new_quote.bill_to = self.validated_data["bill_to"]
         new_quote.billing_address = self.validated_data["billing_address"]
-        new_quote.notes = self.validated_data["notes"]
-        new_quote.terms = self.validated_data["terms"]
+        new_quote.notes = self.validated_data.get("notes", "")
+        new_quote.terms = self.validated_data.get("terms", "")
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1312,9 +1420,11 @@ class QuoteCreateSerializer(ModelSerializer):
 
 
         new_quote.item_total = self.validated_data["item_total"]
-        new_quote.tax = self.validated_data["tax"]
-        new_quote.add_charges = self.validated_data["add_charges"]
+        new_quote.tax = self.validated_data.get("tax", 0)
+        new_quote.add_charges = self.validated_data.get("add_charges", 0)
         new_quote.grand_total = self.validated_data["grand_total"]
+
+        new_quote.status = "Pending"
 
         new_quote.vendor = request.user
 
@@ -1341,6 +1451,19 @@ class QuoteCreateSerializer(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _, _ = new_schedule.save()
+
+        
+        second_schedule_details = {
+            "date": new_quote.due_date + timedelta(weeks=24),
+            "document_type": "quote",
+            "document_id": new_quote.id,
+            "task_type": "one_time",
+            "email": new_quote.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.save()
 
         return new_quote
 
@@ -1385,9 +1508,7 @@ class QuoteEditSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Quote
-        fields = [
-               "customer_id", "due_date",
-                    "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
+        fields = ["customer_id", "due_date", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
         
 
@@ -1403,15 +1524,15 @@ class QuoteEditSerializer(ModelSerializer):
         # instance.taxable = validated_data["taxable"]
         # instance.quote_pref = validated_data["quote_pref"]
         # instance.logo_path = validated_data["logo_path"]
-        instance.quote_date = validated_data["quote_date"]
-        instance.due_date = validated_data["due_date"]
-        instance.po_number = validated_data["po_number"]
-        instance.ship_to = validated_data["ship_to"]
-        instance.shipping_address = validated_data["shipping_address"]
-        instance.bill_to = validated_data["bill_to"]
-        instance.billing_address = validated_data["billing_address"]
-        instance.notes = validated_data["notes"]
-        instance.terms = validated_data["terms"]
+        instance.quote_date = validated_data.get("quote_date", instance.quote_date)
+        instance.due_date = validated_data.get("due_date", instance.due_date)
+        instance.po_number = validated_data.get("po_number", instance.po_number)
+        instance.ship_to = validated_data.get("ship_to", instance.ship_to)
+        instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
+        instance.bill_to = validated_data.get("bill_to", instance.bill_to)
+        instance.billing_address = validated_data.get("billing_address", instance.billing_address)
+        instance.notes = validated_data.get("notes", instance.notes)
+        instance.terms = validated_data.get("terms", instance.terms)
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1421,10 +1542,10 @@ class QuoteEditSerializer(ModelSerializer):
         instance.quantity_list = quantities
 
 
-        instance.item_total = validated_data["item_total"]
-        instance.tax = validated_data["tax"]
-        instance.add_charges = validated_data["add_charges"]
-        instance.grand_total = validated_data["grand_total"]
+        instance.item_total = validated_data.get("item_total", instance.item_total)
+        instance.tax = validated_data.get("tax", instance.tax)
+        instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+        instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
         instance.save()
 
@@ -1447,6 +1568,19 @@ class QuoteEditSerializer(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _ = new_schedule.update()
+
+        
+        second_schedule_details = {
+            "date": instance.due_date + timedelta(weeks=24),
+            "document_type": "quote",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.update()
 
         return instance
 
@@ -1533,8 +1667,8 @@ class CNCreateSerializer(ModelSerializer):
         new_credit.due_date = self.validated_data["due_date"]
         new_credit.ship_to = self.validated_data["ship_to"]
         new_credit.shipping_address = self.validated_data["shipping_address"]
-        new_credit.notes = self.validated_data["notes"]
-        new_credit.terms = self.validated_data["terms"]
+        new_credit.notes = self.validated_data.get("notes", "")
+        new_credit.terms = self.validated_data.get("terms", "")
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1545,9 +1679,11 @@ class CNCreateSerializer(ModelSerializer):
 
 
         new_credit.item_total = self.validated_data["item_total"]
-        new_credit.tax = self.validated_data["tax"]
-        new_credit.add_charges = self.validated_data["add_charges"]
+        new_credit.tax = self.validated_data.get("tax", 0)
+        new_credit.add_charges = self.validated_data.get("add_charges", 0)
         new_credit.grand_total = self.validated_data["grand_total"]
+
+        new_credit.status = "Pending"
 
         new_credit.vendor = request.user
 
@@ -1573,6 +1709,19 @@ class CNCreateSerializer(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _, _ = new_schedule.save()
+
+        
+        second_schedule_details = {
+            "date": new_credit.due_date + timedelta(weeks=24),
+            "document_type": "credit_note",
+            "document_id": new_credit.id,
+            "task_type": "one_time",
+            "email": new_credit.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.save()
 
         return new_credit
 
@@ -1638,13 +1787,13 @@ class CNEditSerializer(ModelSerializer):
         # instance.taxable = validated_data["taxable"]
         # instance.cn_pref = validated_data["cn_pref"]
         # instance.logo_path = validated_data["logo_path"]
-        instance.cn_date = validated_data["cn_date"]
-        instance.po_number = validated_data["po_number"]
-        instance.due_date = validated_data["due_date"]
-        instance.ship_to = validated_data["ship_to"]
-        instance.shipping_address = validated_data["shipping_address"]
-        instance.notes = validated_data["notes"]
-        instance.terms = validated_data["terms"]
+        instance.cn_date = validated_data.get("cn_date", instance.cn_date)
+        instance.po_number = validated_data.get("po_number", instance.po_number)
+        instance.due_date = validated_data.get("due_date", instance.due_date)
+        instance.ship_to = validated_data.get("ship_to", instance.ship_to)
+        instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
+        instance.notes = validated_data.get("notes", instance.notes)
+        instance.terms = validated_data.get("terms", instance.terms)
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1654,10 +1803,10 @@ class CNEditSerializer(ModelSerializer):
         instance.quantity_list = quantities
 
 
-        instance.item_total = validated_data["item_total"]
-        instance.tax = validated_data["tax"]
-        instance.add_charges = validated_data["add_charges"]
-        instance.grand_total = validated_data["grand_total"]
+        instance.item_total = validated_data.get("item_total", instance.item_total)
+        instance.tax = validated_data.get("tax", instance.tax)
+        instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+        instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
         instance.save()
 
@@ -1680,6 +1829,19 @@ class CNEditSerializer(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _ = new_schedule.update()
+
+        
+        second_schedule_details = {
+            "date": instance.due_date + timedelta(weeks=24),
+            "document_type": "credit_note",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.update()
 
         return instance
 
@@ -1771,8 +1933,8 @@ class REceiptCreateSerializer(ModelSerializer):
         new_receipt.shipping_address = self.validated_data["shipping_address"]
         new_receipt.bill_to = self.validated_data["bill_to"]
         new_receipt.billing_address = self.validated_data["billing_address"]
-        new_receipt.notes = self.validated_data["notes"]
-        new_receipt.terms = self.validated_data["terms"]
+        new_receipt.notes = self.validated_data.get("notes", "")
+        new_receipt.terms = self.validated_data.get("terms", "")
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1783,9 +1945,11 @@ class REceiptCreateSerializer(ModelSerializer):
 
 
         new_receipt.item_total = self.validated_data["item_total"]
-        new_receipt.tax = self.validated_data["tax"]
-        new_receipt.add_charges = self.validated_data["add_charges"]
+        new_receipt.tax = self.validated_data.get("tax", 0)
+        new_receipt.add_charges = self.validated_data.get("add_charges", 0)
         new_receipt.grand_total = self.validated_data["grand_total"]
+
+        new_receipt.status = "Pending"
 
         new_receipt.vendor = request.user
 
@@ -1811,6 +1975,19 @@ class REceiptCreateSerializer(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _, _ = new_schedule.save()
+
+        
+        second_schedule_details = {
+            "date": new_receipt.due_date + timedelta(weeks=24),
+            "document_type": "receipt",
+            "document_id": new_receipt.id,
+            "task_type": "one_time",
+            "email": new_receipt.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.save()
 
         return new_receipt
 
@@ -1880,15 +2057,15 @@ class ReceiptEditSerializer(ModelSerializer):
         # instance.taxable = validated_data["taxable"]
         # instance.receipt_pref = validated_data["receipt_pref"]
         # instance.logo_path = validated_data["logo_path"]
-        instance.receipt_date = validated_data["receipt_date"]
-        instance.po_number = validated_data["po_number"]
-        instance.due_date = validated_data["due_date"]
-        instance.ship_to = validated_data["ship_to"]
-        instance.shipping_address = validated_data["shipping_address"]
-        instance.bill_to = validated_data["bill_to"]
-        instance.billing_address = validated_data["billing_address"]
-        instance.notes = validated_data["notes"]
-        instance.terms = validated_data["terms"]
+        instance.receipt_date = validated_data.get("receipt_date", instance.receipt_date)
+        instance.po_number = validated_data.get("po_number", instance.po_number)
+        instance.due_date = validated_data.get("due_date", instance.due_date)
+        instance.ship_to = validated_data.get("ship_to", instance.ship_to)
+        instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
+        instance.bill_to = validated_data.get("bill_to", instance.bill_to)
+        instance.billing_address = validated_data.get("billing_address", instance.billing_address)
+        instance.notes = validated_data.get("notes", instance.notes)
+        instance.terms = validated_data.get("terms", instance.terms)
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1898,10 +2075,10 @@ class ReceiptEditSerializer(ModelSerializer):
         instance.quantity_list = quantities
 
 
-        instance.item_total = validated_data["item_total"]
-        instance.tax = validated_data["tax"]
-        instance.add_charges = validated_data["add_charges"]
-        instance.grand_total = validated_data["grand_total"]
+        instance.item_total = validated_data.get("item_total", instance.item_total)
+        instance.tax = validated_data.get("tax", instance.tax)
+        instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+        instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
         instance.save()
 
@@ -1924,6 +2101,19 @@ class ReceiptEditSerializer(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _ = new_schedule.update()
+
+        
+        second_schedule_details = {
+            "date": instance.due_date + timedelta(weeks=24),
+            "document_type": "receipt",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.update()
 
         return instance
 
@@ -2011,8 +2201,8 @@ class DNCreateSerializer(ModelSerializer):
         new_delivery.due_date = self.validated_data["due_date"]
         new_delivery.ship_to = self.validated_data["ship_to"]
         new_delivery.shipping_address = self.validated_data["shipping_address"]
-        new_delivery.notes = self.validated_data["notes"]
-        new_delivery.terms = self.validated_data["terms"]
+        new_delivery.notes = self.validated_data.get("notes", "")
+        new_delivery.terms = self.validated_data.get("terms", "")
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -2023,9 +2213,11 @@ class DNCreateSerializer(ModelSerializer):
 
 
         new_delivery.item_total = self.validated_data["item_total"]
-        new_delivery.tax = self.validated_data["tax"]
-        new_delivery.add_charges = self.validated_data["add_charges"]
+        new_delivery.tax = self.validated_data.get("tax", 0)
+        new_delivery.add_charges = self.validated_data.get("add_charges", 0)
         new_delivery.grand_total = self.validated_data["grand_total"]
+
+        new_delivery.status = "Pending"
 
         new_delivery.vendor = request.user
 
@@ -2051,6 +2243,19 @@ class DNCreateSerializer(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _, _ = new_schedule.save()
+
+        
+        second_schedule_details = {
+            "date": new_delivery.due_date + timedelta(weeks=24),
+            "document_type": "delivery_note",
+            "document_id": new_delivery.id,
+            "task_type": "one_time",
+            "email": new_delivery.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.save()
 
         return new_delivery
 
@@ -2119,13 +2324,13 @@ class DNEditSerializer(ModelSerializer):
         # instance.taxable = validated_data["taxable"]
         # instance.dn_pref = validated_data["dn_pref"]
         # instance.logo_path = validated_data["logo_path"]
-        instance.dn_date = validated_data["dn_date"]
-        instance.po_number = validated_data["po_number"]
-        instance.due_date = validated_data["due_date"]
-        instance.ship_to = validated_data["ship_to"]
-        instance.shipping_address = validated_data["shipping_address"]
-        instance.notes = validated_data["notes"]
-        instance.terms = validated_data["terms"]
+        instance.dn_date = validated_data.get("dn_date", instance.dn_date)
+        instance.po_number = validated_data.get("po_number", instance.po_number)
+        instance.due_date = validated_data.get("due_date", instance.due_date)
+        instance.ship_to = validated_data.get("ship_to", instance.ship_to)
+        instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
+        instance.notes = validated_data.get("notes", instance.notes)
+        instance.terms = validated_data.get("terms", instance.terms)
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -2135,10 +2340,10 @@ class DNEditSerializer(ModelSerializer):
         instance.quantity_list = quantities
 
 
-        instance.item_total = validated_data["item_total"]
-        instance.tax = validated_data["tax"]
-        instance.add_charges = validated_data["add_charges"]
-        instance.grand_total = validated_data["grand_total"]
+        instance.item_total = validated_data.get("item_total", instance.item_total)
+        instance.tax = validated_data.get("tax", instance.tax)
+        instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+        instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
         instance.save()
 
@@ -2161,6 +2366,19 @@ class DNEditSerializer(ModelSerializer):
         new_schedule = ScheduleForm(schedule_details)
         if new_schedule.is_valid():
             _ = new_schedule.update()
+        
+
+        second_schedule_details = {
+            "date": instance.due_date + timedelta(weeks=24),
+            "document_type": "delivery_note",
+            "document_id": instance.id,
+            "task_type": "one_time",
+            "email": instance.customer.email
+        }
+
+        second_schedule = ScheduleForm(second_schedule_details)
+        if second_schedule.is_valid():
+            _, _ = second_schedule.update()
 
         return instance
 

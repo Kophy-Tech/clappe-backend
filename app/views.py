@@ -351,6 +351,8 @@ def create_invoice(request):
                 subject = "Transaction Receipt"
                 send_my_email(new_invoice.customer.email, body, subject, file_name)
                 os.remove(file_name)
+                new_invoice.emailed = True
+                new_invoice.save()
 
 
             # if pdf_file:
@@ -435,6 +437,8 @@ def edit_invoice(request, id):
                     subject = "Transaction Receipt"
                     send_my_email(updated_invoice.customer.email, body, subject, file_name)
                     os.remove(file_name)
+                    updated_invoice.emailed = True
+                    updated_invoice.save()
 
 
 
@@ -588,6 +592,8 @@ def create_proforma(request):
                 subject = "Transaction Receipt"
                 send_my_email(new_invoice.customer.email, body, subject, file_name)
                 os.remove(file_name)
+                new_invoice.emailed = True
+                new_invoice.save()
 
 
             return Response(context, status=status.HTTP_200_OK)
@@ -669,6 +675,8 @@ def edit_proforma(request, id):
                     subject = "Transaction Receipt"
                     send_my_email(updated_proforma.customer.email, body, subject, file_name)
                     os.remove(file_name)
+                    updated_proforma.emailed = True
+                    updated_proforma.save()
 
                 
                 return Response(context, status=status.HTTP_200_OK)
@@ -813,6 +821,8 @@ def create_purchaseorder(request):
                 subject = "Transaction Receipt"
                 send_my_email(new_po.customer.email, body, subject, file_name)
                 os.remove(file_name)
+                new_po.emailed = True
+                new_po.save()
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -893,6 +903,8 @@ def edit_purchaseorder(request, id):
                     subject = "Transaction Receipt"
                     send_my_email(updated_purchase.customer.email, body, subject, file_name)
                     os.remove(file_name)
+                    updated_purchase.emailed = True
+                    updated_purchase.save()
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1047,6 +1059,8 @@ def create_estimate(request):
                 subject = "Transaction Receipt"
                 send_my_email(new_estimate.customer.email, body, subject, file_name)
                 os.remove(file_name)
+                new_estimate.emailed = True
+                new_estimate.save()
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1126,6 +1140,8 @@ def edit_estimate(request, id):
                     subject = "Transaction Receipt"
                     send_my_email(updated_estimate.customer.email, body, subject, file_name)
                     os.remove(file_name)
+                    updated_estimate.emailed = True
+                    updated_estimate.save()
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1408,6 +1424,8 @@ def create_quote(request):
                 subject = "Transaction Receipt"
                 send_my_email(new_quote.customer.email, body, subject, file_name)
                 os.remove(file_name)
+                new_quote.emailed = True
+                new_quote.save()
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1489,6 +1507,8 @@ def edit_quote(request, id):
                     subject = "Transaction Receipt"
                     send_my_email(updated_quote.customer.email, body, subject, file_name)
                     os.remove(file_name)
+                    updated_quote.emailed = True
+                    updated_quote.save()
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1638,6 +1658,8 @@ def create_receipt(request):
                 subject = "Transaction Receipt"
                 send_my_email(new_receipt.customer.email, body, subject, file_name)
                 os.remove(file_name)
+                new_receipt.emailed = True
+                new_receipt.save()
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1719,6 +1741,8 @@ def edit_receipt(request, id):
                     subject = "Transaction Receipt"
                     send_my_email(updated_receipt.customer.email, body, subject, file_name)
                     os.remove(file_name)
+                    updated_receipt.emailed = True
+                    updated_receipt.save()
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1871,6 +1895,8 @@ def create_credit(request):
                 subject = "Transaction Receipt"
                 send_my_email(new_credit.customer.email, body, subject, file_name)
                 os.remove(file_name)
+                new_credit.emailed = True
+                new_credit.save()
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1951,6 +1977,8 @@ def edit_credit(request, id):
                     subject = "Transaction Receipt"
                     send_my_email(updated_credit.customer.email, body, subject, file_name)
                     os.remove(file_name)
+                    updated_credit.emailed = True
+                    updated_credit.save()
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -2099,6 +2127,8 @@ def create_delivery(request):
                 subject = "Transaction Receipt"
                 send_my_email(new_delivery.customer.email, body, subject, file_name)
                 os.remove(file_name)
+                new_delivery.emailed = True
+                new_delivery.save()
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -2179,6 +2209,8 @@ def edit_delivery(request, id):
                     subject = "Transaction Receipt"
                     send_my_email(updated_delivery.customer.email, body, subject, file_name)
                     os.remove(file_name)
+                    updated_delivery.emailed = True
+                    updated_delivery.save()
 
                 return Response(context, status=status.HTTP_200_OK)
 
