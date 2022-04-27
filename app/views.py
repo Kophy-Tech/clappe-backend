@@ -2538,7 +2538,12 @@ def get_number(request):
 
 
 
-@api_view(["GET", "PUT", "DELETE"])
+
+#################################################### report #######################################################################
+
+
+
+@api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def customer_report(request):
@@ -2785,7 +2790,7 @@ def customer_report(request):
 
 
                 # 1.8
-                elif measure == "customer and company":
+                elif measure == "area code":
                     customers = Customer.objects.filter(vendor=request.user.id)\
                                                 .filter(date_created__gte=start_date)\
                                                 .filter(date_created__lte=end_date).order_by("phone_number").all()
@@ -2842,7 +2847,7 @@ def customer_report(request):
 
 
 
-@api_view(["GET", "PUT", "DELETE"])
+@api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def invoice_report(request):
@@ -4969,7 +4974,7 @@ def invoice_report(request):
    
 
 
-@api_view(["GET", "PUT", "DELETE"])
+@api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def proforma_report(request):
@@ -6072,7 +6077,7 @@ def proforma_report(request):
    
 
 
-@api_view(["GET", "PUT", "DELETE"])
+@api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def purchase_report(request):
@@ -7175,7 +7180,7 @@ def purchase_report(request):
 
 
 
-@api_view(["GET", "PUT", "DELETE"])
+@api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def estimate_report(request):
@@ -8284,7 +8289,7 @@ def estimate_report(request):
 
 
 
-@api_view(["GET", "PUT", "DELETE"])
+@api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def quote_report(request):
@@ -9388,7 +9393,7 @@ def quote_report(request):
 
 
 
-@api_view(["GET", "PUT", "DELETE"])
+@api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def receipt_report(request):
@@ -9967,7 +9972,7 @@ def receipt_report(request):
 
 
 
-@api_view(["GET", "PUT", "DELETE"])
+@api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def credit_report(request):
@@ -10545,7 +10550,7 @@ def credit_report(request):
     
 
     # 8.7
-    elif measure == "count estimate pending":
+    elif measure == "count credit pending":
 
         context = {}
         how = request.query_params.get("how")
@@ -10875,7 +10880,7 @@ def credit_report(request):
 
 
 
-@api_view(["GET", "PUT", "DELETE"])
+@api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def delivery_report(request):
@@ -11258,7 +11263,7 @@ def delivery_report(request):
     
 
     # 9.4
-    elif measure == "detail invoice email":
+    elif measure == "detail delivery email":
         context = {}
         how = request.query_params.get("how")
 
@@ -11980,7 +11985,7 @@ def delivery_report(request):
 
 
 
-@api_view(["GET", "PUT", "DELETE"])
+@api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def item_report(request):
@@ -12025,6 +12030,23 @@ def item_report(request):
         else:
             context["message"] = "No items matched the given parameters"
             return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+    
+    # 10.3
+    elif measure == "item search name":
+
+        items = Item.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .order_by("name")
+        if len(items) > 0:
+            item_ser = ItemSerializer(items, many=True)
+            context['message'] = item_ser.data
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No items matched the given parameters"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
     
 
     # 10.4
@@ -12056,6 +12078,323 @@ def item_report(request):
         else:
             context["message"] = "No items matched the given parameters"
             return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
+    return Response(context, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+@api_view(["GET"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
+def dashboard(request):
+
+    how = request.query_params.get("how", None)
+
+    context = {}
+
+    # stats
+
+    # invoice
+    context["new_invoice"] = Invoice.objects.filter(status="New")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["unpaid_invoice"] = Invoice.objects.filter(status="Unpaid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["paid_invoice"] = Invoice.objects.filter(status="Paid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["emailed_invoice"] = Invoice.objects.filter(emailed=True)\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["overdue_invoice"] = Invoice.objects.filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+
+
+    # proforma
+    context["new_proforma"] = ProformaInvoice.objects.filter(status="New")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["unpaid_proforma"] = ProformaInvoice.objects.filter(status="Unpaid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["paid_proforma"] = ProformaInvoice.objects.filter(status="Paid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["emailed_proforma"] = ProformaInvoice.objects.filter(emailed=True)\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["overdue_proforma"] = ProformaInvoice.objects.filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+
+
+    # purchase
+    context["new_purchase"] = PurchaseOrder.objects.filter(status="New")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["unpaid_purchase"] = PurchaseOrder.objects.filter(status="Unpaid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["paid_purchase"] = PurchaseOrder.objects.filter(status="Paid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["emailed_purchase"] = PurchaseOrder.objects.filter(emailed=True)\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["overdue_purchase"] = PurchaseOrder.objects.filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+
+
+    # estimate
+    context["new_estimate"] = Estimate.objects.filter(status="New")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["unpaid_estimate"] = Estimate.objects.filter(status="Unpaid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["paid_estimate"] = Estimate.objects.filter(status="Paid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["emailed_estimate"] = Estimate.objects.filter(emailed=True)\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["overdue_estimate"] = Estimate.objects.filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+
+
+    # quote
+    context["new_quote"] = Quote.objects.filter(status="New")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["unpaid_quote"] = Quote.objects.filter(status="Unpaid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["paid_quote"] = Quote.objects.filter(status="Paid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["emailed_quote"] = Quote.objects.filter(emailed=True)\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["overdue_quote"] = Quote.objects.filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+
+
+    # receipt
+    context["new_receipt"] = Receipt.objects.filter(status="New")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["unpaid_receipt"] = Receipt.objects.filter(status="Unpaid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["paid_receipt"] = Receipt.objects.filter(status="Paid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["emailed_receipt"] = Receipt.objects.filter(emailed=True)\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["overdue_receipt"] = Receipt.objects.filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+
+
+    # credit
+    context["new_credit"] = CreditNote.objects.filter(status="New")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["unpaid_credit"] = CreditNote.objects.filter(status="Unpaid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["paid_credit"] = CreditNote.objects.filter(status="Paid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["emailed_credit"] = CreditNote.objects.filter(emailed=True)\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["overdue_credit"] = CreditNote.objects.filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+
+
+    # delivery
+    context["new_delivery"] = DeliveryNote.objects.filter(status="New")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["unpaid_delivery"] = DeliveryNote.objects.filter(status="Unpaid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["paid_delivery"] = DeliveryNote.objects.filter(status="Paid")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["emailed_delivery"] = DeliveryNote.objects.filter(emailed=True)\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+    context["overdue_delivery"] = DeliveryNote.objects.filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
+                                            .count()
+
+
+
+
+    # graph
+    how = request.query_params.get("how", "month")    
+    
+    if how == "week":
+        context["week"] = {}
+        today_date = datetime.now()
+        start_month = datetime.strptime(f"{today_date.year}-{today_date.month}-1", "%Y-%m-%d")
+        for week in range(0, 5):
+            week_count = 0
+            start_week = start_month + timedelta(weeks=week)
+            end_week = start_month + timedelta(weeks=week+1)
+
+            week_count += Invoice.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__gte=start_week)\
+                                            .filter(date_created__lt=end_week)\
+                                            .count()
+                                            
+            week_count += ProformaInvoice.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__gte=start_week)\
+                                            .filter(date_created__lt=end_week)\
+                                            .count()
+                                            
+            week_count += PurchaseOrder.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__gte=start_week)\
+                                            .filter(date_created__lt=end_week)\
+                                            .count()
+                                            
+            week_count += Estimate.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__gte=start_week)\
+                                            .filter(date_created__lt=end_week)\
+                                            .count()
+                                            
+            week_count += Quote.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__gte=start_week)\
+                                            .filter(date_created__lt=end_week)\
+                                            .count()
+                                            
+            week_count += Receipt.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__gte=start_week)\
+                                            .filter(date_created__lt=end_week)\
+                                            .count()
+                                            
+            week_count += CreditNote.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__gte=start_week)\
+                                            .filter(date_created__lt=end_week)\
+                                            .count()
+                                            
+            week_count += DeliveryNote.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__gte=start_week)\
+                                            .filter(date_created__lt=end_week)\
+                                            .count()
+                                            
+
+            context["month"][f"week {week+1}"] = week_count
+
+    
+    elif how == "month":
+        context["month"] = {}
+        year = datetime.now().year
+        for month in range(1, 13):
+            month_count = 0
+            month_count += Invoice.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .filter(date_created__month=month)\
+                                            .count()
+
+            month_count += ProformaInvoice.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .filter(date_created__month=month)\
+                                            .count()
+
+            month_count += PurchaseOrder.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .filter(date_created__month=month)\
+                                            .count()
+
+            month_count += Estimate.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .filter(date_created__month=month)\
+                                            .count()
+
+            month_count += Quote.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .filter(date_created__month=month)\
+                                            .count()
+
+            month_count += Receipt.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .filter(date_created__month=month)\
+                                            .count()
+
+            month_count += CreditNote.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .filter(date_created__month=month)\
+                                            .count()
+
+            month_count += DeliveryNote.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .filter(date_created__month=month)\
+                                            .count()
+
+
+            context["month"][month] = month_count
+                                        
+
+    elif how == "year":
+        context["year"] = {}
+        current_year = datetime.now().year
+        for year in range(2022, current_year+1):
+            year_count = 0
+            year_count += Invoice.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .count()
+
+            year_count += ProformaInvoice.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .count()
+
+            year_count += PurchaseOrder.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .count()
+
+            year_count += Estimate.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .count()
+
+            year_count += Quote.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .count()
+
+            year_count += Receipt.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .count()
+
+            year_count += CreditNote.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .count()
+
+            year_count += DeliveryNote.objects.filter(vendor=request.user.id)\
+                                            .filter(date_created__year=year)\
+                                            .count()
+
+
+            context["year"][year] = year_count
+        
+        
 
 
 
