@@ -2551,8 +2551,8 @@ def customer_report(request):
 
     # report_type = request.query_params.get("type", None)
     measure = request.query_params.get("measure", None)
-    start_date = request.query_params.get("start", None)
-    end_date = request.query_params.get("end", None)
+    start_date = request.query_params.get("start_date", None)
+    end_date = request.query_params.get("end_date", None)
 
     if measure != "searchable window":
 
@@ -2853,8 +2853,8 @@ def customer_report(request):
 def invoice_report(request):
     context = {}
     measure = request.query_params.get("measure", None)
-    start_date = request.query_params.get("start", None)
-    end_date = request.query_params.get("end", None)
+    start_date = request.query_params.get("start_date", None)
+    end_date = request.query_params.get("end_date", None)
 
     # 2.1
     if measure == "invoice search":
@@ -4980,8 +4980,8 @@ def invoice_report(request):
 def proforma_report(request):
     context = {}
     measure = request.query_params.get("measure", None)
-    start_date = request.query_params.get("start", None)
-    end_date = request.query_params.get("end", None)
+    start_date = request.query_params.get("start_date", None)
+    end_date = request.query_params.get("end_date", None)
 
     # 3.1
     if measure == "proforma search":
@@ -6083,8 +6083,8 @@ def proforma_report(request):
 def purchase_report(request):
     context = {}
     measure = request.query_params.get("measure", None)
-    start_date = request.query_params.get("start", None)
-    end_date = request.query_params.get("end", None)
+    start_date = request.query_params.get("start_date", None)
+    end_date = request.query_params.get("end_date", None)
 
     # 4.1
     if measure == "purchase search":
@@ -7186,8 +7186,8 @@ def purchase_report(request):
 def estimate_report(request):
     context = {}
     measure = request.query_params.get("measure", None)
-    start_date = request.query_params.get("start", None)
-    end_date = request.query_params.get("end", None)
+    start_date = request.query_params.get("start_date", None)
+    end_date = request.query_params.get("end_date", None)
 
     # 5.1
     if measure == "estimate search":
@@ -8295,8 +8295,8 @@ def estimate_report(request):
 def quote_report(request):
     context = {}
     measure = request.query_params.get("measure", None)
-    start_date = request.query_params.get("start", None)
-    end_date = request.query_params.get("end", None)
+    start_date = request.query_params.get("start_date", None)
+    end_date = request.query_params.get("end_date", None)
 
     # 6.1
     if measure == "quote search":
@@ -9399,8 +9399,8 @@ def quote_report(request):
 def receipt_report(request):
     context = {}
     measure = request.query_params.get("measure", None)
-    start_date = request.query_params.get("start", None)
-    end_date = request.query_params.get("end", None)
+    start_date = request.query_params.get("start_date", None)
+    end_date = request.query_params.get("end_date", None)
 
     # 7.1
     if measure == "receipt search":
@@ -9978,8 +9978,8 @@ def receipt_report(request):
 def credit_report(request):
     context = {}
     measure = request.query_params.get("measure", None)
-    start_date = request.query_params.get("start", None)
-    end_date = request.query_params.get("end", None)
+    start_date = request.query_params.get("start_date", None)
+    end_date = request.query_params.get("end_date", None)
 
     # 8.1
     if measure == "credit search":
@@ -10886,8 +10886,8 @@ def credit_report(request):
 def delivery_report(request):
     context = {}
     measure = request.query_params.get("measure", None)
-    start_date = request.query_params.get("start", None)
-    end_date = request.query_params.get("end", None)
+    start_date = request.query_params.get("start_date", None)
+    end_date = request.query_params.get("end_date", None)
 
     # 9.1
     if measure == "delivery search":
@@ -11992,8 +11992,8 @@ def item_report(request):
     context = {}
 
     measure = request.query_params.get("measure", None)
-    start_date = request.query_params.get("start", None)
-    end_date = request.query_params.get("end", None)
+    start_date = request.query_params.get("start_date", None)
+    end_date = request.query_params.get("end_date", None)
 
 
     # 10.1
@@ -12097,7 +12097,7 @@ def item_report(request):
 @permission_classes((IsAuthenticated, ))
 def dashboard(request):
 
-    how = request.query_params.get("how", None)
+    # how = request.query_params.get("how", None)
 
     context = {}
 
@@ -12250,7 +12250,7 @@ def dashboard(request):
 
 
     # graph
-    how = request.query_params.get("how", "month")    
+    how = request.query_params.get("how", None)    
     
     if how == "week":
         context["week"] = {}

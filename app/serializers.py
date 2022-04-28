@@ -174,7 +174,7 @@ class CustomerCreateSerializer(ModelSerializer):
         new_customer.ship_to = self.validated_data["ship_to"]
         new_customer.shipping_address = self.validated_data["shipping_address"]
         new_customer.billing_address = self.validated_data["billing_address"]
-        new_customer.notes = self.validated_data["notes"]
+        new_customer.notes = self.validated_data.get("notes", "")
         
         new_customer.vendor = request.user
 
@@ -185,22 +185,22 @@ class CustomerCreateSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
-        instance.first_name = validated_data["first_name"]
-        instance.last_name = validated_data["last_name"]
-        instance.business_name = validated_data["business_name"]
-        instance.address = validated_data["address"]
-        instance.email = validated_data["email"]
-        instance.phone_number = validated_data["phone_number"]
-        instance.taxable = validated_data["taxable"]
-        instance.invoice_pref = validated_data["invoice_pref"]
-        # instance.logo_path = validated_data["logo_path"]
-        instance.ship_to = validated_data["ship_to"]
-        instance.shipping_address = validated_data["shipping_address"]
-        instance.billing_address = validated_data["billing_address"]
-        instance.notes = validated_data["notes"]
-        instance.status = validated_data["status"]
-        instance.invoice_number = validated_data["invoice_number"]
-        instance.amount = validated_data["amount"]
+        instance.first_name = validated_data.get("first_name", instance.first_name)
+        instance.last_name = validated_data.get("last_name", instance.last_name)
+        instance.business_name = validated_data.get("business_name", instance.business_name)
+        instance.address = validated_data.get("address", instance.address)
+        instance.email = validated_data.get("email", instance.email)
+        instance.phone_number = validated_data.get("phone_number", instance.phone_number)
+        instance.taxable = validated_data.get("taxable", instance.taxable)
+        instance.invoice_pref = validated_data.get("invoice_pref", instance.invoice_pref)
+        
+        instance.ship_to = validated_data.get("ship_to", instance.ship_to)
+        instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
+        instance.billing_address = validated_data.get("billing_address", instance.billing_address)
+        instance.notes = validated_data.get("notes", instance.notes)
+        # instance.status = validated_data.get("status", instance.status)
+        # instance.invoice_number = validated_data.get("invoice_number", instance.invoice_number)
+        # instance.amount = validated_data.get("amount", instance.amount)
 
         instance.save()
 
