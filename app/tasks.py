@@ -167,3 +167,40 @@ def make_doc_unpaid_task(document_id: int, document_type: str):
     document.status = "Unpaid"
     document.save()
 
+
+
+
+
+
+
+# for changing status of document to pending after a day of creation
+@shared_task
+def make_doc_pending_task(document_id: int, document_type: str):
+
+    if document_type == "invoice":
+        document = Invoice.objects.get(id=document_id)
+
+    elif document_type == "proforma":
+        document = ProformaInvoice.objects.get(id=document_id)
+
+    elif document_type == "purchase_order":
+        document = PurchaseOrder.objects.get(id=document_id)
+
+    elif document_type == "estimate":
+        document = Estimate.objects.get(id=document_id)
+
+    elif document_type == "quote":
+        document = Quote.objects.get(id=document_id)
+
+    elif document_type == "receipt":
+        document = Receipt.objects.get(id=document_id)
+
+    elif document_type == "credit_note":
+        document = CreditNote.objects.get(id=document_id)
+
+    elif document_type == "delivery_note":
+        document = DeliveryNote.objects.get(id=document_id)
+
+    
+    document.status = "Pending"
+    document.save()

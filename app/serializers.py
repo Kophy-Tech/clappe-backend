@@ -7,11 +7,11 @@ from drf_tweaks.serializers import ModelSerializer
 from .models import CreditNote, Customer, DeliveryNote, Item, MyUsers, Invoice, PayCreditNote, PayDeliveryNote, PayQuote, PayReceipt, ProformaInvoice, \
                     Estimate, PurchaseOrder, PayInvoice, PayEstimate, PayProforma, PayPurchaseOrder, Quote, Receipt
 
-from .forms import ScheduleForm
-from django_celery_beat.models import CrontabSchedule, PeriodicTask
+from .forms import set_tasks, delete_tasks
+from django_celery_beat.models import PeriodicTask
 
 import cloudinary, string
-from datetime import timedelta
+# from datetime import timedelta
 from random import choices
 
 
@@ -394,53 +394,15 @@ class InvoiceCreate(ModelSerializer):
         new_invoice.discount_type = self.validated_data["discount_type"]
         new_invoice.discount_amount = self.validated_data["discount_amount"]
         new_invoice.grand_total = self.validated_data["grand_total"]
-        new_invoice.status = "Pending"
+        
+        new_invoice.status = "New"
         
         new_invoice.vendor = request.user
 
         new_invoice.save()
 
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     invoice_ser = InvoiceSerializer(new_invoice).data
-        #     invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
-        #     file_name = get_report(invoice_ser, self.validated_data, CURRENCY_MAPPING[request.user.currency], "invoice", request)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(new_invoice.email, body, subject, file_name)
-        
-        # elif self.validated_data['download']:
-        #     invoice_ser = InvoiceSerializer(new_invoice).data
-        #     invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
-        #     file_name = get_report(invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, self.validated_data['terms'])
-
-        
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": new_invoice.due_date,
-            "document_type": "invoice",
-            "document_id": new_invoice.id,
-            "task_type": "one_time",
-            "email": new_invoice.customer.email
-        }
-
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _, _ = new_schedule.save()
-
-        second_schedule_details = {
-            "date": new_invoice.due_date + timedelta(weeks=24),
-            "document_type": "invoice",
-            "document_id": new_invoice.id,
-            "task_type": "one_time",
-            "email": new_invoice.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.save()
+        set_tasks(new_invoice, "invoice", True)
 
 
 
@@ -531,39 +493,7 @@ class InvoiceEditSerializer(ModelSerializer):
         instance.save()
 
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     invoice_ser = InvoiceSerializer(instance).data
-        #     invoice_ser['item_list'] = pdf_item_serializer(instance.item_list, instance.quantity_list)
-        #     file_name = get_report(invoice_ser, self.validated_data, CURRENCY_MAPPING[request.user.currency], "invoice", request)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(instance.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": instance.due_date,
-            "document_type": "invoice",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _ = new_schedule.update()
-
-
-        second_schedule_details = {
-            "date": instance.due_date + timedelta(weeks=24),
-            "document_type": "invoice",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.update()
+        set_tasks(instance, "invoice", False)
 
 
         return instance
@@ -596,8 +526,7 @@ class PayInvoiceSerializer(ModelSerializer):
         
         pay_invoice.save()
 
-        my_task = PeriodicTask.objects.get(args=json.dumps([invoice.id, "invoice"]))
-        my_task.delete()
+        delete_tasks(invoice.customer.email, "invoice", invoice.id)
 
         return pay_invoice
 
@@ -661,48 +590,14 @@ class ProformaCreateSerializer(ModelSerializer):
         new_proforma.tax = self.validated_data.get("tax", 0)
         new_proforma.add_charges = self.validated_data.get("add_charges", 0)
         new_proforma.grand_total = self.validated_data["grand_total"]
-        new_proforma.status = "Pending"
+        
+        new_proforma.status = "New"
 
         new_proforma.vendor = request.user
 
         new_proforma.save()
 
-
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     file_name = f"Proforma Invoice for {new_proforma.email}.pdf"
-        #     get_report(file_name)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(new_proforma.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": new_proforma.due_date,
-            "document_type": "proforma",
-            "document_id": new_proforma.id,
-            "task_type": "one_time",
-            "email": new_proforma.customer.email
-        }
-
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _, _ = new_schedule.save()
-
-
-        second_schedule_details = {
-            "date": new_proforma.due_date + timedelta(weeks=24),
-            "document_type": "proforma",
-            "document_id": new_proforma.id,
-            "task_type": "one_time",
-            "email": new_proforma.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.save()
-
-
+        set_tasks(new_proforma, "proforma", True)
 
         return new_proforma
 
@@ -783,38 +678,7 @@ class ProformaEditSerializer(ModelSerializer):
 
         instance.save()
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     file_name = f"Proforma Invoice for {instance.email}.pdf"
-        #     get_report(file_name)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(instance.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": instance.due_date,
-            "document_type": "proforma",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _ = new_schedule.update()
-
-        
-        second_schedule_details = {
-            "date": instance.due_date + timedelta(weeks=24),
-            "document_type": "proforma",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.update()
+        set_tasks(instance, "proforma", False)
 
         return instance
 
@@ -853,8 +717,7 @@ class PayProformaSerializer(ModelSerializer):
 
         pay_proforma.save()
 
-        my_task = PeriodicTask.objects.get(args=json.dumps([proforma.id, "proforma"]))
-        my_task.delete()
+        delete_tasks(proforma.customer.email, "proforma", proforma.id)
 
         return pay_proforma
 
@@ -922,45 +785,15 @@ class PurchaseCreateSerializer(ModelSerializer):
         new_purchaseorder.add_charges = self.validated_data.get("add_charges", 0)
         new_purchaseorder.grand_total = self.validated_data["grand_total"]
         
-        new_purchaseorder.status = "Pending"
+        
+        new_purchaseorder.status = "New"
 
         new_purchaseorder.vendor = request.user
 
         new_purchaseorder.save()
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     file_name = f"Purchase Order for {new_purchaseorder.email}.pdf"
-        #     get_report(file_name)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(new_purchaseorder.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": new_purchaseorder.due_date,
-            "document_type": "purchase",
-            "document_id": new_purchaseorder.id,
-            "task_type": "one_time",
-            "email": new_purchaseorder.customer.email
-        }
 
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _, _ = new_schedule.save()
-
-        
-        second_schedule_details = {
-            "date": new_purchaseorder.due_date + timedelta(weeks=24),
-            "document_type": "purchase",
-            "document_id": new_purchaseorder.id,
-            "task_type": "one_time",
-            "email": new_purchaseorder.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.save()
+        set_tasks(new_purchaseorder, "purchase order", True)
 
         return new_purchaseorder
 
@@ -1041,38 +874,7 @@ class PurchaseEditSerializer(ModelSerializer):
 
         instance.save()
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     file_name = f"Purchase Order for {instance.email}.pdf"
-        #     get_report(file_name)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(instance.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": instance.due_date,
-            "document_type": "purchase",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _ = new_schedule.update()
-
-
-        second_schedule_details = {
-            "date": instance.due_date + timedelta(weeks=24),
-            "document_type": "purchase",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.update()
+        set_tasks(instance, "purchase order", False)
 
         return instance
 
@@ -1105,8 +907,7 @@ class PayPurchaseSerializer(ModelSerializer):
 
         pay_purchase.save()
 
-        my_task = PeriodicTask.objects.get(args=json.dumps([purchase_order.id, "purchase"]))
-        my_task.delete()
+        delete_tasks(purchase_order.customer.email, "purchase order", purchase_order.id)
 
         return pay_purchase
 
@@ -1170,45 +971,14 @@ class EstimateCreateSerializer(ModelSerializer):
         new_estimate.add_charges = self.validated_data.get("add_charges", 0)
         new_estimate.grand_total = self.validated_data["grand_total"]
 
-        new_estimate.status = "Pending"
+        
+        new_estimate.status = "New"
 
         new_estimate.vendor = request.user
 
         new_estimate.save()
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     file_name = f"Estimate for {new_estimate.email}.pdf"
-        #     get_report(file_name)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(new_estimate.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": new_estimate.due_date,
-            "document_type": "estimate",
-            "document_id": new_estimate.id,
-            "task_type": "one_time",
-            "email": new_estimate.customer.email
-        }
-
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _, _ = new_schedule.save()
-
-        
-        second_schedule_details = {
-            "date": new_estimate.due_date + timedelta(weeks=24),
-            "document_type": "estimate",
-            "document_id": new_estimate.id,
-            "task_type": "one_time",
-            "email": new_estimate.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.save()
+        set_tasks(new_estimate, "estimate", True)
 
         return new_estimate
 
@@ -1293,38 +1063,7 @@ class EstimateEditSerializer(ModelSerializer):
 
         instance.save()
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     file_name = f"Estimate for {instance.email}.pdf"
-        #     get_report(file_name)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(instance.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": instance.due_date,
-            "document_type": "estimate",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _ = new_schedule.update()
-
-        
-        second_schedule_details = {
-            "date": instance.due_date + timedelta(weeks=24),
-            "document_type": "estimate",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.update()
+        set_tasks(instance, "estimate", False)
 
         return instance
 
@@ -1356,8 +1095,7 @@ class PayEstimateSerializer(ModelSerializer):
         pay_estimate.estimate = estimate
         pay_estimate.save()
 
-        my_task = PeriodicTask.objects.get(args=json.dumps([estimate.id, "estimate"]))
-        my_task.delete()
+        delete_tasks(estimate.customer.email, "estimate", estimate.id)
 
         return pay_estimate
 
@@ -1424,46 +1162,15 @@ class QuoteCreateSerializer(ModelSerializer):
         new_quote.add_charges = self.validated_data.get("add_charges", 0)
         new_quote.grand_total = self.validated_data["grand_total"]
 
-        new_quote.status = "Pending"
+        
+        new_quote.status = "New"
 
         new_quote.vendor = request.user
 
         new_quote.save()
 
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     file_name = f"Quote for {new_quote.email}.pdf"
-        #     get_report(file_name)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(Invoice.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": new_quote.due_date,
-            "document_type": "quote",
-            "document_id": new_quote.id,
-            "task_type": "one_time",
-            "email": new_quote.customer.email
-        }
-
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _, _ = new_schedule.save()
-
-        
-        second_schedule_details = {
-            "date": new_quote.due_date + timedelta(weeks=24),
-            "document_type": "quote",
-            "document_id": new_quote.id,
-            "task_type": "one_time",
-            "email": new_quote.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.save()
+        set_tasks(new_quote, "quote", True)
 
         return new_quote
 
@@ -1549,39 +1256,7 @@ class QuoteEditSerializer(ModelSerializer):
 
         instance.save()
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     file_name = f"Quote for {instance.email}.pdf"
-        #     get_report(file_name)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(Invoice.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": instance.due_date,
-            "document_type": "quote",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _ = new_schedule.update()
-
-        
-        second_schedule_details = {
-            "date": instance.due_date + timedelta(weeks=24),
-            "document_type": "quote",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.update()
-
+        set_tasks(instance, "quote", False)
         return instance
 
 
@@ -1614,8 +1289,7 @@ class PayQuoteSerializer(ModelSerializer):
 
         pay_quote.save()
 
-        my_task = PeriodicTask.objects.get(args=json.dumps([quote.id, "quote"]))
-        my_task.delete()
+        delete_tasks(quote.customer.email, "quote", quote.id)
 
         return pay_quote
 
@@ -1683,45 +1357,14 @@ class CNCreateSerializer(ModelSerializer):
         new_credit.add_charges = self.validated_data.get("add_charges", 0)
         new_credit.grand_total = self.validated_data["grand_total"]
 
-        new_credit.status = "Pending"
+        
+        new_credit.status = "New"
 
         new_credit.vendor = request.user
 
         new_credit.save()
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     file_name = f"Credit Note for {new_credit.email}.pdf"
-        #     get_report(file_name)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(Invoice.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": new_credit.due_date,
-            "document_type": "credit_note",
-            "document_id": new_credit.id,
-            "task_type": "one_time",
-            "email": new_credit.customer.email
-        }
-
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _, _ = new_schedule.save()
-
-        
-        second_schedule_details = {
-            "date": new_credit.due_date + timedelta(weeks=24),
-            "document_type": "credit_note",
-            "document_id": new_credit.id,
-            "task_type": "one_time",
-            "email": new_credit.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.save()
+        set_tasks(new_credit, "credit note", True)
 
         return new_credit
 
@@ -1810,38 +1453,7 @@ class CNEditSerializer(ModelSerializer):
 
         instance.save()
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     file_name = f"Credit Note for {instance.email}.pdf"
-        #     get_report(file_name)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(Invoice.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": instance.due_date,
-            "document_type": "credit_note",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _ = new_schedule.update()
-
-        
-        second_schedule_details = {
-            "date": instance.due_date + timedelta(weeks=24),
-            "document_type": "credit_note",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.update()
+        set_tasks(instance, "credit note", False)
 
         return instance
 
@@ -1875,8 +1487,7 @@ class PayCNSerializer(ModelSerializer):
 
         pay_credit.save()
 
-        my_task = PeriodicTask.objects.get(args=json.dumps([credit.id, "credit_note"]))
-        my_task.delete()
+        delete_tasks(credit.customer.email, "credit note", credit.id)
 
         return pay_credit
 
@@ -1949,45 +1560,14 @@ class REceiptCreateSerializer(ModelSerializer):
         new_receipt.add_charges = self.validated_data.get("add_charges", 0)
         new_receipt.grand_total = self.validated_data["grand_total"]
 
-        new_receipt.status = "Pending"
+        
+        new_receipt.status = "New"
 
         new_receipt.vendor = request.user
 
         new_receipt.save()
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     file_name = f"Receipt for {new_receipt.email}.pdf"
-        #     get_report(file_name)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(Invoice.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": new_receipt.due_date,
-            "document_type": "receipt",
-            "document_id": new_receipt.id,
-            "task_type": "one_time",
-            "email": new_receipt.customer.email
-        }
-
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _, _ = new_schedule.save()
-
-        
-        second_schedule_details = {
-            "date": new_receipt.due_date + timedelta(weeks=24),
-            "document_type": "receipt",
-            "document_id": new_receipt.id,
-            "task_type": "one_time",
-            "email": new_receipt.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.save()
+        set_tasks(new_receipt, "receipt", True)
 
         return new_receipt
 
@@ -2082,38 +1662,7 @@ class ReceiptEditSerializer(ModelSerializer):
 
         instance.save()
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     file_name = f"Receipt for {instance.email}.pdf"
-        #     get_report(file_name)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(Invoice.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": instance.due_date,
-            "document_type": "receipt",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _ = new_schedule.update()
-
-        
-        second_schedule_details = {
-            "date": instance.due_date + timedelta(weeks=24),
-            "document_type": "receipt",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.update()
+        set_tasks(instance, "receipt", False)
 
         return instance
 
@@ -2147,8 +1696,7 @@ class PayReceiptSerializer(ModelSerializer):
 
         pay_receipt.save()
 
-        my_task = PeriodicTask.objects.get(args=json.dumps([receipt.id, "receipt"]))
-        my_task.delete()
+        delete_tasks(receipt.customer.email, "receipt", receipt.id)
 
         return pay_receipt
 
@@ -2217,45 +1765,14 @@ class DNCreateSerializer(ModelSerializer):
         new_delivery.add_charges = self.validated_data.get("add_charges", 0)
         new_delivery.grand_total = self.validated_data["grand_total"]
 
-        new_delivery.status = "Pending"
+        
+        new_delivery.status = "New"
 
         new_delivery.vendor = request.user
 
         new_delivery.save()
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     file_name = f"Delivery Note for {new_delivery.email}.pdf"
-        #     get_report(file_name)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(Invoice.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": new_delivery.due_date,
-            "document_type": "delivery_note",
-            "document_id": new_delivery.id,
-            "task_type": "one_time",
-            "email": new_delivery.customer.email
-        }
-
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _, _ = new_schedule.save()
-
-        
-        second_schedule_details = {
-            "date": new_delivery.due_date + timedelta(weeks=24),
-            "document_type": "delivery_note",
-            "document_id": new_delivery.id,
-            "task_type": "one_time",
-            "email": new_delivery.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.save()
+        set_tasks(new_delivery, "delivery note", True)
 
         return new_delivery
 
@@ -2347,38 +1864,7 @@ class DNEditSerializer(ModelSerializer):
 
         instance.save()
 
-        # if self.validated_data['send_email']:
-        #     # for sending email when creating a new document
-        #     file_name = f"Delivery Note for {instance.email}.pdf"
-        #     get_report(file_name)
-        #     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-        #     subject = "Transaction Receipt"
-        #     send_my_email(Invoice.email, body, subject, file_name)
-            
-        # date, docuemnt_type, document_id, task_type [one time or periodic], email
-        schedule_details = {
-            "date": instance.due_date,
-            "document_type": "delivery_note",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-        new_schedule = ScheduleForm(schedule_details)
-        if new_schedule.is_valid():
-            _ = new_schedule.update()
-        
-
-        second_schedule_details = {
-            "date": instance.due_date + timedelta(weeks=24),
-            "document_type": "delivery_note",
-            "document_id": instance.id,
-            "task_type": "one_time",
-            "email": instance.customer.email
-        }
-
-        second_schedule = ScheduleForm(second_schedule_details)
-        if second_schedule.is_valid():
-            _, _ = second_schedule.update()
+        set_tasks(instance, "delivery note", False)
 
         return instance
 
@@ -2411,8 +1897,7 @@ class PayDNSerializer(ModelSerializer):
 
         pay_delivery.save()
 
-        my_task = PeriodicTask.objects.get(args=json.dumps([delivery.id, "delivery_note"]))
-        my_task.delete()
+        delete_tasks(delivery.customer.email, "delivery note", delivery.id)
 
         return pay_delivery
 
