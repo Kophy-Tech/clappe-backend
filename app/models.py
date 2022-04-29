@@ -37,7 +37,7 @@ class MyUsers(AbstractUser):
     other_payment = models.CharField("Other Payment", max_length=100, null=True, blank=True)
 
     password_recovery = models.CharField(max_length=15, null=True, blank=True)
-    password_recovery_time = models.DateField(null=True, blank=True)
+    password_recovery_time = models.DateTimeField(null=True, blank=True)
 
 
 

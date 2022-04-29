@@ -50,7 +50,7 @@ def send_my_email(receiver_email, body, subject, filename=None):
 
         # Add attachment to message and convert message to string
         message.attach(part)
-        text = message.as_string()
+    text = message.as_string()
 
     # Log in to server using secure context and send email
     context = ssl.create_default_context()

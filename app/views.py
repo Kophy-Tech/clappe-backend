@@ -169,7 +169,7 @@ def get_code(request):
         return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
 
-    user_email = request.data.get("email", None)
+    user_email = request.data.get("user_email", None)
     
     if user_email:
         if len(user_email) > 1:
@@ -193,7 +193,8 @@ The Clappe account team
                     current_user.save()
                     return Response(context, status=status.HTTP_200_OK)
 
-                except:
+                except Exception as e:
+                    print(e)
                     context['message'] = "Error when sending the email, please try again."
                     return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
@@ -231,13 +232,13 @@ def confirm_code(request):
                 context["message"] = "User with this email does not exist"
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
-            if len(user_code) != 8 and user_code != current_user.password_recovery:
+            if len(user_code) == 8 and user_code == current_user.password_recovery:
                 if datetime.now() < current_user.password_recovery_time:
                     context['message'] = "Code accepted, you can now proceed to enter a new password."
                     return Response(context, status=status.HTTP_200_OK)
 
                 else:
-                    context['message'] = "code has expired, please request for a new one"
+                    context['message'] = "Code has expired, please request for a new one"
                     return Response(context, status=status.HTTP_400_BAD_REQUEST)
                     
             else:
@@ -266,9 +267,9 @@ def reset_password(request):
 
     new_password = request.data.get("new_password")
     confirm_password = request.data.get("confirm_password")
-    user_email = request.data.get("email")
+    user_email = request.data.get("user_email")
 
-    if len(new_password) < 8:
+    if len(new_password) >= 8:
         if new_password == confirm_password:
             try:
                 current_user = MyUsers.objects.get(email=user_email)
