@@ -36,6 +36,9 @@ class MyUsers(AbstractUser):
     e_transfer = models.CharField("E-Transfer", max_length=100, null=True, blank=True)
     other_payment = models.CharField("Other Payment", max_length=100, null=True, blank=True)
 
+    password_recovery = models.CharField(max_length=15, null=True, blank=True)
+    password_recovery_time = models.DateField(null=True, blank=True)
+
 
 
     # USERNAME_FIELD = "email"
@@ -64,8 +67,8 @@ class Customer(models.Model):
     billing_address = models.CharField("Billing Address", max_length=500, null=False, blank=False)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
     status = models.CharField("Status", max_length=20, null=True, blank=True, default="New")
-    invoice_number = models.CharField("Invoice Number", null=True, blank=True, default=1, max_length=2048)
-    amount = models.FloatField("Amount", null=True, blank=True, default=0.00)
+    # invoice_number = models.CharField("Invoice Number", null=True, blank=True, default=1, max_length=2048)
+    # amount = models.FloatField("Amount", null=True, blank=True, default=0.00)
 
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
 
@@ -643,7 +646,7 @@ class Item(models.Model):
     description = models.CharField("Item Description", max_length=2048, blank=True, null=True)
     cost_price = models.FloatField("Cost Price", blank=False, null=False)
     sales_price = models.FloatField("Sales Price", blank=False, null=False)
-    sales_tax = models.FloatField("Sales Tax", blank=False, null=False)
+    sales_tax = models.FloatField("Sales Tax", blank=True, null=True, default=0.0)
     date_created = models.DateTimeField("Date created", auto_now_add=True)
     date_modified = models.DateTimeField("Date modified", auto_now=True)
     sku = models.CharField("SKU", max_length=15, blank=True, null=True, unique=True)

@@ -6,7 +6,8 @@ from .views import all_estimate, all_invoice, all_items, all_purchaseorder, crea
                     signup, login, logout, customer, edit_customer, my_customer, user_profile, create_proforma, edit_proforma, \
                     pay_proforma, all_proforma, create_quote, edit_quote, all_quote, pay_quote, all_credit, create_credit, edit_credit, \
                     pay_credit, all_receipt, create_receipt, edit_receipt, pay_receipt, create_delivery, edit_delivery, all_delivery,\
-                    pay_delivery, change_profile, change_preference, change_password, get_number, dashboard
+                    pay_delivery, change_profile, change_preference, change_password, get_number, dashboard, get_code, confirm_code,\
+                    reset_password
 
 
 
@@ -22,6 +23,10 @@ urlpatterns = [
     path('profile/password', change_password, name='change_password'),
     path('profile/preference', change_preference, name='change_preference'),
     path('profile/change', change_profile, name='change_profile'),
+
+    path('recover/code', get_code, name='get_code'),
+    path('recover/confirm', confirm_code, name='confirm_code'),
+    path('recover/reset', reset_password, name='reset_password'),
 
 
     # customers urls

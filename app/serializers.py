@@ -94,15 +94,26 @@ def process_picture(media, models, type="profile"):
 
 
 
+# def integer_validator(value):
+#     try:
+#         return int(value)
+#     except Exception as e:
+#         raise serializers.ValidationError("A valid number is required for cost price")
 
 
 
 
+
+
+def password_validator(value):
+    if len(value) < 8:
+        raise serializers.ValidationError("Password must have at least 8 characters.")
 
 
 
 
 class SignUpSerializer(ModelSerializer):
+    password = serializers.CharField(min_length=8, validators=[password_validator])
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
 
@@ -274,19 +285,51 @@ class ItemSerializer(serializers.ModelSerializer):
 
 
 class CreateItemSerializer(ModelSerializer):
+    user_id = serializers.IntegerField()
+    cost_price = serializers.CharField(required=True)
+    sales_price = serializers.CharField(required=True)
+    sales_tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Item
-        fields = ["name", "description", "cost_price", "sales_price", "sales_tax", "sku"]
-        
+        fields = ["name", "description", "cost_price", "sales_price", "sales_tax", "user_id"]
 
+    
+    def validate(self, data):
+        name_count = Item.objects.filter(name=data['name']).filter(vendor__id=data['user_id']).count()
+        if name_count > 0:
+            raise serializers.ValidationError({"name":["Item with this name already exists"]})
+        return data
+
+    def validate_cost_price(self, value):
+        try:
+            return int(value)
+        except Exception as e:
+            raise serializers.ValidationError("A valid number is required for cost price")
+
+    def validate_sales_price(self, value):
+        try:
+            return int(value)
+        except Exception as e:
+            raise serializers.ValidationError("A valid number is required for sales price")
+    
+    def validate_sales_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for sales tax")
+        else:
+            return 0
 
     
     def save(self, request):
         new_item = Item()
         new_item.name = self.validated_data['name']
-        new_item.description = self.validated_data['description']
+        new_item.description = self.validated_data.get('description', "")
         new_item.cost_price = self.validated_data['cost_price']
         new_item.sales_price = self.validated_data['sales_price']
         new_item.sales_tax = self.validated_data['sales_tax']
@@ -347,6 +390,9 @@ class InvoiceCreate(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id= serializers.IntegerField(required=True)
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -357,6 +403,34 @@ class InvoiceCreate(ModelSerializer):
             "customer_id",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","item_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "send_email", "download", "terms"]
+
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
+    def validate_discount_amount(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for discount amount")
+        else:
+            return 0
 
 
     def save(self, request):
@@ -392,7 +466,7 @@ class InvoiceCreate(ModelSerializer):
         new_invoice.add_charges = self.validated_data.get("add_charges", 0)
         new_invoice.sub_total = self.validated_data["sub_total"]
         new_invoice.discount_type = self.validated_data["discount_type"]
-        new_invoice.discount_amount = self.validated_data["discount_amount"]
+        new_invoice.discount_amount = self.validated_data.get("discount_amount", 0)
         new_invoice.grand_total = self.validated_data["grand_total"]
         
         new_invoice.status = "New"
@@ -443,12 +517,44 @@ class InvoiceEditSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Invoice
         fields = ["customer_id", "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "item_list",
                     "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "send_email", "download", "terms"]
+
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
+    def validate_discount_amount(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for discount amount")
+        else:
+            return 0
 
 
     def update(self, instance, validated_data, request):
@@ -547,6 +653,10 @@ class ProformaCreateSerializer(ModelSerializer):
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    # discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -556,6 +666,28 @@ class ProformaCreateSerializer(ModelSerializer):
                 "customer_id", 
                 "invoice_date", "po_number", "due_date", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
+
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
+
+
 
 
     def save(self, request):
@@ -635,6 +767,10 @@ class ProformaEditSerializer(ModelSerializer):
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    # discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
@@ -642,6 +778,25 @@ class ProformaEditSerializer(ModelSerializer):
         fields = ["customer_id", "invoice_date", "po_number", "due_date", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
 
 
 
@@ -740,6 +895,10 @@ class PurchaseCreateSerializer(ModelSerializer):
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    # discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -749,6 +908,26 @@ class PurchaseCreateSerializer(ModelSerializer):
                 "customer_id", 
                     "po_date", "ship_to", "notes", "shipping_address", "item_list", "due_date",
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
+
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
 
 
 
@@ -833,6 +1012,10 @@ class PurchaseEditSerializer(ModelSerializer):
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    # discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
 
     required_error = "{fieldname} is required."
@@ -841,6 +1024,26 @@ class PurchaseEditSerializer(ModelSerializer):
         model = PurchaseOrder
         fields = ["customer_id", "po_date", "due_date", "ship_to", "notes", "shipping_address", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
+
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
 
 
 
@@ -925,6 +1128,10 @@ class EstimateCreateSerializer(ModelSerializer):
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    # discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -934,6 +1141,27 @@ class EstimateCreateSerializer(ModelSerializer):
                 "customer_id", "due_date", "po_number",
                     "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
+
+
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
 
 
     def save(self, request):
@@ -1018,6 +1246,9 @@ class EstimateEditSerializer(ModelSerializer):
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -1025,6 +1256,27 @@ class EstimateEditSerializer(ModelSerializer):
         model = Estimate
         fields = ["customer_id", "po_number", "due_date", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
+
+
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
 
 
 
@@ -1115,6 +1367,9 @@ class QuoteCreateSerializer(ModelSerializer):
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -1124,6 +1379,27 @@ class QuoteCreateSerializer(ModelSerializer):
                     "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes",  "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
                         
+
+
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
 
 
 
@@ -1210,6 +1486,9 @@ class QuoteEditSerializer(ModelSerializer):
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -1218,6 +1497,26 @@ class QuoteEditSerializer(ModelSerializer):
         fields = ["customer_id", "due_date", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
         
+
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
 
 
 
@@ -1311,6 +1610,9 @@ class CNCreateSerializer(ModelSerializer):
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -1321,6 +1623,27 @@ class CNCreateSerializer(ModelSerializer):
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]       
 
         
+
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
+
 
 
     def save(self, request):
@@ -1406,6 +1729,9 @@ class CNEditSerializer(ModelSerializer):
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -1417,6 +1743,26 @@ class CNEditSerializer(ModelSerializer):
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
         
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
+
 
 
 
@@ -1513,6 +1859,9 @@ class REceiptCreateSerializer(ModelSerializer):
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -1523,6 +1872,26 @@ class REceiptCreateSerializer(ModelSerializer):
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
         
         
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
+
 
 
     def save(self, request):
@@ -1613,6 +1982,9 @@ class ReceiptEditSerializer(ModelSerializer):
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -1624,6 +1996,26 @@ class ReceiptEditSerializer(ModelSerializer):
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
         
+
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
 
 
 
@@ -1720,6 +2112,9 @@ class DNCreateSerializer(ModelSerializer):
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -1730,6 +2125,27 @@ class DNCreateSerializer(ModelSerializer):
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
         
         
+
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
+
 
 
     def save(self, request):
@@ -1817,6 +2233,9 @@ class DNEditSerializer(ModelSerializer):
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -1828,6 +2247,26 @@ class DNEditSerializer(ModelSerializer):
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
         
+
+
+    def validate_tax(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for tax")
+        else:
+            return 0
+
+    def validate_add_charges(self, value):
+        if len(value) > 0:
+            try:
+                return int(value)
+            except Exception as e:
+                raise serializers.ValidationError("A valid number is required for additional charges")
+        else:
+            return 0
+    
 
 
 

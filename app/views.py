@@ -21,7 +21,7 @@ from .serializers import CNCreateSerializer, CNEditSerializer, CreateItemSeriali
                         ReceiptEditSerializer, ReceiptSerailizer, SignUpSerializer, LoginSerializer, UserSerializer, InvoiceCreate,\
                         PayProformaSerializer, PurchaseCreateSerializer, PurchaseEditSerializer, PurchaseOrderSerailizer, \
                         PayPurchaseSerializer, ProfileSerializer, PasswordChangeSerializer, PreferenceSerializer,\
-                        custom_item_serializer, CURRENCY_MAPPING, pdf_item_serializer
+                        custom_item_serializer, CURRENCY_MAPPING, pdf_item_serializer, get_sku
 
 from app.pdf.main import get_report
 from app.my_email import send_my_email
@@ -154,10 +154,143 @@ def logout(request):
         access = JWT.objects.get(user_id=request.user.id)
         access.delete()
 
-        #the access token should be deleted from frontend
-
         context = {'message': 'Logout successful'}
     return Response(context, status=status.HTTP_200_OK)
+
+
+
+
+@api_view(["POST"])
+def get_code(request):
+    context = {}
+
+    if request.user.is_authenticated:
+        context['message'] = "You can't reset password while logged in"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        
+
+    user_email = request.data.get("email", None)
+    
+    if user_email:
+        if len(user_email) > 1:
+            if MyUsers.objects.filter(email=user_email).exists():
+                user_code = get_sku()
+                email_body = f"""
+Please use this code to reset the password for your account on https://www.clappe.com
+Here is your code: {user_code}
+The code will expire in 4 hours.
+If you didn't request for a password reset, make sure the login details for your email account have not been compromised
+Thanks,\n\n\n
+The Clappe account team
+                """
+                try:
+                    send_my_email(user_email, email_body, "Password Reset")
+
+                    context['message'] = "Password reset code sent successfully."
+                    current_user = MyUsers.objects.get(email=user_email)
+                    current_user.password_recovery = user_code
+                    current_user.password_recovery_time = datetime.now() + timedelta(hours=4)
+                    current_user.save()
+                    return Response(context, status=status.HTTP_200_OK)
+
+                except:
+                    context['message'] = "Error when sending the email, please try again."
+                    return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+            else:
+                context['message'] = "Email not found, please check and try again"
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            context['message'] = "Please enter a valid email address"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+    else:
+        context['message'] = "Please enter your email address"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+@api_view(["POST"])
+def confirm_code(request):
+    context = {}
+
+    if request.user.is_authenticated:
+        context['message'] = "You can't reset password while logged in"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+    user_code = request.data.get("user_code", None)
+    user_email = request.data.get("user_email", None)
+
+    if user_code:
+        if user_email:
+            try:
+                current_user = MyUsers.objects.get(email=user_email)
+            except MyUsers.DoesNotExist:
+                context["message"] = "User with this email does not exist"
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+            if len(user_code) != 8 and user_code != current_user.password_recovery:
+                if datetime.now() < current_user.password_recovery_time:
+                    context['message'] = "Code accepted, you can now proceed to enter a new password."
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context['message'] = "code has expired, please request for a new one"
+                    return Response(context, status=status.HTTP_400_BAD_REQUEST)
+                    
+            else:
+                context['message'] = "Incorrect code, please check and try again."
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        
+        else:
+            context['message'] = "Please send the user email"
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+
+    else:
+        context['message'] = "Please enter your password reset code"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+@api_view(["POST"])
+def reset_password(request):
+    context = {}
+
+    if request.user.is_authenticated:
+        context['message'] = "You can't reset password while logged in"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+    new_password = request.data.get("new_password")
+    confirm_password = request.data.get("confirm_password")
+    user_email = request.data.get("email")
+
+    if len(new_password) < 8:
+        if new_password == confirm_password:
+            try:
+                current_user = MyUsers.objects.get(email=user_email)
+            except MyUsers.DoesNotExist:
+                context["message"] = "User with this email does not exist"
+                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+            current_user.set_password(new_password)
+            current_user.password_recovery_time = None
+            current_user.password_recovery = None
+            current_user.save()
+
+            context["message"] = "Password reset successfully, you can now proceed to login"
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context['message'] = "New password must be the same as confirm password"
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+    else:
+        context['message'] = "New password must have more than 8 characters"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -201,7 +334,7 @@ def customer(request):
 
         if form.is_valid():
             new_customer = form.save(request)
-            context['message'] = "success"
+            context['message'] = "Customer created successfully"
             context['customer'] = new_customer.first_name + ' ' + new_customer.last_name
 
             return Response(context, status=status.HTTP_201_CREATED)
@@ -257,7 +390,7 @@ def edit_customer(request, id):
 
         if form.is_valid():
             updated_customer = form.update(customer, form.validated_data)
-            context['message'] = "success"
+            context['message'] = "Customer updated successfully"
             context['id'] = customer.id
             context['customer'] = updated_customer.first_name + ' ' + updated_customer.last_name
 
@@ -275,7 +408,7 @@ def edit_customer(request, id):
     if request.method == "DELETE":
         customer = Customer.objects.get(id=id)
         customer.delete()
-        context = {"message": "success"}
+        context = {"message": "Customer deleted successfully"}
 
         return Response(context, status=status.HTTP_200_OK)
 
@@ -324,7 +457,7 @@ def create_invoice(request):
 
         if form.is_valid():
             new_invoice = form.save(request)
-            context['message'] = "success"
+            context['message'] = "Invoice created successfully"
             context['invoice'] = {"id": new_invoice.id, **form.data}
             # context['invoice']['item_list'] = [{"id": a, "quantity": b} for a,b in zip(new_invoice.iten_list, new_invoice.quantity_list)]
             # context['invoice']['item_list'] = custom_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
@@ -413,7 +546,7 @@ def edit_invoice(request, id):
 
             if form.is_valid():
                 updated_invoice = form.update(invoice, form.validated_data, request)
-                context['message'] = "success"
+                context['message'] = "Invoice updated successfully"
                 context['invoice'] = {"id": updated_invoice.id, **form.validated_data}
 
 
@@ -462,7 +595,7 @@ def edit_invoice(request, id):
         try:
             invoice = Invoice.objects.get(id=id)
             invoice.delete()
-            context = {"message": "Success"}
+            context = {"message": "Invoice deleted"}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -496,7 +629,7 @@ def pay_invoice(request):
                 else:
                     pay_invoice = form.save(invoice)
                     # if pay_invoice:
-                    context['message'] = "success"
+                    context['message'] = "Invoice payment was successful"
                     context['pay_invoice'] = {"id": pay_invoice.id, **form.data}
 
                     return Response(context, status=status.HTTP_200_OK)
@@ -567,7 +700,7 @@ def create_proforma(request):
 
         if form.is_valid():
             new_invoice = form.save(request)
-            context['message'] = "success"
+            context['message'] = "Proforma invoice created successfully"
             context['invoice'] = {"id": new_invoice.id, **form.data}
             # context['invoice']['item_list'] = custom_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
 
@@ -650,7 +783,7 @@ def edit_proforma(request, id):
 
             if form.is_valid():
                 updated_proforma = form.update(proforma, form.validated_data)
-                context['message'] = "success"
+                context['message'] = "Proforma invoice updated successfully"
                 context['proforma'] = {"id": updated_proforma.id, **form.validated_data}
                 # context['proforma']['item_list'] = custom_item_serializer(updated_proforma.item_list, updated_proforma.quantity_list)
 
@@ -699,7 +832,7 @@ def edit_proforma(request, id):
         try:
             proforma = ProformaInvoice.objects.get(id=id)
             proforma.delete()
-            context = {"message": "Success"}
+            context = {"message": "Proforma invoice deleted"}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -732,7 +865,7 @@ def pay_proforma(request):
 
                 else:
                     pay_proforma = form.save(proforma)
-                    context['message'] = "success"
+                    context['message'] = "Proforma invoice payment was successful"
                     context['pay_proforma'] = {"id": pay_proforma.id, **form.data}
 
                     return Response(context, status=status.HTTP_200_OK)
@@ -796,7 +929,7 @@ def create_purchaseorder(request):
 
         if form.is_valid():
             new_po = form.save(request)
-            context['message'] = "success"
+            context['message'] = "Purchase order created successfully"
             context['invoice'] = {"id": new_po.id, **form.data}
             # context['invoice']['item_list'] = custom_item_serializer(new_po.item_list, new_po.quantity_list)
 
@@ -878,7 +1011,7 @@ def edit_purchaseorder(request, id):
 
             if form.is_valid():
                 updated_purchase = form.update(purchase, form.validated_data)
-                context['message'] = "success"
+                context['message'] = "Purchase order updated successfully"
                 context['purchase'] = {"id": updated_purchase.id, **form.validated_data}
                 # context['purchase']['item_list'] = custom_item_serializer(updated_purchase.item_list, updated_purchase.quantity_list)
 
@@ -926,7 +1059,7 @@ def edit_purchaseorder(request, id):
         try:
             purchase = PurchaseOrder.objects.get(id=id)
             purchase.delete()
-            context = {"message": "Success"}
+            context = {"message": "Purchase order deleted"}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -959,7 +1092,7 @@ def pay_purchaseorder(request):
 
                 else:
                     Pay_purchase = form.save(purchase)
-                    context['message'] = "success"
+                    context['message'] = "Purchase order payment was successful"
                     context['Pay_purchase'] = {"id": Pay_purchase.id, **form.data}
 
                     return Response(context, status=status.HTTP_200_OK)
@@ -1034,7 +1167,7 @@ def create_estimate(request):
 
         if form.is_valid():
             new_estimate = form.save(request)
-            context['message'] = "success"
+            context['message'] = "Estimate created successfully"
             context['estimate'] = {"id": new_estimate.id, **form.data}
             # context['estimate']['item_list'] = custom_item_serializer(new_estimate.item_list, new_estimate.quantity_list)
 
@@ -1116,7 +1249,7 @@ def edit_estimate(request, id):
 
             if form.is_valid():
                 updated_estimate = form.update(estimate, form.validated_data)
-                context['message'] = "success"
+                context['message'] = "Estimate updated successfully"
                 context['estimate'] = {"id": updated_estimate.id, **form.validated_data}
                 # context['estimate']['item_list'] = custom_item_serializer(updated_estimate.item_list, updated_estimate.quantity_list)
 
@@ -1163,7 +1296,7 @@ def edit_estimate(request, id):
         try:
             estimate = Estimate.objects.get(id=id)
             estimate.delete()
-            context = {"message": "Success"}
+            context = {"message": "Estimate deleted"}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1196,7 +1329,7 @@ def pay_estimate(request):
 
                 else:
                     pay_estimate = form.save(estimate)
-                    context['message'] = "success"
+                    context['message'] = "Estimate payment was successful"
                     context['pay_estimate'] = {"id": pay_estimate.id, **form.data}
 
                     return Response(context, status=status.HTTP_200_OK)
@@ -1259,12 +1392,14 @@ def all_items(request):
 def create_item(request):
 
     if request.method == "POST":
-        form = CreateItemSerializer(data=request.data)
+        data = request.data
+        data['user_id'] = request.user.id
+        form = CreateItemSerializer(data=data)
         context = {}
 
         if form.is_valid():
             new_item = form.save(request)
-            context['message'] = "success"
+            context['message'] = "Item created successfully"
             context['estimate'] = {"id": new_item.id, **form.data}
 
             return Response(context, status=status.HTTP_200_OK)
@@ -1316,7 +1451,7 @@ def edit_item(request, id):
 
             if form.is_valid():
                 updated_item = form.update(item)
-                context['message'] = "success"
+                context['message'] = "Item updated successfully"
                 context['item'] = {"id": updated_item.id, **form.data}
 
                 return Response(context, status=status.HTTP_200_OK)
@@ -1339,7 +1474,7 @@ def edit_item(request, id):
         try:
             item = Item.objects.get(id=id)
             item.delete()
-            context = {"message": "Success"}
+            context = {"message": "Item deleted"}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1400,7 +1535,7 @@ def create_quote(request):
 
         if form.is_valid():
             new_quote = form.save(request)
-            context['message'] = "success"
+            context['message'] = "Quote created successfully"
             context['quote'] = {"id": new_quote.id, **form.data}
             # context['quote']['item_list'] = custom_item_serializer(new_quote.item_list, new_quote.quantity_list)
 
@@ -1482,7 +1617,7 @@ def edit_quote(request, id):
 
             if form.is_valid():
                 updated_quote = form.update(quote, form.validated_data)
-                context['message'] = "success"
+                context['message'] = "Quote updated successfully"
                 context['quote'] = {"id": updated_quote.id, **form.validated_data}
                 # context['quote']['item_list'] = custom_item_serializer(updated_quote.item_list, updated_quote.quantity_list)
 
@@ -1530,7 +1665,7 @@ def edit_quote(request, id):
         try:
             quote = Quote.objects.get(id=id)
             quote.delete()
-            context = {"message": "Success"}
+            context = {"message": "Quote deleted"}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1563,7 +1698,7 @@ def pay_quote(request):
 
                 else:
                     pay_quote = form.save(quote)
-                    context['message'] = "success"
+                    context['message'] = "Quote payment was successful"
                     context['pay_quote'] = {"id": pay_quote.id, **form.data}
 
                     return Response(context, status=status.HTTP_200_OK)
@@ -1633,7 +1768,7 @@ def create_receipt(request):
 
         if form.is_valid():
             new_receipt = form.save(request)
-            context['message'] = "success"
+            context['message'] = "Receipt created successfully"
             context['receipt'] = {"id": new_receipt.id, **form.data}
             # context['receipt']['item_list'] = custom_item_serializer(new_receipt.item_list, new_receipt.quantity_list)
 
@@ -1716,7 +1851,7 @@ def edit_receipt(request, id):
 
             if form.is_valid():
                 updated_receipt = form.update(receipt, form.validated_data)
-                context['message'] = "success"
+                context['message'] = "Receipt updated successfully"
                 context['receipt'] = {"id": updated_receipt.id, **form.validated_data}
                 # context['receipt']['item_list'] = custom_item_serializer(updated_receipt.item_list, updated_receipt.quantity_list)
 
@@ -1764,7 +1899,7 @@ def edit_receipt(request, id):
         try:
             receipt = Receipt.objects.get(id=id)
             receipt.delete()
-            context = {"message": "Success"}
+            context = {"message": "Receipt deleted"}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1797,7 +1932,7 @@ def pay_receipt(request):
 
                 else:
                     pay_receipt = form.save(receipt)
-                    context['message'] = "success"
+                    context['message'] = "Receipt payment was successful"
                     context['pay_receipt'] = {"id": pay_receipt.id, **form.data}
 
                     return Response(context, status=status.HTTP_200_OK)
@@ -1870,7 +2005,7 @@ def create_credit(request):
 
         if form.is_valid():
             new_credit = form.save(request)
-            context['message'] = "success"
+            context['message'] = "Credit note created successfully"
             context['credit'] = {"id": new_credit.id, **form.data}
             # context['credit']['item_list'] = custom_item_serializer(new_credit.item_list, new_credit.quantity_list)
 
@@ -1953,7 +2088,7 @@ def edit_credit(request, id):
 
             if form.is_valid():
                 updated_credit = form.update(credit, form.validated_data)
-                context['message'] = "success"
+                context['message'] = "Credit note updated successfully"
                 context['credit'] = {"id": updated_credit.id, **form.validated_data}
                 # context['credit']['item_list'] = custom_item_serializer(updated_credit.item_list, updated_credit.quantity_list)
 
@@ -2000,7 +2135,7 @@ def edit_credit(request, id):
         try:
             credit = CreditNote.objects.get(id=id)
             credit.delete()
-            context = {"message": "Success"}
+            context = {"message": "Credit note deleted"}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -2033,7 +2168,7 @@ def pay_credit(request):
 
                 else:
                     pay_credit = form.save(credit)
-                    context['message'] = "success"
+                    context['message'] = "Credit note payment was successful"
                     context['pay_credit'] = {"id": pay_credit.id, **form.data}
 
                     return Response(context, status=status.HTTP_200_OK)
@@ -2102,7 +2237,7 @@ def create_delivery(request):
 
         if form.is_valid():
             new_delivery = form.save(request)
-            context['message'] = "success"
+            context['message'] = "Delivery note created successfully"
             context['delivery'] = {"id": new_delivery.id, **form.data}
             # context['delivery']['item_list'] = custom_item_serializer(new_delivery.item_list, new_delivery.quantity_list)
 
@@ -2185,7 +2320,7 @@ def edit_delivery(request, id):
 
             if form.is_valid():
                 updated_delivery = form.update(delivery, form.validated_data)
-                context['message'] = "success"
+                context['message'] = "Delivery note updated successfully"
                 context['delivery'] = {"id": updated_delivery.id, **form.validated_data}
                 # context['delivery']['item_list'] = custom_item_serializer(updated_delivery.item_list, updated_delivery.quantity_list)
 
@@ -2232,7 +2367,7 @@ def edit_delivery(request, id):
         try:
             delivery = DeliveryNote.objects.get(id=id)
             delivery.delete()
-            context = {"message": "Success"}
+            context = {"message": "Delivery note deleted"}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -2265,7 +2400,7 @@ def pay_delivery(request):
 
                 else:
                     pay_delivery = form.save(delivery)
-                    context['message'] = "success"
+                    context['message'] = "Delivery note payment was successful"
                     context['pay_delivery'] = {"id": pay_delivery.id, **form.data}
 
                     return Response(context, status=status.HTTP_200_OK)
@@ -2322,7 +2457,7 @@ def change_profile(request):
         form = ProfileSerializer(instance=request.user, data=request.data)
         if form.is_valid():
             updated_profile = form.update(request.user, form.validated_data)
-            context['message'] = "Success"
+            context['message'] = "Profile updated successfully"
             context['profile'] = {**form.validated_data}
             if "photo_path" in context['profile'].keys():
                 context['profile']['photo_path'] = updated_profile.photo_path

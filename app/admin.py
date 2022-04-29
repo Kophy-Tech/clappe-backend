@@ -5,8 +5,12 @@ from .models import CreditNote, Customer, DeliveryNote, Item, MyUsers, Invoice, 
                      PayPurchaseOrder, Quote, Receipt, JWT
 # Register your models here.
 
+class UserAdmin(admin.ModelAdmin):
+    exclude = ("password_recovery","password_recovery_time")
 
-admin.site.register(MyUsers)
+
+
+admin.site.register(MyUsers, UserAdmin)
 admin.site.register(JWT)
 admin.site.register(Invoice)
 admin.site.register(ProformaInvoice)
