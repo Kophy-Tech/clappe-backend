@@ -386,6 +386,7 @@ def pdf_item_serializer(items, quantities):
 
 
 class InvoiceCreate(ModelSerializer):
+    # invoice_date = serializers.DateField(required=True)
     item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
@@ -400,10 +401,15 @@ class InvoiceCreate(ModelSerializer):
     class Meta:
         model = Invoice
         fields = [
-            "customer_id",
-            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","item_list",
-            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "send_email", "download", "terms"]
+            "customer_id", "po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","item_list",
+            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "send_email", "download", "terms",
+            "invoice_date"]
 
+
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
 
     def validate_tax(self, value):
         if len(value) > 0:
@@ -432,6 +438,16 @@ class InvoiceCreate(ModelSerializer):
         else:
             return 0
 
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
+
+
 
     def save(self, request):
 
@@ -443,13 +459,13 @@ class InvoiceCreate(ModelSerializer):
         # new_invoice.logo_path = self.validated_data["logo_path"]
         new_invoice.invoice_number = get_number(request, 'invoice')
         new_invoice.invoice_date = self.validated_data['invoice_date']
-        new_invoice.po_number = self.validated_data['po_number']
+        new_invoice.po_number = self.validated_data.get('po_number', None)
         new_invoice.due_date = self.validated_data['due_date']
 
-        new_invoice.ship_to = self.validated_data["ship_to"]
-        new_invoice.shipping_address = self.validated_data["shipping_address"]
-        new_invoice.bill_to = self.validated_data["bill_to"]
-        new_invoice.billing_address = self.validated_data["billing_address"]
+        new_invoice.ship_to = self.validated_data.get("ship_to", "")
+        new_invoice.shipping_address = self.validated_data.get("shipping_address", "")
+        new_invoice.bill_to = self.validated_data.get("bill_to", "")
+        new_invoice.billing_address = self.validated_data.get("billing_address", "")
         new_invoice.notes = self.validated_data.get("notes", "")
         new_invoice.terms = self.validated_data.get("terms", "")
 
@@ -528,6 +544,10 @@ class InvoiceEditSerializer(ModelSerializer):
         fields = ["customer_id", "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "item_list",
                     "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "send_email", "download", "terms"]
 
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
 
     def validate_tax(self, value):
         if len(value) > 0:
@@ -555,6 +575,15 @@ class InvoiceEditSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for discount amount")
         else:
             return 0
+
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
 
 
     def update(self, instance, validated_data, request):
@@ -667,6 +696,10 @@ class ProformaCreateSerializer(ModelSerializer):
                 "invoice_date", "po_number", "due_date", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
 
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
 
     def validate_tax(self, value):
         if len(value) > 0:
@@ -685,6 +718,15 @@ class ProformaCreateSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
             return 0
+    
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
     
 
 
@@ -779,6 +821,11 @@ class ProformaEditSerializer(ModelSerializer):
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
 
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
+
     def validate_tax(self, value):
         if len(value) > 0:
             try:
@@ -796,6 +843,15 @@ class ProformaEditSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
             return 0
+
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
     
 
 
@@ -909,6 +965,10 @@ class PurchaseCreateSerializer(ModelSerializer):
                     "po_date", "ship_to", "notes", "shipping_address", "item_list", "due_date",
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
 
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
 
     def validate_tax(self, value):
         if len(value) > 0:
@@ -927,6 +987,16 @@ class PurchaseCreateSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
             return 0
+
+    
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
     
 
 
@@ -946,9 +1016,9 @@ class PurchaseCreateSerializer(ModelSerializer):
         new_purchaseorder.po_number = get_number(request, 'purchase_order')
         new_purchaseorder.po_date = self.validated_data["po_date"]
         new_purchaseorder.due_date = self.validated_data["due_date"]
-        new_purchaseorder.ship_to = self.validated_data["ship_to"]
+        new_purchaseorder.ship_to = self.validated_data.get("ship_to", "")
         new_purchaseorder.notes = self.validated_data.get("notes", "")
-        new_purchaseorder.shipping_address = self.validated_data["shipping_address"]
+        new_purchaseorder.shipping_address = self.validated_data.get("shipping_address", "")
         new_purchaseorder.terms = self.validated_data.get("terms", "")
         
         item_list = self.validated_data['item_list']
@@ -1026,6 +1096,12 @@ class PurchaseEditSerializer(ModelSerializer):
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
 
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
+
+
     def validate_tax(self, value):
         if len(value) > 0:
             try:
@@ -1043,6 +1119,16 @@ class PurchaseEditSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
             return 0
+
+
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
     
 
 
@@ -1061,6 +1147,8 @@ class PurchaseEditSerializer(ModelSerializer):
         instance.po_date = validated_data.get("po_date", instance.po_date)
         instance.notes = validated_data.get("notes", instance.notes)
         instance.terms = validated_data.get("terms", instance.terms)
+        instance.ship_to = validated_data.get("ship_to", "")
+        instance.shipping_address = validated_data.get("shipping_address", "")
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1142,7 +1230,10 @@ class EstimateCreateSerializer(ModelSerializer):
                     "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
 
-
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
 
     def validate_tax(self, value):
         if len(value) > 0:
@@ -1161,6 +1252,16 @@ class EstimateCreateSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
             return 0
+
+
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
     
 
 
@@ -1179,10 +1280,10 @@ class EstimateCreateSerializer(ModelSerializer):
         new_estimate.estimate_date = self.validated_data["estimate_date"]
         new_estimate.po_number = self.validated_data["po_number"]
         new_estimate.due_date = self.validated_data["due_date"]
-        new_estimate.ship_to = self.validated_data["ship_to"]
-        new_estimate.shipping_address = self.validated_data["shipping_address"]
-        new_estimate.bill_to = self.validated_data["bill_to"]
-        new_estimate.billing_address = self.validated_data["billing_address"]
+        new_estimate.ship_to = self.validated_data.get("ship_to", "")
+        new_estimate.shipping_address = self.validated_data.get("shipping_address", "")
+        new_estimate.bill_to = self.validated_data.get("bill_to", "")
+        new_estimate.billing_address = self.validated_data.get("billing_address", "")
         new_estimate.notes = self.validated_data.get("notes", "")
         new_estimate.terms = self.validated_data.get("terms", "")
         
@@ -1259,6 +1360,12 @@ class EstimateEditSerializer(ModelSerializer):
 
 
 
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
+
+
     def validate_tax(self, value):
         if len(value) > 0:
             try:
@@ -1276,6 +1383,16 @@ class EstimateEditSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
             return 0
+
+
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
     
 
 
@@ -1380,6 +1497,10 @@ class QuoteCreateSerializer(ModelSerializer):
                     "notes",  "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
                         
 
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
 
 
     def validate_tax(self, value):
@@ -1399,6 +1520,16 @@ class QuoteCreateSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
             return 0
+
+
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
     
 
 
@@ -1418,10 +1549,10 @@ class QuoteCreateSerializer(ModelSerializer):
         new_quote.quote_date = self.validated_data["quote_date"]
         new_quote.due_date = self.validated_data["due_date"]
         new_quote.po_number = self.validated_data["po_number"]
-        new_quote.ship_to = self.validated_data["ship_to"]
-        new_quote.shipping_address = self.validated_data["shipping_address"]
-        new_quote.bill_to = self.validated_data["bill_to"]
-        new_quote.billing_address = self.validated_data["billing_address"]
+        new_quote.ship_to = self.validated_data.get("ship_to", "")
+        new_quote.shipping_address = self.validated_data.get("shipping_address", "")
+        new_quote.bill_to = self.validated_data.get("bill_to", "")
+        new_quote.billing_address = self.validated_data.get("billing_address", "")
         new_quote.notes = self.validated_data.get("notes", "")
         new_quote.terms = self.validated_data.get("terms", "")
         
@@ -1497,7 +1628,10 @@ class QuoteEditSerializer(ModelSerializer):
         fields = ["customer_id", "due_date", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
         
-
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
 
     def validate_tax(self, value):
         if len(value) > 0:
@@ -1516,6 +1650,16 @@ class QuoteEditSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
             return 0
+
+
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
     
 
 
@@ -1622,7 +1766,11 @@ class CNCreateSerializer(ModelSerializer):
                     "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]       
 
-        
+    
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
 
 
     def validate_tax(self, value):
@@ -1642,6 +1790,16 @@ class CNCreateSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
             return 0
+
+
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
     
 
 
@@ -1662,8 +1820,8 @@ class CNCreateSerializer(ModelSerializer):
         new_credit.cn_date = self.validated_data["cn_date"]
         new_credit.po_number = self.validated_data["po_number"]
         new_credit.due_date = self.validated_data["due_date"]
-        new_credit.ship_to = self.validated_data["ship_to"]
-        new_credit.shipping_address = self.validated_data["shipping_address"]
+        new_credit.ship_to = self.validated_data.get("ship_to", "")
+        new_credit.shipping_address = self.validated_data.get("shipping_address", "")
         new_credit.notes = self.validated_data.get("notes", "")
         new_credit.terms = self.validated_data.get("terms", "")
         
@@ -1742,7 +1900,10 @@ class CNEditSerializer(ModelSerializer):
                     "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
-        
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
 
     def validate_tax(self, value):
         if len(value) > 0:
@@ -1761,6 +1922,16 @@ class CNEditSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
             return 0
+
+
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
     
 
 
@@ -1871,7 +2042,10 @@ class REceiptCreateSerializer(ModelSerializer):
                     "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
         
-        
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
 
     def validate_tax(self, value):
         if len(value) > 0:
@@ -1890,6 +2064,16 @@ class REceiptCreateSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
             return 0
+
+
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
     
 
 
@@ -1909,10 +2093,10 @@ class REceiptCreateSerializer(ModelSerializer):
         new_receipt.receipt_date = self.validated_data["receipt_date"]
         new_receipt.po_number = self.validated_data["po_number"]
         new_receipt.due_date = self.validated_data["due_date"]
-        new_receipt.ship_to = self.validated_data["ship_to"]
-        new_receipt.shipping_address = self.validated_data["shipping_address"]
-        new_receipt.bill_to = self.validated_data["bill_to"]
-        new_receipt.billing_address = self.validated_data["billing_address"]
+        new_receipt.ship_to = self.validated_data.get("ship_to", "")
+        new_receipt.shipping_address = self.validated_data.get("shipping_address", "")
+        new_receipt.bill_to = self.validated_data.get("bill_to", "")
+        new_receipt.billing_address = self.validated_data.get("billing_address", "")
         new_receipt.notes = self.validated_data.get("notes", "")
         new_receipt.terms = self.validated_data.get("terms", "")
         
@@ -1996,6 +2180,10 @@ class ReceiptEditSerializer(ModelSerializer):
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
         
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
 
 
     def validate_tax(self, value):
@@ -2015,6 +2203,16 @@ class ReceiptEditSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
             return 0
+
+
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
     
 
 
@@ -2124,7 +2322,11 @@ class DNCreateSerializer(ModelSerializer):
                     "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
         
-        
+
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data 
 
 
     def validate_tax(self, value):
@@ -2144,6 +2346,16 @@ class DNCreateSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
             return 0
+
+
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
     
 
 
@@ -2163,8 +2375,8 @@ class DNCreateSerializer(ModelSerializer):
         new_delivery.dn_date = self.validated_data["dn_date"]
         new_delivery.po_number = self.validated_data["po_number"]
         new_delivery.due_date = self.validated_data["due_date"]
-        new_delivery.ship_to = self.validated_data["ship_to"]
-        new_delivery.shipping_address = self.validated_data["shipping_address"]
+        new_delivery.ship_to = self.validated_data.get("ship_to", "")
+        new_delivery.shipping_address = self.validated_data.get("shipping_address", "")
         new_delivery.notes = self.validated_data.get("notes", "")
         new_delivery.terms = self.validated_data.get("terms", "")
         
@@ -2247,7 +2459,10 @@ class DNEditSerializer(ModelSerializer):
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
         
-
+    def validate(self, data):
+        if not data.get("invoice_date"):
+            raise serializers.ValidationError("Invoice date is required")
+        return data
 
     def validate_tax(self, value):
         if len(value) > 0:
@@ -2266,6 +2481,16 @@ class DNEditSerializer(ModelSerializer):
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
             return 0
+
+
+    def validate_item_list(self, value):
+        if isinstance(value, list):
+            if len(value) >= 1:
+                return value
+            else:
+                raise serializers.ValidationError("Items are required")
+        else:
+            raise serializers.ValidationError("Items are required")
     
 
 

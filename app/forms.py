@@ -98,7 +98,6 @@ class ScheduleForm(forms.Form):
             new_task.description = f"Monthly Email Report for {email} ({document_type.capitalize()})"
 
         new_task.save()
-        print(f"periodic task created for {email}")
 
         return new_cron, new_task
 

@@ -122,7 +122,6 @@ def send_monthly_mail_task(document_id: int, document_type: str):
     try:
         send_my_email(document.email, body, file_name, "Your Monthly Report")
         final = f"Successfully sent {file_name} to {document.email}"
-        print(final)
         os.remove(file_name)
         
     except Exception as e:

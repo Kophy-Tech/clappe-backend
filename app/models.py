@@ -102,12 +102,12 @@ class Invoice(models.Model):
     # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
     invoice_number = models.CharField("Invoice number", blank=False, null=False, max_length=2048)
     invoice_date = models.DateField("Invoice Date", blank=False, null=False)
-    po_number = models.CharField("PO number", blank=False, null=False, max_length=2048)
+    po_number = models.CharField("PO number", blank=True, null=True, max_length=2048)
     due_date = models.DateField("Due Date", blank=False, null=False)
-    ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
-    shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
-    bill_to = models.CharField("Bill To", max_length=2048, blank=False, null=False)
-    billing_address = models.CharField("Billing Address", max_length=500, null=False, blank=False)
+    ship_to = models.CharField("Ship to", max_length=500, null=True, blank=True)
+    shipping_address = models.CharField("Shipping Address", max_length=500, null=True, blank=True)
+    bill_to = models.CharField("Bill To", max_length=2048, blank=True, null=True)
+    billing_address = models.CharField("Billing Address", max_length=500, null=True, blank=True)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
     
     item_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
@@ -152,7 +152,7 @@ class ProformaInvoice(models.Model):
     # invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
     # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
     # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
-    invoice_number = models.CharField("Invoice number", blank=False, null=False, max_length=2048)
+    invoice_number = models.CharField("Invoice number", blank=True, null=True, max_length=2048)
     invoice_date = models.DateField("Invoice Date", blank=False, null=False)
     po_number = models.CharField("PO number", blank=False, null=False, max_length=2048)
     due_date = models.DateField("Due Date", blank=False, null=False)
@@ -198,11 +198,11 @@ class PurchaseOrder(models.Model):
     # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
     # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
 
-    po_number = models.CharField("PO number", blank=False, null=False, max_length=2048)
+    po_number = models.CharField("PO number", blank=True, null=True, max_length=2048)
     po_date = models.DateField("Purchase Order Date", blank=False, null=False)
     due_date = models.DateField("Due Date", blank=False, null=False, default=timezone.now)
-    ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
-    shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
+    ship_to = models.CharField("Ship to", max_length=500, null=True, blank=True)
+    shipping_address = models.CharField("Shipping Address", max_length=500, null=True, blank=True)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
 
     
@@ -246,13 +246,13 @@ class Estimate(models.Model):
 
     estimate_number = models.CharField("Estimate number", blank=False, null=False, max_length=2048)
     estimate_date = models.DateField("Estimate Date", blank=False, null=False)
-    po_number = models.CharField("PO Number", blank=False, null=False, max_length=1024, default=1)
+    po_number = models.CharField("PO Number", blank=True, null=True, max_length=1024, default=1)
     due_date = models.DateField("Due Date", blank=False, null=False)
 
-    ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
-    shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
-    bill_to = models.CharField("Bill To", max_length=2048, blank=False, null=False)
-    billing_address = models.CharField("Billing Address", max_length=500, null=False, blank=False)
+    ship_to = models.CharField("Ship to", max_length=500, null=True, blank=True)
+    shipping_address = models.CharField("Shipping Address", max_length=500, null=True, blank=True)
+    bill_to = models.CharField("Bill To", max_length=2048, blank=True, null=True)
+    billing_address = models.CharField("Billing Address", max_length=500, null=True, blank=True)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
     
     item_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
@@ -298,11 +298,11 @@ class Quote(models.Model):
     quote_number = models.CharField("Quote number", blank=False, null=False, max_length=2048)
     quote_date = models.DateField("Quote Date", blank=False, null=False)
     due_date = models.DateField("Due Date", blank=False, null=False, default=timezone.now)
-    po_number = models.CharField("PO number", blank=False, null=False, max_length=2048)
-    ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
-    shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
-    bill_to = models.CharField("Bill To", max_length=2048, blank=False, null=False)
-    billing_address = models.CharField("Billing Address", max_length=500, null=False, blank=False)
+    po_number = models.CharField("PO number", blank=True, null=True, max_length=2048)
+    ship_to = models.CharField("Ship to", max_length=500, null=True, blank=True)
+    shipping_address = models.CharField("Shipping Address", max_length=500, null=True, blank=True)
+    bill_to = models.CharField("Bill To", max_length=2048, blank=True, null=True)
+    billing_address = models.CharField("Billing Address", max_length=500, null=True, blank=True)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
 
     
@@ -349,12 +349,12 @@ class Receipt(models.Model):
 
     receipt_number = models.CharField("Receipt number", blank=False, null=False, max_length=2048)
     receipt_date = models.DateField("Receipt Date", blank=False, null=False)
-    po_number = models.CharField("PO number", blank=False, null=False, max_length=2048)
+    po_number = models.CharField("PO number", blank=True, null=True, max_length=2048)
     due_date = models.DateField("Due Date", blank=False, null=False)
-    ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
-    shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
-    bill_to = models.CharField("Bill To", max_length=2048, blank=False, null=False)
-    billing_address = models.CharField("Billing Address", max_length=500, null=False, blank=False)
+    ship_to = models.CharField("Ship to", max_length=500, null=True, blank=True)
+    shipping_address = models.CharField("Shipping Address", max_length=500, null=True, blank=True)
+    bill_to = models.CharField("Bill To", max_length=2048, blank=True, null=True)
+    billing_address = models.CharField("Billing Address", max_length=500, null=True, blank=True)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
 
     
@@ -402,10 +402,10 @@ class CreditNote(models.Model):
 
     cn_number = models.CharField("Credit Note number", blank=False, null=False, max_length=2048)
     cn_date = models.DateField("Credit Note Date", blank=False, null=False)
-    po_number = models.CharField("PO number", blank=False, null=False, max_length=2048)
+    po_number = models.CharField("PO number", blank=True, null=True, max_length=2048)
     due_date = models.DateField("Due Date", blank=False, null=False)
-    ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
-    shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
+    ship_to = models.CharField("Ship to", max_length=500, null=True, blank=True)
+    shipping_address = models.CharField("Shipping Address", max_length=500, null=True, blank=True)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
 
     
@@ -456,10 +456,10 @@ class DeliveryNote(models.Model):
 
     dn_number = models.CharField("Delivery Note number", blank=False, null=False, max_length=2048)
     dn_date = models.DateField("Delivery Note Date", blank=False, null=False)
-    po_number = models.CharField("PO number", blank=False, null=False, max_length=2048)
+    po_number = models.CharField("PO number", blank=True, null=True, max_length=2048)
     due_date = models.DateField("Due Date", blank=False, null=False)
-    ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
-    shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
+    ship_to = models.CharField("Ship to", max_length=500, null=True, blank=True)
+    shipping_address = models.CharField("Shipping Address", max_length=500, null=True, blank=True)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
 
     

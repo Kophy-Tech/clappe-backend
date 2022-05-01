@@ -223,8 +223,6 @@ def add_other_details(pdf, document, start_y, document_type, currency, terms, re
         pdf.drawCentredString(530, 730, f"{currency} {total_amount}")
 
         if request.user.signature:
-            print(request.user.logo_path)
-            print(request.user.signature)
             pdf = draw_image(pdf, request.user.signature, request.user.email, 565, 800, 'signature')
 
 
