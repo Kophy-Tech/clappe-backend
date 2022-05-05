@@ -486,6 +486,7 @@ def create_invoice(request):
                 send_my_email(new_invoice.customer.email, body, subject, file_name)
                 os.remove(file_name)
                 new_invoice.emailed = True
+                new_invoice.emailed_date = datetime.now().strftime("%d-%m-%Y")
                 new_invoice.save()
 
 
@@ -572,6 +573,7 @@ def edit_invoice(request, id):
                     send_my_email(updated_invoice.customer.email, body, subject, file_name)
                     os.remove(file_name)
                     updated_invoice.emailed = True
+                    updated_invoice.emailed_date = datetime.now().strftime("%d-%m-%Y")
                     updated_invoice.save()
 
 
@@ -727,6 +729,7 @@ def create_proforma(request):
                 send_my_email(new_invoice.customer.email, body, subject, file_name)
                 os.remove(file_name)
                 new_invoice.emailed = True
+                new_invoice.emailed_date = datetime.now().strftime("%d-%m-%Y")
                 new_invoice.save()
 
 
@@ -810,6 +813,7 @@ def edit_proforma(request, id):
                     send_my_email(updated_proforma.customer.email, body, subject, file_name)
                     os.remove(file_name)
                     updated_proforma.emailed = True
+                    updated_proforma.emailed_date = datetime.now().strftime("%d-%m-%Y")
                     updated_proforma.save()
 
                 
@@ -956,6 +960,7 @@ def create_purchaseorder(request):
                 send_my_email(new_po.customer.email, body, subject, file_name)
                 os.remove(file_name)
                 new_po.emailed = True
+                new_po.emailed_date = datetime.now().strftime("%d-%m-%Y")
                 new_po.save()
 
             return Response(context, status=status.HTTP_200_OK)
@@ -1038,6 +1043,7 @@ def edit_purchaseorder(request, id):
                     send_my_email(updated_purchase.customer.email, body, subject, file_name)
                     os.remove(file_name)
                     updated_purchase.emailed = True
+                    updated_purchase.emailed_date = datetime.now().strftime("%d-%m-%Y")
                     updated_purchase.save()
 
                 return Response(context, status=status.HTTP_200_OK)
@@ -1194,6 +1200,7 @@ def create_estimate(request):
                 send_my_email(new_estimate.customer.email, body, subject, file_name)
                 os.remove(file_name)
                 new_estimate.emailed = True
+                new_estimate.emailed_date = datetime.now().strftime("%d-%m-%Y")
                 new_estimate.save()
 
             return Response(context, status=status.HTTP_200_OK)
@@ -1275,6 +1282,7 @@ def edit_estimate(request, id):
                     send_my_email(updated_estimate.customer.email, body, subject, file_name)
                     os.remove(file_name)
                     updated_estimate.emailed = True
+                    updated_estimate.emailed_date = datetime.now().strftime("%d-%m-%Y")
                     updated_estimate.save()
 
                 return Response(context, status=status.HTTP_200_OK)
@@ -1561,6 +1569,7 @@ def create_quote(request):
                 send_my_email(new_quote.customer.email, body, subject, file_name)
                 os.remove(file_name)
                 new_quote.emailed = True
+                new_quote.emailed_date = datetime.now().strftime("%d-%m-%Y")
                 new_quote.save()
 
             return Response(context, status=status.HTTP_200_OK)
@@ -1644,6 +1653,7 @@ def edit_quote(request, id):
                     send_my_email(updated_quote.customer.email, body, subject, file_name)
                     os.remove(file_name)
                     updated_quote.emailed = True
+                    updated_quote.emailed_date = datetime.now().strftime("%d-%m-%Y")
                     updated_quote.save()
 
                 return Response(context, status=status.HTTP_200_OK)
@@ -1795,6 +1805,7 @@ def create_receipt(request):
                 send_my_email(new_receipt.customer.email, body, subject, file_name)
                 os.remove(file_name)
                 new_receipt.emailed = True
+                new_receipt.emailed_date = datetime.now().strftime("%d-%m-%Y")
                 new_receipt.save()
 
             return Response(context, status=status.HTTP_200_OK)
@@ -1878,6 +1889,7 @@ def edit_receipt(request, id):
                     send_my_email(updated_receipt.customer.email, body, subject, file_name)
                     os.remove(file_name)
                     updated_receipt.emailed = True
+                    updated_receipt.emailed_date = datetime.now().strftime("%d-%m-%Y")
                     updated_receipt.save()
 
                 return Response(context, status=status.HTTP_200_OK)
@@ -2032,6 +2044,7 @@ def create_credit(request):
                 send_my_email(new_credit.customer.email, body, subject, file_name)
                 os.remove(file_name)
                 new_credit.emailed = True
+                new_credit.emailed_date = datetime.now().strftime("%d-%m-%Y")
                 new_credit.save()
 
             return Response(context, status=status.HTTP_200_OK)
@@ -2114,6 +2127,7 @@ def edit_credit(request, id):
                     send_my_email(updated_credit.customer.email, body, subject, file_name)
                     os.remove(file_name)
                     updated_credit.emailed = True
+                    updated_credit.emailed_date = datetime.now().strftime("%d-%m-%Y")
                     updated_credit.save()
 
                 return Response(context, status=status.HTTP_200_OK)
@@ -2264,6 +2278,7 @@ def create_delivery(request):
                 send_my_email(new_delivery.customer.email, body, subject, file_name)
                 os.remove(file_name)
                 new_delivery.emailed = True
+                new_delivery.emailed_date = datetime.now().strftime("%d-%m-%Y")
                 new_delivery.save()
 
             return Response(context, status=status.HTTP_200_OK)
@@ -2346,6 +2361,7 @@ def edit_delivery(request, id):
                     send_my_email(updated_delivery.customer.email, body, subject, file_name)
                     os.remove(file_name)
                     updated_delivery.emailed = True
+                    updated_delivery.emailed_date = datetime.now().strftime("%d-%m-%Y")
                     updated_delivery.save()
 
                 return Response(context, status=status.HTTP_200_OK)
@@ -2690,10 +2706,12 @@ def customer_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
-    if measure != "searchable window":
+    if measure != "searchbox windows":
 
         if start_date:
             if end_date:
+
+                measure = measure.lower()
                 
                 # 1.1
                 if measure == "customer search":
@@ -2701,7 +2719,7 @@ def customer_report(request):
                                                 .filter(date_created__gte=start_date)\
                                                 .filter(date_created__lte=end_date).order_by("first_name").all()
                     if len(customers) > 0:
-                        customer_ser = CustomerSerializer(customers, many=True)
+                        customer_ser = CustomerSerializer(customers, many=True, fields=("id", "business_name", "address", "email", "taxable", "status"))
                         context["message"] = customer_ser.data
                         return Response(context, status=status.HTTP_200_OK)
 
@@ -2710,180 +2728,221 @@ def customer_report(request):
                         return Response(context, status=status.HTTP_404_NOT_FOUND)
                 
                 # 1.2
-                elif measure == "purchase summary":
-                    context = {}
+                elif measure == "surchase summary search":
+                    context = {"message": []}
                     customers = Customer.objects.filter(vendor=request.user.id)\
-                                                .order_by("first_name").all().values_list("id", flat=True)
-                    for id in list(customers):
+                                                .order_by("first_name")
+                    for customer in customers:
 
-                        invoices = Invoice.objects.filter(ucstomer_id=id)\
+                        invoices = Invoice.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
-                        invoice_ser = InvoiceSerializer(invoices, many=True)
+                        invoice_ser = InvoiceSerializer(invoices, many=True, fields=("id", "invoice_date", "grand_total", "tax", "status"))
 
-                        proformas = ProformaInvoice.objects.filter(ucstomer_id=id)\
+                        proformas = ProformaInvoice.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
-                        proforma_ser = ProformerInvoiceSerailizer(proformas, many=True)
+                        proforma_ser = ProformerInvoiceSerailizer(proformas, many=True, fields=("id", "invoice_date", "grand_total", "tax", "status"))
 
-                        purchases = PurchaseOrder.objects.filter(ucstomer_id=id)\
+                        purchases = PurchaseOrder.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
-                        purchase_ser = PurchaseOrderSerailizer(purchases, many=True)
+                        purchase_ser = PurchaseOrderSerailizer(purchases, many=True, fields=("id", "po_date", "grand_total", "tax", "status"))
 
-                        estimates = Estimate.objects.filter(ucstomer_id=id)\
+                        estimates = Estimate.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
-                        estimate_ser = EstimateSerailizer(estimates, many=True)
+                        estimate_ser = EstimateSerailizer(estimates, many=True, fields=("id", "estimate_date", "grand_total", "tax", "status"))
 
-                        quotes = Quote.objects.filter(ucstomer_id=id)\
+                        quotes = Quote.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
-                        quote_ser = QuoteSerailizer(quotes, many=True)
+                        quote_ser = QuoteSerailizer(quotes, many=True, fields=("id", "quote_date", "grand_total", "tax", "status"))
 
-                        receipts = Receipt.objects.filter(ucstomer_id=id)\
+                        receipts = Receipt.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
-                        receipt_ser = ReceiptSerailizer(receipts, many=True)
+                        receipt_ser = ReceiptSerailizer(receipts, many=True, fields=("id", "receipt_date", "grand_total", "tax", "status"))
 
-                        credits = CreditNote.objects.filter(ucstomer_id=id)\
+                        credits = CreditNote.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
-                        credit_ser = CreditNoteSerailizer(credits, many=True)
+                        credit_ser = CreditNoteSerailizer(credits, many=True, fields=("id", "credit_date", "grand_total", "tax", "status"))
 
-                        deliverys = DeliveryNote.objects.filter(ucstomer_id=id)\
+                        deliverys = DeliveryNote.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
-                        delivery_ser = DNSerailizer(deliverys, many=True)
+                        delivery_ser = DNSerailizer(deliverys, many=True, fields=("id", "delivery_date", "grand_total", "tax", "status"))
 
-                        context["customer_id"] = id
-                        context[id]['invoice'] = invoice_ser.data
-                        context[id]['proforma'] = proforma_ser.data
-                        context[id]['estimate'] = estimate_ser.data
-                        context[id]['quote'] = quote_ser.data
-                        context[id]['receipt'] = receipt_ser.data
-                        context[id]['credit'] = credit_ser.data
-                        context[id]['purchase'] = purchase_ser.data
-                        context[id]['delivery'] = delivery_ser.data
+                        single_customer = {}
+
+                        single_customer["customer_name"] = customer.first_name + ' ' + customer.last_name
+                        single_customer['invoice'] = invoice_ser.data
+                        single_customer['proforma'] = proforma_ser.data
+                        single_customer['estimate'] = estimate_ser.data
+                        single_customer['quote'] = quote_ser.data
+                        single_customer['receipt'] = receipt_ser.data
+                        single_customer['credit'] = credit_ser.data
+                        single_customer['purchase'] = purchase_ser.data
+                        single_customer['delivery'] = delivery_ser.data
+
+                        context['message'].append(single_customer)
 
                     return Response(context, status=status.HTTP_200_OK)
                 
                 # 1.3
-                elif measure == "transactions":
-                    context = {}
+                elif measure == "transactions search":
+                    context = {"message": []}
                     customers = Customer.objects.filter(vendor=request.user.id)\
-                                                .order_by("first_name").all().values_list("id", flat=True)
-                    for id in list(customers):
+                                                .order_by("first_name")
+                    for customer in customers:
 
-                        invoices = Invoice.objects.filter(ucstomer_id=id)\
+                        invoices = Invoice.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
                         invoice_ser = InvoiceSerializer(invoices, many=True)
 
-                        proformas = ProformaInvoice.objects.filter(ucstomer_id=id)\
+                        proformas = ProformaInvoice.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
                         proforma_ser = ProformerInvoiceSerailizer(proformas, many=True)
 
-                        purchases = PurchaseOrder.objects.filter(ucstomer_id=id)\
+                        purchases = PurchaseOrder.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
                         purchase_ser = PurchaseOrderSerailizer(purchases, many=True)
 
-                        estimates = Estimate.objects.filter(ucstomer_id=id)\
+                        estimates = Estimate.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
                         estimate_ser = EstimateSerailizer(estimates, many=True)
 
-                        quotes = Quote.objects.filter(ucstomer_id=id)\
+                        quotes = Quote.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
                         quote_ser = QuoteSerailizer(quotes, many=True)
 
-                        receipts = Receipt.objects.filter(ucstomer_id=id)\
+                        receipts = Receipt.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
                         receipt_ser = ReceiptSerailizer(receipts, many=True)
 
-                        credits = CreditNote.objects.filter(ucstomer_id=id)\
+                        credits = CreditNote.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
                         credit_ser = CreditNoteSerailizer(credits, many=True)
 
-                        deliverys = DeliveryNote.objects.filter(ucstomer_id=id)\
+                        deliverys = DeliveryNote.objects.filter(customer=customer)\
                                                     .filter(date_created__lte=end_date)\
                                                     .filter(date_created__gte=start_date).order_by("date_created")
                         delivery_ser = DNSerailizer(deliverys, many=True)
 
-                        context["customer_id"] = id
+                        single_customer = {}
+                        
+                        single_customer["customer_name"] = customer.first_name + ' ' + customer.last_name
+                        # single_customer['customer_id'][id] = {}
 
-                        context[id]['invoice'] = invoice_ser.data
-                        context[id]['invoice']["total_number"] = len(invoice_ser.data)
+                        transaction_count = 0
+                        transaction_count += len(invoice_ser.data)
+                        transaction_count += len(proforma_ser.data)
+                        transaction_count += len(estimate_ser.data)
+                        transaction_count += len(quote_ser.data)
+                        transaction_count += len(receipt_ser.data)
+                        transaction_count += len(purchase_ser.data)
+                        transaction_count += len(delivery_ser.data)
+                        transaction_count += len(credit_ser.data)
+
+                        # single_customer['invoice'] = invoice_ser.data
+                        # single_customer['invoice']["total_number"] = len(invoice_ser.data)
                         total_amount = 0
+                        total_tax = 0
+
+
                         for inv in invoice_ser.data:
                             total_amount += int(inv['grand_total'])
-                        context[id]['invoice']["total_amount"] = total_amount
+                            total_tax += int(inv['tax'])
+                        # single_customer['invoice']["total_amount"] = total_amount
 
-                        context[id]['proforma'] = proforma_ser.data
-                        context[id]['proforma']["total_number"] = len(proforma_ser.data)
-                        total_amount = 0
+                        # single_customer['proforma'] = proforma_ser.data
+                        # single_customer['proforma']["total_number"] = len(proforma_ser.data)
+                        # proforma_amount = 0
+                        # proforma_tax = 0
                         for inv in proforma_ser.data:
                             total_amount += int(inv['grand_total'])
-                        context[id]['proforma']["total_amount"] = total_amount
+                            total_tax += int(inv['tax'])
+                        # single_customer['proforma']["total_amount"] = total_amount
 
-                        context[id]['estimate'] = estimate_ser.data
-                        context[id]['estimate']["total_number"] = len(estimate_ser.data)
-                        total_amount = 0
+                        # single_customer['estimate'] = estimate_ser.data
+                        # single_customer['estimate']["total_number"] = len(estimate_ser.data)
+                        # estimate_amount = 0
+                        # estimate_tax = 0
                         for inv in estimate_ser.data:
                             total_amount += int(inv['grand_total'])
-                        context[id]['estimate']["total_amount"] = total_amount
+                            total_tax += int(inv['tax'])
+                        # single_customer['estimate']["total_amount"] = total_amount
 
-                        context[id]['quote'] = quote_ser.data
-                        context[id]['quote']["total_number"] = len(quote_ser.data)
-                        total_amount = 0
+                        # single_customer['quote'] = quote_ser.data
+                        # single_customer['quote']["total_number"] = len(quote_ser.data)
+                        # quote_amount = 0
+                        # quote_tax = 0
                         for inv in quote_ser.data:
                             total_amount += int(inv['grand_total'])
-                        context[id]['quote']["total_amount"] = total_amount
+                            total_tax += int(inv['tax'])
+                        # single_customer['quote']["total_amount"] = total_amount
 
-                        context[id]['receipt'] = receipt_ser.data
-                        context[id]['receipt']["total_number"] = len(receipt_ser.data)
-                        total_amount = 0
+                        # single_customer['receipt'] = receipt_ser.data
+                        # single_customer['receipt']["total_number"] = len(receipt_ser.data)
+                        # receipt_amount = 0
+                        # receipt_tax = 0
                         for inv in receipt_ser.data:
                             total_amount += int(inv['grand_total'])
-                        context[id]['receipt']["total_amount"] = total_amount
+                            total_tax += int(inv['tax'])
+                        # single_customer['receipt']["total_amount"] = total_amount
 
-                        context[id]['credit'] = credit_ser.data
-                        context[id]['credit']["total_number"] = len(credit_ser.data)
-                        total_amount = 0
+                        # single_customer['credit'] = credit_ser.data
+                        # single_customer['credit']["total_number"] = len(credit_ser.data)
+                        # credit_amount = 0
+                        # credit_tax = 0
                         for inv in credit_ser.data:
                             total_amount += int(inv['grand_total'])
-                        context[id]['credit']["total_amount"] = total_amount
+                            total_tax += int(inv['tax'])
+                        # single_customer['credit']["total_amount"] = total_amount
 
-                        context[id]['purchase'] = purchase_ser.data
-                        context[id]['purchase']["total_number"] = len(purchase_ser.data)
-                        total_amount = 0
+                        # single_customer['purchase'] = purchase_ser.data
+                        # single_customer['purchase']["total_number"] = len(purchase_ser.data)
+                        # purchase_amount = 0
+                        # purchase_tax = 0
                         for inv in purchase_ser.data:
                             total_amount += int(inv['grand_total'])
-                        context[id]['purchase']["total_amount"] = total_amount
+                            total_tax += int(inv['tax'])
+                        # single_customer['purchase']["total_amount"] = total_amount
 
-                        context[id]['delivery'] = delivery_ser.data
-                        context[id]['delivery']["total_number"] = len(delivery_ser.data)
-                        total_amount = 0
+                        # single_customer['delivery'] = delivery_ser.data
+                        # single_customer['delivery']["total_number"] = len(delivery_ser.data)
+                        # delivery_amount = 0
+                        # delivery_tax = 0
                         for inv in delivery_ser.data:
                             total_amount += int(inv['grand_total'])
-                        context[id]['delivery']["total_amount"] = total_amount
+                            total_tax += int(inv['tax'])
+                        # single_customer['delivery']["total_amount"] = total_amount
+
+                        single_customer["transaction_count"] = transaction_count
+                        single_customer['invoice_total'] = total_amount
+                        single_customer['invoice_tax'] = total_tax
+
+                        context['message'].append(single_customer)
 
 
                     return Response(context, status=status.HTTP_200_OK)
 
                 
                 # 1.4
-                elif measure == "company name":
+                elif measure == "company name search":
                     customers = Customer.objects.filter(vendor=request.user.id)\
                                                 .filter(date_created__gte=start_date)\
                                                 .filter(date_created__lte=end_date).order_by("business_name").all()
                     if len(customers) > 0:
-                        customer_ser = CustomerSerializer(customers, many=True)
+                        customer_ser = CustomerSerializer(customers, many=True, fields=("id", "business_name", "address", "email", "taxable"))
                         context["message"] = customer_ser.data
 
                         return Response(context, status=status.HTTP_200_OK)
@@ -2894,12 +2953,12 @@ def customer_report(request):
 
 
                 # 1.5
-                elif measure == "customer name":
+                elif measure == "customer name search":
                     customers = Customer.objects.filter(vendor=request.user.id)\
                                                 .filter(date_created__gte=start_date)\
                                                 .filter(date_created__lte=end_date).order_by("first_name").all()
                     if len(customers) > 0:
-                        customer_ser = CustomerSerializer(customers, many=True)
+                        customer_ser = CustomerSerializer(customers, many=True, fields=("id", "first_name", "last_name", "address", "email", "taxable"))
                         context["message"] = customer_ser.data
                         
                         return Response(context, status=status.HTTP_200_OK)
@@ -2910,12 +2969,12 @@ def customer_report(request):
 
 
                 # 1.6
-                elif measure == "customer and company":
+                elif measure == "customer&company name search":
                     customers = Customer.objects.filter(vendor=request.user.id)\
                                                 .filter(date_created__gte=start_date)\
                                                 .filter(date_created__lte=end_date).order_by("first_name", "business_name").all()
                     if len(customers) > 0:
-                        customer_ser = CustomerSerializer(customers, many=True)
+                        customer_ser = CustomerSerializer(customers, many=True, fields=("id", "first_name", "last_name", "business_name", "address", "email", "taxable"))
                         context["message"] = customer_ser.data
                         
                         return Response(context, status=status.HTTP_200_OK)
@@ -2926,12 +2985,12 @@ def customer_report(request):
 
 
                 # 1.8
-                elif measure == "area code":
+                elif measure == "area code search":
                     customers = Customer.objects.filter(vendor=request.user.id)\
                                                 .filter(date_created__gte=start_date)\
                                                 .filter(date_created__lte=end_date).order_by("phone_number").all()
                     if len(customers) > 0:
-                        customer_ser = CustomerSerializer(customers, many=True)
+                        customer_ser = CustomerSerializer(customers, many=True, fields=("id", "first_name", "last_name", "business_name", "phone_number", "email"))
                         context["message"] = customer_ser.data
                         
                         return Response(context, status=status.HTTP_200_OK)
@@ -2960,17 +3019,17 @@ def customer_report(request):
                             .filter(date_created__lte=end_date).all()
         if len(customers) > 0:
             customer_name = customers.order_by("first_name")
-            customer_company = customers.order_by("business_name")
-            customer_phone = customers.order_by("phone_number")
+            # customer_company = customers.order_by("business_name")
+            # customer_phone = customers.order_by("phone_number")
 
             # customer_ser = CustomerSerializer(customers, many=True)
-            customer_name_ser = CustomerSerializer(customer_name, many=True)
-            customer_company_ser = CustomerSerializer(customer_company, many=True)
-            customer_phone_ser = CustomerSerializer(customer_phone, many=True)
+            customer_name_ser = CustomerSerializer(customer_name, many=True, fields=("id", "first_name", "last_name", "business_name", "phone_number"))
+            # customer_company_ser = CustomerSerializer(customer_company, many=True)
+            # customer_phone_ser = CustomerSerializer(customer_phone, many=True)
 
-            context["message"]['by_name'] = customer_name_ser.data
-            context["message"]['by_company'] = customer_company_ser.data
-            context["message"]['by_phone'] = customer_phone_ser.data
+            context["message"] = customer_name_ser.data
+            # context["message"]['by_company'] = customer_company_ser.data
+            # context["message"]['by_phone'] = customer_phone_ser.data
             
             return Response(context, status=status.HTTP_200_OK)
 
@@ -2987,19 +3046,35 @@ def customer_report(request):
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def invoice_report(request):
-    context = {}
+    
     measure = request.query_params.get("measure", None)
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if measure:
+        measure = measure.lower()
+    else:
+        return Response({"message": "You need to pass 'measure'"}, status=status.HTTP_400_BAD_REQUEST)
     # 2.1
     if measure == "invoice search":
+        context = {"message": []}
         invoices = Invoice.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
         if len(invoices) > 0:
             invoice_ser = InvoiceSerializer(invoices, many=True)
-            context['message'] = invoice_ser.data
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['invoice_number'] = invoice['invoice_number']
+                single_invoice['invoice_date'] = invoice['invoice_date']
+                single_invoice['invoice_amount'] = invoice['grand_total']
+                single_invoice['status'] = invoice['status']
+                single_invoice['id'] = invoice['id']
+
+                context["message"].append(single_invoice)
+            # context['message'] = invoice_ser.data
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -3008,14 +3083,26 @@ def invoice_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 2.2
-    elif measure == "amount search":
+    elif measure == "invoice amount search":
+        context = {"message": []}
         invoices = Invoice.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
 
         if len(invoices) > 0:
+            
             invoice_ser = InvoiceSerializer(invoices, many=True)
-            context['message'] = invoice_ser.data
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['invoice_number'] = invoice['invoice_number']
+                single_invoice['invoice_date'] = invoice['invoice_date']
+                single_invoice['invoice_amount'] = invoice['grand_total']
+                single_invoice['status'] = invoice['status']
+                single_invoice['id'] = invoice['id']
+
+                context["message"].append(single_invoice)
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -3025,7 +3112,8 @@ def invoice_report(request):
     
 
     # 2.3
-    elif measure == "per customer":
+    elif measure == "invoice customer search":
+        context = {}
         invoices = Invoice.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
@@ -3042,7 +3130,7 @@ def invoice_report(request):
             
             final_data = []
             for k,v in total_data.items():
-                final_data.append({"full_name": k, "total_amount": v})
+                final_data.append({"customer_name": k, "total_amount": v})
 
             context['message'] = final_data
 
@@ -3054,7 +3142,7 @@ def invoice_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 2.4
-    elif measure == "total per date":
+    elif measure == "Invoice total per-date Search":
         context = {}
         how = request.query_params.get("how")
 
@@ -3065,7 +3153,7 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
@@ -3077,7 +3165,9 @@ def invoice_report(request):
                 for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+            
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -3088,7 +3178,7 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())
@@ -3097,9 +3187,11 @@ def invoice_report(request):
 
                 total_amount = 0
                 for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                    total_amount += float(inv['grand_total'])
 
-                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                total_data[current_time.strftime('%Y-%m-%d')] = total_amount
+
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -3111,6 +3203,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -3125,11 +3218,11 @@ def invoice_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
+                    total_data[key] = total_amount
                         
-                    # context[key] = invoice_ser.data
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -3143,11 +3236,12 @@ def invoice_report(request):
                     key = f"{start_date} - {end_date}"
 
                     total_amount = 0
+                    total_data = {}
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                    total_data[key] = total_amount
+                    context['message'] = total_data
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -3165,6 +3259,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -3180,10 +3275,10 @@ def invoice_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context[key] = invoice_ser.data
+                    total_data[key] = total_amount
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -3192,15 +3287,16 @@ def invoice_report(request):
                             .filter(date_created__lte=end_date).all().order_by("date_created")
 
                 if len(invoices) > 0:
+                    total_data = {}
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                    total_data[key] = total_amount
+                    context['message'] = total_data
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -3217,15 +3313,16 @@ def invoice_report(request):
                             .filter(date_created__lte=end_date).all().order_by("date_created")
 
             if len(invoices) > 0:
+                total_data = {}
                 invoice_ser = InvoiceSerializer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
                 total_amount = 0
                 for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                    total_amount += float(inv['grand_total'])
 
-                context[key] = total_amount
-                # context['message'] = invoice_ser.data
+                total_data[key] = total_amount
+                context['message'] = total_data
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -3236,11 +3333,12 @@ def invoice_report(request):
 
     
     # 2.5
-    elif measure == "count invoice email":
+    elif measure == "email per-date search":
         context = {}
         how = request.query_params.get("how")
 
         if how == "hour":
+            total_data = {}
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
             end_time = datetime.strptime(end_date, "%Y-%m-%d")
 
@@ -3254,13 +3352,14 @@ def invoice_report(request):
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
-                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
 
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "day":
+            total_data = {}
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
             end_time = datetime.strptime(end_date, "%Y-%m-%d")
 
@@ -3274,14 +3373,14 @@ def invoice_report(request):
                 emailed_count = Invoice.objects.filter(date_created__date=current_time.date())\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
 
-                
-
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "week":
+            total_data = {}
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
             end_time = datetime.strptime(end_date, "%Y-%m-%d")
 
@@ -3300,10 +3399,10 @@ def invoice_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
-                            
-                    
+                    total_data[key] = emailed_count
                 
+                context["message"] = total_data
+                    
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -3314,11 +3413,13 @@ def invoice_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                context["message"] = {key: emailed_count}
+                # context[key] = emailed_count
                 return Response(context, status=status.HTTP_200_OK)
                 
         
         elif how == "months":
+            total_data = {}
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
             end_time = datetime.strptime(end_date, "%Y-%m-%d")
 
@@ -3338,7 +3439,8 @@ def invoice_report(request):
                                                 .filter(emailed=True).count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
+                    total_data[key] = emailed_count
+                context["message"] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -3349,35 +3451,39 @@ def invoice_report(request):
                             .filter(emailed=True).count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                # context[key] = emailed_count
+                context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
 
         elif how == "custom date":
+            total_data = {}
             emailed_count = Invoice.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date)\
                             .filter(emailed=True).count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = emailed_count
+            # context[key] = emailed_count
+            context["message"] = {key: emailed_count}
             return Response(context, status=status.HTTP_200_OK)
     
 
     # 2.6
-    elif measure == "detail invoice email":
+    elif measure == "detail invoice search":
         context = {}
         how = request.query_params.get("how")
 
         if how == "hour":
+            
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
             end_time = datetime.strptime(end_date, "%Y-%m-%d")
 
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
@@ -3385,8 +3491,23 @@ def invoice_report(request):
                                           .filter(emailed=True)
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
+
+                    single_data.append(single_invoice)
+
                 # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+            
+            context["message"] = total_data
 
                 # # for inv in invoice_ser.data:
                 # total_amount = 0
@@ -3403,19 +3524,29 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
                                             .filter(emailed=True)
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                # context['message'] = invoice_ser.data
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+            
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -3427,6 +3558,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -3439,12 +3571,21 @@ def invoice_report(request):
                                                 .filter(emailed=True)
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
+                    
+                    total_data[key] = single_data
 
-                    context[key] = invoice_ser.data                        
+                context["message"] = total_data                      
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -3459,12 +3600,23 @@ def invoice_report(request):
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    
+                    # total_data[key] = single_data
+
+                    context["message"] = {key: single_data}
+
+                    # context[key] = invoice_ser.data
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -3482,6 +3634,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -3496,14 +3649,22 @@ def invoice_report(request):
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
+                    
+                    total_data[key] = single_data
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                context["message"] = total_data
+                    # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -3517,12 +3678,22 @@ def invoice_report(request):
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    
+                        # total_data[key] = single_data
+
+                    context["message"] = {key: single_data}
+                    # context[key] = invoice_ser.data
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -3544,12 +3715,22 @@ def invoice_report(request):
                 invoice_ser = InvoiceSerializer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+                
+                    # total_data[key] = single_data
+
+                context["message"] = {key: single_data}
+                # context[key] = invoice_ser.data
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -3561,7 +3742,7 @@ def invoice_report(request):
     
 
     # 2.7
-    elif measure == "count invoice overdue":
+    elif measure == "overdue per-date search":
 
         context = {}
         how = request.query_params.get("how")
@@ -3573,16 +3754,16 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 overdue_count = Invoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(status="Overdue").count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
-                
-
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+            
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -3593,17 +3774,16 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 overdue_count = Invoice.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Overdue").count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = overdue_count
-
-                
-
+                total_data[current_time.strftime('%Y-%m-%d')] = overdue_count
+            
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -3615,6 +3795,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -3626,9 +3807,9 @@ def invoice_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = overdue_count
-                            
-                    
+                    total_data[key] = overdue_count
+                
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -3640,7 +3821,7 @@ def invoice_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = overdue_count
+                context["message"] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -3652,6 +3833,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -3664,7 +3846,9 @@ def invoice_report(request):
                                                 .filter(status="Overdue").count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = overdue_count
+                    total_data[key] = overdue_count
+                
+                context["message"] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -3675,7 +3859,8 @@ def invoice_report(request):
                             .filter(status="Overdue").count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = overdue_count
+                # context[key] = overdue_count
+                context["message"] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -3687,12 +3872,13 @@ def invoice_report(request):
                             .filter(status="Overdue").count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = overdue_count
+            # context[key] = overdue_count
+            context["message"] = {key: overdue_count}
             return Response(context, status=status.HTTP_200_OK)
 
 
     # 2.8
-    elif measure == "detail invoice overdue":
+    elif measure == "invoice overdue list":
         context = {}
         how = request.query_params.get("how")
 
@@ -3703,7 +3889,7 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
@@ -3712,13 +3898,23 @@ def invoice_report(request):
                                             .order_by("date_created")
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+
+                # context['message'] = invoice_ser.data
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -3730,7 +3926,7 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
@@ -3739,11 +3935,23 @@ def invoice_report(request):
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -3755,6 +3963,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -3768,12 +3977,22 @@ def invoice_report(request):
                                                 .order_by("date_created")
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
 
-                    context[key] = invoice_ser.data                        
+
+                    total_data[key] = single_data
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -3785,15 +4004,25 @@ def invoice_report(request):
                             .order_by("date_created")
 
                 if len(invoices) > 0:
+                    # total_data = {}
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    # total_data[key] = single_data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -3811,6 +4040,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -3825,14 +4055,22 @@ def invoice_report(request):
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -3843,15 +4081,24 @@ def invoice_report(request):
                             .order_by("date_created")
 
                 if len(invoices) > 0:
+                    # total_data = {}
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -3873,12 +4120,20 @@ def invoice_report(request):
                 invoice_ser = InvoiceSerializer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -3888,7 +4143,7 @@ def invoice_report(request):
 
     
     # 2.9
-    elif measure == "detail invoice pending":
+    elif measure == "invoice pending list":
         context = {}
         how = request.query_params.get("how")
 
@@ -3899,7 +4154,7 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
@@ -3907,14 +4162,22 @@ def invoice_report(request):
                                           .filter(status="Pending")\
                                             .order_by("date_created")
                 invoice_ser = InvoiceSerializer(invoices, many=True)
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                    single_invoice['id'] = invoice['id']
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                    single_data.append(single_invoice)
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+            
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -3926,7 +4189,7 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
@@ -3934,12 +4197,21 @@ def invoice_report(request):
                                             .order_by("date_created")
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                    single_invoice['id'] = invoice['id']
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -3951,6 +4223,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -3964,12 +4237,21 @@ def invoice_report(request):
                                                 .order_by("date_created")
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
 
-                    context[key] = invoice_ser.data                        
+                    total_data[key] = single_data
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -3981,15 +4263,23 @@ def invoice_report(request):
                             .order_by("date_created")
 
                 if len(invoices) > 0:
+                    # tot
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
-
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -4007,6 +4297,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -4021,14 +4312,21 @@ def invoice_report(request):
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                    total_data[key] = single_data
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -4041,13 +4339,20 @@ def invoice_report(request):
                 if len(invoices) > 0:
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
-
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -4069,12 +4374,20 @@ def invoice_report(request):
                 invoice_ser = InvoiceSerializer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4084,7 +4397,7 @@ def invoice_report(request):
 
 
     # 2.10
-    elif measure == "detail inovice paid":
+    elif measure == "invoice paid list":
         context = {}
         how = request.query_params.get("how")
 
@@ -4095,7 +4408,7 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
@@ -4105,12 +4418,24 @@ def invoice_report(request):
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
                 # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                # context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                    single_invoice['id'] = invoice['id']
+
+                    single_data.append(single_invoice)
+                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -4122,7 +4447,7 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
@@ -4131,11 +4456,21 @@ def invoice_report(request):
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -4147,6 +4482,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -4161,11 +4497,21 @@ def invoice_report(request):
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4180,12 +4526,20 @@ def invoice_report(request):
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -4203,6 +4557,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -4217,14 +4572,22 @@ def invoice_report(request):
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -4238,12 +4601,20 @@ def invoice_report(request):
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -4265,12 +4636,20 @@ def invoice_report(request):
                 invoice_ser = InvoiceSerializer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4280,7 +4659,7 @@ def invoice_report(request):
     
 
     # 2.11
-    elif measure == "detail invoice unpaid":
+    elif measure == "unpaid invoice list":
         context = {}
         how = request.query_params.get("how")
 
@@ -4291,7 +4670,7 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
@@ -4300,14 +4679,22 @@ def invoice_report(request):
                                             .order_by("date_created")
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
 
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+            
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -4318,7 +4705,7 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
@@ -4327,11 +4714,22 @@ def invoice_report(request):
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -4343,6 +4741,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -4357,11 +4756,21 @@ def invoice_report(request):
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4376,12 +4785,20 @@ def invoice_report(request):
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -4399,6 +4816,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -4413,14 +4831,23 @@ def invoice_report(request):
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                    total_data[key] = invoice_ser.data
+                context["message"] = total_data
+
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -4434,12 +4861,20 @@ def invoice_report(request):
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -4461,12 +4896,20 @@ def invoice_report(request):
                 invoice_ser = InvoiceSerializer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4476,7 +4919,7 @@ def invoice_report(request):
 
 
     # 2.12
-    elif measure == "detail sales tax":
+    elif measure == "sales tax list":
         context = {}
         how = request.query_params.get("how")
 
@@ -4487,19 +4930,27 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
-                # for inv in invoice_ser.data:
-                total_amount = 0
-                for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['salestax'] = invoice['tax']
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+                    single_data.append(single_invoice)
+                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                    
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -4510,18 +4961,27 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
-                total_amount = 0
-                for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['salestax'] = invoice['tax']
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+            
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -4533,6 +4993,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -4545,13 +5006,20 @@ def invoice_report(request):
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    total_amount = 0
-                    for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['salestax'] = invoice['tax']
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = total_amount
-                        
-                    # context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4564,12 +5032,18 @@ def invoice_report(request):
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    total_amount = 0
-                    for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['salestax'] = invoice['tax']
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -4587,6 +5061,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -4600,12 +5075,21 @@ def invoice_report(request):
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    total_amount = 0
-                    for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['salestax'] = invoice['tax']
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = total_amount
-                    # context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+
+                context["message"] = total_data
+
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -4617,20 +5101,24 @@ def invoice_report(request):
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    total_amount = 0
-                    for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['salestax'] = invoice['tax']
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
                 else:
                     context["message"] = "No invoices were created within this date range"
                     return Response(context, status=status.HTTP_404_NOT_FOUND)
-            
-            # return Response(context, status=status.HTTP_200_OK)
         
 
         elif how == "custom date":
@@ -4642,12 +5130,18 @@ def invoice_report(request):
                 invoice_ser = InvoiceSerializer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                total_amount = 0
-                for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['salestax'] = invoice['tax']
+                    single_invoice['id'] = invoice['id']
 
-                context[key] = total_amount
-                # context['message'] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4658,7 +5152,7 @@ def invoice_report(request):
 
     
     # 2.13
-    elif measure == "different sales tax":
+    elif measure == "total sales tax search":
         context = {}
         how = request.query_params.get("how")
 
@@ -4669,7 +5163,7 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices_percent = Invoice.objects.filter(date_created__date=current_time.date())\
@@ -4686,13 +5180,20 @@ def invoice_report(request):
                 invoice_vser = InvoiceSerializer(invoices_value, many=True)
 
                 # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')]['percent'] = invoice_pser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')]['value'] = invoice_vser.data
-
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                p_amount = 0
+                v_amount = 0
+                for a in invoice_pser.data:
+                    p_amount += a['tax']
+                
+                for b in invoice_vser.data:
+                    v_amount += b['tax']
+                
+                single_data.append({"percent": p_amount, "value": v_amount})
+                    
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+            
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -4704,7 +5205,7 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices_percent = Invoice.objects.filter(date_created__date=current_time.date())\
@@ -4718,12 +5219,19 @@ def invoice_report(request):
                 invoice_pser = InvoiceSerializer(invoices_percent, many=True)
                 invoice_vser = InvoiceSerializer(invoices_value, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                p_amount = 0
+                v_amount = 0
+                for a in invoice_pser.data:
+                    p_amount += a['tax']
+                
+                for b in invoice_vser.data:
+                    v_amount += b['tax']
+                
+                single_data.append({"percent": p_amount, "value": v_amount})
 
-                context[current_time.strftime('%Y-%m-%d')]['percent'] = invoice_pser.data
-                context[current_time.strftime('%Y-%m-%d')]['value'] = invoice_vser.data
+                total_data[current_time.strftime('%Y-%m-%d')]['percent'] = single_data
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -4735,6 +5243,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -4757,9 +5266,19 @@ def invoice_report(request):
 
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
+                    single_data = []
+                    p_amount = 0
+                    v_amount = 0
+                    for a in invoice_pser.data:
+                        p_amount += a['tax']
+                    
+                    for b in invoice_vser.data:
+                        v_amount += b['tax']
+                
+                    single_data.append({"percent": p_amount, "value": v_amount})
 
-                    context[key]['percent'] = invoice_pser.data                     
-                    context[key]['value'] = invoice_vser.data
+
+                    total_data[key] = single_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4781,17 +5300,22 @@ def invoice_report(request):
                 invoice_vser = InvoiceSerializer(invoices_value, many=True)
                 key = f"{start_date} - {end_date}"
 
-                context[key]['percent'] = invoice_pser.data
-                context[key]['value'] = invoice_vser.data
+                single_data = []
+                p_amount = 0
+                v_amount = 0
+                for a in invoice_pser.data:
+                    p_amount += a['tax']
+                
+                for b in invoice_vser.data:
+                    v_amount += b['tax']
+                
+                single_data.append({"percent": p_amount, "value": v_amount})
+
+
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
-
-                # else:
-                #     context["message"] = "No emailed invoices within this date range"
-                #     return Response(context, status=status.HTTP_404_NOT_FOUND)
-            
-            # return Response(context, status=status.HTTP_200_OK)
         
         elif how == "months":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -4801,6 +5325,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -4821,15 +5346,21 @@ def invoice_report(request):
                     invoice_pser = InvoiceSerializer(invoices_percent, many=True)
                     invoice_vser = InvoiceSerializer(invoices_value, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    p_amount = 0
+                    v_amount = 0
+                    for a in invoice_pser.data:
+                        p_amount += a['tax']
+                    
+                    for b in invoice_vser.data:
+                        v_amount += b['tax']
+                    
+                    single_data.append({"percent": p_amount, "value": v_amount})
 
-                    # context[key] = total_amount
-                    context[key]['percent'] = invoice_pser.data
-                    context[key]['value'] = invoice_vser.data
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -4850,21 +5381,20 @@ def invoice_report(request):
                 invoice_vser = InvoiceSerializer(invoices_value, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                p_amount = 0
+                v_amount = 0
+                for a in invoice_pser.data:
+                    p_amount += a['tax']
+                
+                for b in invoice_vser.data:
+                    v_amount += b['tax']
+                
+                single_data.append({"percent": p_amount, "value": v_amount})
 
-                # context[key] = total_amount
-                context[key]['percent'] = invoice_pser.data
-                context[key]['value'] = invoice_vser.data
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
-
-                # else:
-                #     context["message"] = "No emailed invoices within this date range"
-                #     return Response(context, status=status.HTTP_404_NOT_FOUND)
-            
-            # return Response(context, status=status.HTTP_200_OK)
         
 
         elif how == "custom date":
@@ -4885,23 +5415,24 @@ def invoice_report(request):
             invoice_vser = InvoiceSerializer(invoices_percent, many=True)
             key = f"{start_date} - {end_date}"
 
-            # total_amount = 0
-            # for inv in invoice_ser.data:
-            #         total_amount += float(inv['grand_total'])
+            single_data = []
+            p_amount = 0
+            v_amount = 0
+            for a in invoice_pser.data:
+                p_amount += a['tax']
+            
+            for b in invoice_vser.data:
+                v_amount += b['tax']
+            
+            single_data.append({"percent": p_amount, "value": v_amount})
 
-            # context[key] = total_amount
-            context[key]['percent'] = invoice_pser.data
-            context[key]['value'] = invoice_vser.data
+            context["message"] = {key: single_data}
 
             return Response(context, status=status.HTTP_200_OK)
 
-            # else:
-            #     context["message"] = "No invoices were created within this date range"
-            #     return Response(context, status=status.HTTP_404_NOT_FOUND)
-
 
     # 2.14
-    elif measure == "detail recurring invoice":
+    elif measure == "recurring transactions list":
         context = {}
         how = request.query_params.get("how")
 
@@ -4912,7 +5443,7 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
@@ -4920,14 +5451,20 @@ def invoice_report(request):
                                           .filter(recurring=True)
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['salestax'] = invoice['tax']
+                    single_invoice['recurring_date'] = invoice['recurring_date']
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
-
+                    single_data.append(single_invoice)
+                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -4938,7 +5475,7 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
@@ -4946,11 +5483,20 @@ def invoice_report(request):
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['salestax'] = invoice['tax']
+                    single_invoice['recurring_date'] = invoice['recurring_date']
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -4962,6 +5508,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -4975,11 +5522,20 @@ def invoice_report(request):
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['salestax'] = invoice['tax']
+                        single_invoice['recurring_date'] = invoice['recurring_date']
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4994,12 +5550,19 @@ def invoice_report(request):
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['salestax'] = invoice['tax']
+                        single_invoice['recurring_date'] = invoice['recurring_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -5017,6 +5580,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -5031,14 +5595,22 @@ def invoice_report(request):
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['salestax'] = invoice['tax']
+                        single_invoice['recurring_date'] = invoice['recurring_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
 
                     # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                    total_data[key] = single_data
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -5052,12 +5624,19 @@ def invoice_report(request):
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['salestax'] = invoice['tax']
+                        single_invoice['recurring_date'] = invoice['recurring_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -5079,12 +5658,19 @@ def invoice_report(request):
                 invoice_ser = InvoiceSerializer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['salestax'] = invoice['tax']
+                    single_invoice['recurring_date'] = invoice['recurring_date']
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5097,16 +5683,6 @@ def invoice_report(request):
 
 
 
-
-
-
-
-
-
-
-
-
-            
    
 
 
@@ -5119,14 +5695,31 @@ def proforma_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if measure:
+        measure = measure.lower()
+    else:
+        return Response({"message": "You need to pass 'measure'"}, status=status.HTTP_400_BAD_REQUEST)
     # 3.1
-    if measure == "proforma search":
+    if measure == "proforma invoice search":
         invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
         if len(invoices) > 0:
             invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
-            context['message'] = invoice_ser.data
+
+            single_data = []
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['invoice_number'] = invoice['invoice_number']
+                single_invoice['invoice_date'] = invoice['invoice_date']
+                single_invoice['invoice_amount'] = invoice['grand_total']
+                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['id'] = invoice['id']
+
+                single_data.append(single_invoice)
+            
+            context["message"] = single_data
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -5135,14 +5728,26 @@ def proforma_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 3.2
-    elif measure == "amount search":
+    elif measure == "proforma invoice amount search":
         invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
 
         if len(invoices) > 0:
             invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
-            context['message'] = invoice_ser.data
+            single_data = []
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['invoice_number'] = invoice['invoice_number']
+                single_invoice['invoice_date'] = invoice['invoice_date']
+                single_invoice['invoice_amount'] = invoice['grand_total']
+                single_invoice['id'] = invoice['id']
+                # single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+
+                single_data.append(single_invoice)
+
+            context['message'] = single_data
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -5152,7 +5757,7 @@ def proforma_report(request):
     
 
     # 3.3
-    elif measure == "per customer":
+    elif measure == "invoice total search":
         invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
@@ -5160,6 +5765,7 @@ def proforma_report(request):
         if len(invoices) > 0:
             invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
             total_data = {}
+
             for inv in invoice_ser.data:
                 full_name = inv['customer']['first_name'] + " " + inv['customer']['last_name']
                 if full_name in total_data:
@@ -5181,7 +5787,7 @@ def proforma_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 3.4
-    elif measure == "total per date":
+    elif measure == "invoice total search":
         context = {}
         how = request.query_params.get("how")
 
@@ -5192,7 +5798,7 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
@@ -5202,9 +5808,10 @@ def proforma_report(request):
                 # for inv in invoice_ser.data:
                 total_amount = 0
                 for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                    total_amount += float(inv['grand_total'])
 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -5215,7 +5822,7 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())
@@ -5224,9 +5831,10 @@ def proforma_report(request):
 
                 total_amount = 0
                 for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                    total_amount += float(inv['grand_total'])
 
-                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                total_data[current_time.strftime('%Y-%m-%d')] = total_amount
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -5238,6 +5846,7 @@ def proforma_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -5252,11 +5861,12 @@ def proforma_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                        
-                    # context[key] = invoice_ser.data
+                    total_data[key] = total_amount
+                
+                context["message"] = total_data
+
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5271,10 +5881,10 @@ def proforma_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                    # context[key] = total_amount
+                    context['message'] = {key: total_amount}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -5292,6 +5902,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -5307,10 +5918,11 @@ def proforma_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context[key] = invoice_ser.data
+                    total_data[key] = total_amount
+
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -5324,10 +5936,10 @@ def proforma_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                    # context[key] = total_amount
+                    context['message'] = {key: total_amount}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -5351,8 +5963,8 @@ def proforma_report(request):
                 for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                context[key] = total_amount
-                # context['message'] = invoice_ser.data
+                # context[key] = total_amount
+                context['message'] = {key: total_amount}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5363,7 +5975,7 @@ def proforma_report(request):
 
     
     # 3.5
-    elif measure == "count proforma email":
+    elif measure == "invoice email search":
         context = {}
         how = request.query_params.get("how")
 
@@ -5374,15 +5986,17 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
-                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+            
+
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -5394,17 +6008,16 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
 
-                
-
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -5416,6 +6029,7 @@ def proforma_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -5427,9 +6041,11 @@ def proforma_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
-                            
                     
+                    total_data[key] = emailed_count
+                
+                            
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5441,7 +6057,7 @@ def proforma_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -5453,6 +6069,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -5465,7 +6082,9 @@ def proforma_report(request):
                                                 .filter(emailed=True).count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
+                    total_data[key] = emailed_count
+                
+                context["message"] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5476,7 +6095,7 @@ def proforma_report(request):
                             .filter(emailed=True).count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -5488,12 +6107,12 @@ def proforma_report(request):
                             .filter(emailed=True).count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = emailed_count
+            context["message"] = {key: emailed_count}
             return Response(context, status=status.HTTP_200_OK)
     
 
     # 3.6
-    elif measure == "detail proforma email":
+    elif measure == "detail performa invoice email search":
         context = {}
         how = request.query_params.get("how")
 
@@ -5504,7 +6123,7 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
@@ -5512,13 +6131,21 @@ def proforma_report(request):
                                           .filter(emailed=True)
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -5530,7 +6157,7 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
@@ -5538,11 +6165,21 @@ def proforma_report(request):
 
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+            
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -5554,6 +6191,7 @@ def proforma_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -5567,11 +6205,21 @@ def proforma_report(request):
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5586,12 +6234,19 @@ def proforma_report(request):
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -5609,6 +6264,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -5623,14 +6279,21 @@ def proforma_report(request):
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                    total_data[key] = single_data
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -5644,12 +6307,19 @@ def proforma_report(request):
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                        
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -5671,12 +6341,19 @@ def proforma_report(request):
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5688,7 +6365,7 @@ def proforma_report(request):
     
 
     # 3.7
-    elif measure == "count proforma overdue":
+    elif measure == "proforma invoice overdue":
 
         context = {}
         how = request.query_params.get("how")
@@ -5700,16 +6377,16 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 overdue_count = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(status="Overdue").count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
-                
-
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+            
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -5720,18 +6397,17 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 overdue_count = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Overdue").count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = overdue_count
+                total_data[current_time.strftime('%Y-%m-%d')] = overdue_count
 
-                
 
-                
+            context["message"] = total_data
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "week":
@@ -5742,6 +6418,7 @@ def proforma_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -5753,9 +6430,10 @@ def proforma_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = overdue_count
-                            
                     
+                    total_data[key] = overdue_count
+                            
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5767,7 +6445,8 @@ def proforma_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = overdue_count
+                
+                context["message"] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -5779,6 +6458,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -5791,7 +6471,8 @@ def proforma_report(request):
                                                 .filter(status="Overdue").count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = overdue_count
+                    total_data[key] = overdue_count
+                context["message"] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5802,7 +6483,7 @@ def proforma_report(request):
                             .filter(status="Overdue").count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = overdue_count
+                context["message"] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -5814,12 +6495,12 @@ def proforma_report(request):
                             .filter(status="Overdue").count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = overdue_count
+            context["message"] = {key: overdue_count}
             return Response(context, status=status.HTTP_200_OK)
 
 
     # 3.8
-    elif measure == "detail proforma overdue":
+    elif measure == "list of proforma invoice overdue":
         context = {}
         how = request.query_params.get("how")
 
@@ -5830,7 +6511,7 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
@@ -5839,13 +6520,22 @@ def proforma_report(request):
                                             .order_by("date_created")
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -5857,7 +6547,7 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
@@ -5866,11 +6556,23 @@ def proforma_report(request):
 
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
+                    
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+            
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -5882,6 +6584,7 @@ def proforma_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -5896,11 +6599,22 @@ def proforma_report(request):
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5915,12 +6629,20 @@ def proforma_report(request):
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -5938,6 +6660,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -5952,14 +6675,24 @@ def proforma_report(request):
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
+
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -5973,12 +6706,20 @@ def proforma_report(request):
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                        
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6000,12 +6741,20 @@ def proforma_report(request):
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6015,7 +6764,7 @@ def proforma_report(request):
 
     
     # 3.9
-    elif measure == "detail proforma pending":
+    elif measure == "list of proforma invoice pending":
         context = {}
         how = request.query_params.get("how")
 
@@ -6026,7 +6775,7 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
@@ -6035,14 +6784,22 @@ def proforma_report(request):
                                             .order_by("date_created")
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
 
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -6053,7 +6810,7 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
@@ -6062,11 +6819,21 @@ def proforma_report(request):
 
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -6078,6 +6845,7 @@ def proforma_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -6092,11 +6860,22 @@ def proforma_report(request):
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6111,12 +6890,20 @@ def proforma_report(request):
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6134,6 +6921,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -6148,14 +6936,23 @@ def proforma_report(request):
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                    
+                    total_data[key] = single_data
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -6169,12 +6966,20 @@ def proforma_report(request):
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['invoice_number'] = invoice['invoice_number']
+                        single_invoice['invoice_date'] = invoice['invoice_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                        
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6196,12 +7001,20 @@ def proforma_report(request):
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['invoice_number'] = invoice['invoice_number']
+                    single_invoice['invoice_date'] = invoice['invoice_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6222,14 +7035,32 @@ def purchase_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if measure:
+        measure = measure.lower()
+    else:
+        return Response({"message": "You need to pass 'measure'"}, status=status.HTTP_400_BAD_REQUEST)
+
     # 4.1
-    if measure == "purchase search":
+    if measure == "purchase order search":
         invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
         if len(invoices) > 0:
             invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
-            context['message'] = invoice_ser.data
+            
+            single_data = []
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['po_number'] = invoice['po_number']
+                single_invoice['po_date'] = invoice['po_date']
+                single_invoice['invoice_amount'] = invoice['grand_total']
+                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['id'] = invoice['id']
+
+                single_data.append(single_invoice)
+            
+            context["message"] = single_data
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -6238,14 +7069,25 @@ def purchase_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 4.2
-    elif measure == "amount search":
+    elif measure == "purchase order by amount search":
         invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
 
         if len(invoices) > 0:
             invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
-            context['message'] = invoice_ser.data
+            single_data = []
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['po_number'] = invoice['po_number']
+                single_invoice['po_date'] = invoice['po_date']
+                single_invoice['invoice_amount'] = invoice['grand_total']
+                single_invoice['id'] = invoice['id']
+
+                single_data.append(single_invoice)
+
+            context['message'] = single_data
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -6255,7 +7097,7 @@ def purchase_report(request):
     
 
     # 4.3
-    elif measure == "per customer":
+    elif measure == "purchase order customer":
         invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
@@ -6284,7 +7126,7 @@ def purchase_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 4.4
-    elif measure == "total per date":
+    elif measure == "purchase order total":
         context = {}
         how = request.query_params.get("how")
 
@@ -6295,7 +7137,7 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
@@ -6307,7 +7149,8 @@ def purchase_report(request):
                 for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -6318,7 +7161,7 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())
@@ -6329,7 +7172,9 @@ def purchase_report(request):
                 for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                total_data[current_time.strftime('%Y-%m-%d')] = total_amount
+            
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -6341,6 +7186,7 @@ def purchase_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -6357,8 +7203,9 @@ def purchase_report(request):
                     for inv in invoice_ser.data:
                             total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                        
+                    total_data[key] = total_amount
+                
+                context["message"] = total_data
                     # context[key] = invoice_ser.data
                 
                 return Response(context, status=status.HTTP_200_OK)
@@ -6376,8 +7223,8 @@ def purchase_report(request):
                     for inv in invoice_ser.data:
                             total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                    # context[key] = total_amount
+                    context['message'] = {key: total_amount}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6395,6 +7242,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -6412,7 +7260,8 @@ def purchase_report(request):
                     for inv in invoice_ser.data:
                             total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
+                    total_data[key] = total_amount
+                context["message"] = total_data
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6429,8 +7278,8 @@ def purchase_report(request):
                     for inv in invoice_ser.data:
                             total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                    # context[key] = total_amount
+                    context['message'] = {key: total_amount}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6454,8 +7303,8 @@ def purchase_report(request):
                 for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                context[key] = total_amount
-                # context['message'] = invoice_ser.data
+                # context[key] = total_amount
+                context['message'] = {key: total_amount}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6466,7 +7315,7 @@ def purchase_report(request):
 
     
     # 4.5
-    elif measure == "count purchase email":
+    elif measure == "purchase order email":
         context = {}
         how = request.query_params.get("how")
 
@@ -6477,16 +7326,16 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
-                
-
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+            
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -6497,17 +7346,16 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = emailed_count
-
+                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
                 
-
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -6519,6 +7367,7 @@ def purchase_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -6530,9 +7379,10 @@ def purchase_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
-                            
                     
+                    total_data[key] = emailed_count
+
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6544,7 +7394,8 @@ def purchase_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                # context[key] = emailed_count
+                context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -6556,6 +7407,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -6568,7 +7420,9 @@ def purchase_report(request):
                                                 .filter(emailed=True).count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
+                    total_data[key] = emailed_count
+                
+                context["message"] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6579,7 +7433,8 @@ def purchase_report(request):
                             .filter(emailed=True).count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                # context[key] = emailed_count
+                context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -6591,12 +7446,13 @@ def purchase_report(request):
                             .filter(emailed=True).count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = emailed_count
+            # context[key] = emailed_count
+            context["message"] = {key: emailed_count}
             return Response(context, status=status.HTTP_200_OK)
     
 
     # 4.6
-    elif measure == "detail purchase email":
+    elif measure == "detail purchase order email":
         context = {}
         how = request.query_params.get("how")
 
@@ -6607,7 +7463,7 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
@@ -6615,13 +7471,21 @@ def purchase_report(request):
                                           .filter(emailed=True)
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['po_number'] = invoice['po_number']
+                    single_invoice['po_date'] = invoice['po_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+                    
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -6633,7 +7497,7 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
@@ -6641,11 +7505,20 @@ def purchase_report(request):
 
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['po_number'] = invoice['po_number']
+                    single_invoice['po_date'] = invoice['po_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -6657,6 +7530,7 @@ def purchase_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -6670,11 +7544,21 @@ def purchase_report(request):
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['po_number'] = invoice['po_number']
+                        single_invoice['po_date'] = invoice['po_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6686,15 +7570,25 @@ def purchase_report(request):
                             .order_by("date_created")
 
                 if len(invoices) > 0:
+                    total_data = {}
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['po_number'] = invoice['po_number']
+                        single_invoice['po_date'] = invoice['po_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                
+                    context["message"] = total_data
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6712,6 +7606,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -6726,14 +7621,21 @@ def purchase_report(request):
 
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['po_number'] = invoice['po_number']
+                        single_invoice['po_date'] = invoice['po_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                    total_data[key] = single_data
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -6747,12 +7649,19 @@ def purchase_report(request):
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['po_number'] = invoice['po_number']
+                        single_invoice['po_date'] = invoice['po_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6774,12 +7683,19 @@ def purchase_report(request):
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['po_number'] = invoice['po_number']
+                    single_invoice['po_date'] = invoice['po_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6791,7 +7707,7 @@ def purchase_report(request):
     
 
     # 4.7
-    elif measure == "count purchase overdue":
+    elif measure == "purchase order overdue":
 
         context = {}
         how = request.query_params.get("how")
@@ -6803,15 +7719,17 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 overdue_count = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(status="Overdue").count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
-                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+
+            
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -6823,17 +7741,16 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 overdue_count = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Overdue").count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = overdue_count
+                total_data[current_time.strftime('%Y-%m-%d')] = overdue_count
 
-                
-
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -6845,6 +7762,7 @@ def purchase_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -6856,9 +7774,10 @@ def purchase_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = overdue_count
-                            
-                    
+
+                    total_data[key] = overdue_count
+
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6870,7 +7789,8 @@ def purchase_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = overdue_count
+                # context[key] = overdue_count
+                context["message"] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -6882,6 +7802,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -6894,7 +7815,10 @@ def purchase_report(request):
                                                 .filter(status="Overdue").count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = overdue_count
+
+                    total_data[key] = overdue_count
+                
+                context["message"] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6905,7 +7829,8 @@ def purchase_report(request):
                             .filter(status="Overdue").count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = overdue_count
+                # context[key] = overdue_count
+                context["message"] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -6917,12 +7842,13 @@ def purchase_report(request):
                             .filter(status="Overdue").count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = overdue_count
+            # context[key] = overdue_count
+            context["message"] = {key: overdue_count}
             return Response(context, status=status.HTTP_200_OK)
 
 
     # 4.8
-    elif measure == "detail purchase overdue":
+    elif measure == "list of purchase order overdue":
         context = {}
         how = request.query_params.get("how")
 
@@ -6933,7 +7859,7 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
@@ -6942,13 +7868,22 @@ def purchase_report(request):
                                             .order_by("date_created")
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['po_number'] = invoice['po_number']
+                    single_invoice['po_date'] = invoice['po_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+
+                context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -6960,7 +7895,7 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
@@ -6969,9 +7904,18 @@ def purchase_report(request):
 
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['po_number'] = invoice['po_number']
+                    single_invoice['po_date'] = invoice['po_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
+
+                    single_data.append(single_invoice)
 
                 context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
                 
@@ -6985,6 +7929,7 @@ def purchase_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -6999,11 +7944,22 @@ def purchase_report(request):
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['po_number'] = invoice['po_number']
+                        single_invoice['po_date'] = invoice['po_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7018,12 +7974,21 @@ def purchase_report(request):
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['po_number'] = invoice['po_number']
+                        single_invoice['po_date'] = invoice['po_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -7041,6 +8006,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -7055,14 +8021,23 @@ def purchase_report(request):
 
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['po_number'] = invoice['po_number']
+                        single_invoice['po_date'] = invoice['po_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                    total_data[key] = single_data
+
+                context["message"] = total_data
+
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -7076,12 +8051,21 @@ def purchase_report(request):
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['po_number'] = invoice['po_number']
+                        single_invoice['po_date'] = invoice['po_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    # context[key] = invoice_ser.data
+                    context["message"] = single_data
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -7103,12 +8087,21 @@ def purchase_report(request):
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['po_number'] = invoice['po_number']
+                    single_invoice['po_date'] = invoice['po_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                # context[key] = invoice_ser.data
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7118,7 +8111,7 @@ def purchase_report(request):
 
     
     # 4.9
-    elif measure == "detail purchase pending":
+    elif measure == "list of proforma invoice pending":
         context = {}
         how = request.query_params.get("how")
 
@@ -7129,7 +8122,7 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
@@ -7138,13 +8131,22 @@ def purchase_report(request):
                                             .order_by("date_created")
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['po_number'] = invoice['po_number']
+                    single_invoice['po_date'] = invoice['po_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -7156,7 +8158,7 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
@@ -7165,11 +8167,22 @@ def purchase_report(request):
 
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['po_number'] = invoice['po_number']
+                    single_invoice['po_date'] = invoice['po_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -7181,6 +8194,7 @@ def purchase_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -7195,11 +8209,22 @@ def purchase_report(request):
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['po_number'] = invoice['po_number']
+                        single_invoice['po_date'] = invoice['po_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7214,12 +8239,20 @@ def purchase_report(request):
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['po_number'] = invoice['po_number']
+                        single_invoice['po_date'] = invoice['po_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -7237,6 +8270,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -7251,14 +8285,21 @@ def purchase_report(request):
 
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['po_number'] = invoice['po_number']
+                        single_invoice['po_date'] = invoice['po_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
+                    total_data[key] = single_data
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -7272,12 +8313,20 @@ def purchase_report(request):
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['po_number'] = invoice['po_number']
+                        single_invoice['po_date'] = invoice['po_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -7299,12 +8348,21 @@ def purchase_report(request):
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['po_number'] = invoice['po_number']
+                    single_invoice['po_date'] = invoice['po_date']
+                    single_invoice['invoice_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                # context[key] = invoice_ser.data
+                context["message"] = single_data
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7325,14 +8383,32 @@ def estimate_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if measure:
+        measure = measure.lower()
+    else:
+        return Response({"message": "You need to pass 'measure'"}, status=status.HTTP_400_BAD_REQUEST)
+
     # 5.1
-    if measure == "estimate search":
+    if measure == "estimate search by date":
         invoices = Estimate.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
         if len(invoices) > 0:
             invoice_ser = EstimateSerailizer(invoices, many=True)
-            context['message'] = invoice_ser.data
+            single_data = []
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['estimate_number'] = invoice['estimate_number']
+                single_invoice['estimate_date'] = invoice['estimate_date']
+                single_invoice['estimate_amount'] = invoice['grand_total']
+                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['id'] = invoice['id']
+
+                single_data.append(single_invoice)
+
+            # context['message'] = invoice_ser.data
+            context["message"] = single_data
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -7341,14 +8417,27 @@ def estimate_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 5.2
-    elif measure == "amount search":
+    elif measure == "estimate by amount":
         invoices = Estimate.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
 
         if len(invoices) > 0:
             invoice_ser = EstimateSerailizer(invoices, many=True)
-            context['message'] = invoice_ser.data
+            single_data = []
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['estimate_number'] = invoice['estimate_number']
+                single_invoice['estimate_date'] = invoice['estimate_date']
+                single_invoice['estimate_amount'] = invoice['grand_total']
+                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['id'] = invoice['id']
+
+                single_data.append(single_invoice)
+
+            # context['message'] = invoice_ser.data
+            context["message"] = single_data
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -7358,7 +8447,7 @@ def estimate_report(request):
     
 
     # 5.3
-    elif measure == "per customer":
+    elif measure == "estimate total":
         invoices = Estimate.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
@@ -7387,7 +8476,7 @@ def estimate_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 5.4
-    elif measure == "total per date":
+    elif measure == "estimate total per date":
         context = {}
         how = request.query_params.get("how")
 
@@ -7398,7 +8487,7 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())\
@@ -7410,7 +8499,9 @@ def estimate_report(request):
                 for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+            
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -7421,7 +8512,7 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())
@@ -7432,7 +8523,9 @@ def estimate_report(request):
                 for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                total_data[current_time.strftime('%Y-%m-%d')] = total_amount
+            
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -7444,6 +8537,7 @@ def estimate_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -7460,9 +8554,9 @@ def estimate_report(request):
                     for inv in invoice_ser.data:
                             total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
+                    total_data[key] = total_amount
                         
-                    # context[key] = invoice_ser.data
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7479,8 +8573,8 @@ def estimate_report(request):
                     for inv in invoice_ser.data:
                             total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                    # context[key] = total_amount
+                    context['message'] = {key: total_amount}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -7498,6 +8592,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -7515,8 +8610,8 @@ def estimate_report(request):
                     for inv in invoice_ser.data:
                             total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context[key] = invoice_ser.data
+                    total_data[key] = total_amount
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -7532,8 +8627,8 @@ def estimate_report(request):
                     for inv in invoice_ser.data:
                             total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                    # context[key] = total_amount
+                    context['message'] = {key: total_amount}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -7557,8 +8652,8 @@ def estimate_report(request):
                 for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                context[key] = total_amount
-                # context['message'] = invoice_ser.data
+                # context[key] = total_amount
+                context['message'] = {key: total_amount}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7569,7 +8664,7 @@ def estimate_report(request):
 
     
     # 5.5
-    elif measure == "count estimate email":
+    elif measure == "estimate email":
         context = {}
         how = request.query_params.get("how")
 
@@ -7580,16 +8675,16 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = Estimate.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
-                
-
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+            
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -7600,16 +8695,16 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = Estimate.objects.filter(date_created__date=current_time.date())\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
 
-                
+            context["message"] = total_data
 
                 
             return Response(context, status=status.HTTP_200_OK)
@@ -7622,6 +8717,7 @@ def estimate_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -7633,9 +8729,9 @@ def estimate_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
-                            
-                    
+                    total_data[key] = emailed_count
+
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7647,7 +8743,8 @@ def estimate_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                # context[key] = emailed_count
+                context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -7659,6 +8756,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -7671,7 +8769,9 @@ def estimate_report(request):
                                                 .filter(emailed=True).count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
+                    total_data[key] = emailed_count
+
+                context["message"] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7682,7 +8782,8 @@ def estimate_report(request):
                             .filter(emailed=True).count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                # context[key] = emailed_count
+                context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -7694,7 +8795,8 @@ def estimate_report(request):
                             .filter(emailed=True).count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = emailed_count
+            # context[key] = emailed_count
+            context["message"] = {key: emailed_count}
             return Response(context, status=status.HTTP_200_OK)
     
 
@@ -7710,7 +8812,7 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())\
@@ -7718,13 +8820,21 @@ def estimate_report(request):
                                           .filter(emailed=True)
                 invoice_ser = EstimateSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['estimate_number'] = invoice['estimate_number']
+                    single_invoice['estimate_date'] = invoice['estimate_date']
+                    single_invoice['estimate_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -7736,7 +8846,7 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())\
@@ -7744,11 +8854,21 @@ def estimate_report(request):
 
                 invoice_ser = EstimateSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['estimate_number'] = invoice['estimate_number']
+                    single_invoice['estimate_date'] = invoice['estimate_date']
+                    single_invoice['estimate_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -7760,6 +8880,7 @@ def estimate_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -7773,11 +8894,21 @@ def estimate_report(request):
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['estimate_number'] = invoice['estimate_number']
+                        single_invoice['estimate_date'] = invoice['estimate_date']
+                        single_invoice['estimate_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7792,12 +8923,20 @@ def estimate_report(request):
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['estimate_number'] = invoice['estimate_number']
+                        single_invoice['estimate_date'] = invoice['estimate_date']
+                        single_invoice['estimate_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                        
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -7815,6 +8954,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -7829,14 +8969,21 @@ def estimate_report(request):
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['estimate_number'] = invoice['estimate_number']
+                        single_invoice['estimate_date'] = invoice['estimate_date']
+                        single_invoice['estimate_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -7850,12 +8997,19 @@ def estimate_report(request):
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['estimate_number'] = invoice['estimate_number']
+                        single_invoice['estimate_date'] = invoice['estimate_date']
+                        single_invoice['estimate_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -7877,12 +9031,20 @@ def estimate_report(request):
                 invoice_ser = EstimateSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['estimate_number'] = invoice['estimate_number']
+                    single_invoice['estimate_date'] = invoice['estimate_date']
+                    single_invoice['estimate_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                # context[key] = invoice_ser.data
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7894,7 +9056,7 @@ def estimate_report(request):
     
 
     # 5.7
-    elif measure == "count estimate overdue":
+    elif measure == "estimate overdue":
 
         context = {}
         how = request.query_params.get("how")
@@ -7906,16 +9068,16 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 overdue_count = Estimate.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(status="Overdue").count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
-                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
 
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -7926,16 +9088,16 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 overdue_count = Estimate.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Overdue").count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = overdue_count
+                total_data[current_time.strftime('%Y-%m-%d')] = overdue_count
 
-                
+            context["message"] = total_data
 
                 
             return Response(context, status=status.HTTP_200_OK)
@@ -7948,6 +9110,7 @@ def estimate_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -7959,9 +9122,9 @@ def estimate_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = overdue_count
-                            
-                    
+                    total_data[key] = overdue_count
+
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7973,7 +9136,8 @@ def estimate_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = overdue_count
+                # context[key] = overdue_count
+                context["message"] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -7985,6 +9149,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -7997,7 +9162,9 @@ def estimate_report(request):
                                                 .filter(status="Overdue").count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = overdue_count
+                    total_data[key] = overdue_count
+                
+                context["message"] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8008,7 +9175,8 @@ def estimate_report(request):
                             .filter(status="Overdue").count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = overdue_count
+                # context[key] = overdue_count
+                context["message"] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -8020,12 +9188,13 @@ def estimate_report(request):
                             .filter(status="Overdue").count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = overdue_count
+            # context[key] = overdue_count
+            context["message"] = {key: overdue_count}
             return Response(context, status=status.HTTP_200_OK)
 
 
     # 5.8
-    elif measure == "detail estimate overdue":
+    elif measure == "list of estimate overdue":
         context = {}
         how = request.query_params.get("how")
 
@@ -8036,7 +9205,7 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())\
@@ -8045,13 +9214,22 @@ def estimate_report(request):
                                             .order_by("date_created")
                 invoice_ser = EstimateSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['estimate_number'] = invoice['estimate_number']
+                    single_invoice['estimate_date'] = invoice['estimate_date']
+                    single_invoice['estimate_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+            
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -8063,7 +9241,7 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())\
@@ -8072,11 +9250,20 @@ def estimate_report(request):
 
                 invoice_ser = EstimateSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['estimate_number'] = invoice['estimate_number']
+                    single_invoice['estimate_date'] = invoice['estimate_date']
+                    single_invoice['estimate_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -8088,6 +9275,7 @@ def estimate_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -8102,11 +9290,22 @@ def estimate_report(request):
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['estimate_number'] = invoice['estimate_number']
+                        single_invoice['estimate_date'] = invoice['estimate_date']
+                        single_invoice['estimate_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8121,12 +9320,20 @@ def estimate_report(request):
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['estimate_number'] = invoice['estimate_number']
+                        single_invoice['estimate_date'] = invoice['estimate_date']
+                        single_invoice['estimate_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8144,6 +9351,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -8158,14 +9366,22 @@ def estimate_report(request):
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['estimate_number'] = invoice['estimate_number']
+                        single_invoice['estimate_date'] = invoice['estimate_date']
+                        single_invoice['estimate_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                    total_data[key] = single_data
+
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -8179,12 +9395,20 @@ def estimate_report(request):
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['estimate_number'] = invoice['estimate_number']
+                        single_invoice['estimate_date'] = invoice['estimate_date']
+                        single_invoice['estimate_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8206,12 +9430,21 @@ def estimate_report(request):
                 invoice_ser = EstimateSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['estimate_number'] = invoice['estimate_number']
+                    single_invoice['estimate_date'] = invoice['estimate_date']
+                    single_invoice['estimate_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                # context[key] = invoice_ser.data
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8221,7 +9454,7 @@ def estimate_report(request):
 
     
     # 5.9
-    elif measure == "detail estimate pending":
+    elif measure == "list of estimate pending":
         context = {}
         how = request.query_params.get("how")
 
@@ -8232,7 +9465,7 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())\
@@ -8241,13 +9474,23 @@ def estimate_report(request):
                                             .order_by("date_created")
                 invoice_ser = EstimateSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['estimate_number'] = invoice['estimate_number']
+                    single_invoice['estimate_date'] = invoice['estimate_date']
+                    single_invoice['estimate_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+
+                # context['message'] = invoice_ser.data
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -8259,7 +9502,7 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())\
@@ -8268,11 +9511,22 @@ def estimate_report(request):
 
                 invoice_ser = EstimateSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['estimate_number'] = invoice['estimate_number']
+                    single_invoice['estimate_date'] = invoice['estimate_date']
+                    single_invoice['estimate_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -8284,6 +9538,7 @@ def estimate_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -8298,11 +9553,22 @@ def estimate_report(request):
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['estimate_number'] = invoice['estimate_number']
+                        single_invoice['estimate_date'] = invoice['estimate_date']
+                        single_invoice['estimate_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8317,12 +9583,20 @@ def estimate_report(request):
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['estimate_number'] = invoice['estimate_number']
+                        single_invoice['estimate_date'] = invoice['estimate_date']
+                        single_invoice['estimate_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8340,6 +9614,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -8354,14 +9629,22 @@ def estimate_report(request):
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['estimate_number'] = invoice['estimate_number']
+                        single_invoice['estimate_date'] = invoice['estimate_date']
+                        single_invoice['estimate_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                    total_data[key] = single_data
+                
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -8375,12 +9658,21 @@ def estimate_report(request):
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['estimate_number'] = invoice['estimate_number']
+                        single_invoice['estimate_date'] = invoice['estimate_date']
+                        single_invoice['estimate_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8402,12 +9694,21 @@ def estimate_report(request):
                 invoice_ser = EstimateSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['estimate_number'] = invoice['estimate_number']
+                    single_invoice['estimate_date'] = invoice['estimate_date']
+                    single_invoice['estimate_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+                    
+                # context[key] = invoice_ser.data
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8434,6 +9735,11 @@ def quote_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if measure:
+        measure = measure.lower()
+    else:
+        return Response({"message": "You need to pass 'measure'"}, status=status.HTTP_400_BAD_REQUEST)
+
     # 6.1
     if measure == "quote search":
         invoices = Quote.objects.filter(vendor=request.user.id)\
@@ -8441,7 +9747,19 @@ def quote_report(request):
                             .filter(date_created__lte=end_date).all().order_by("date_created")
         if len(invoices) > 0:
             invoice_ser = QuoteSerailizer(invoices, many=True)
-            context['message'] = invoice_ser.data
+            single_data = []
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['quote_number'] = invoice['quote_number']
+                single_invoice['quote_date'] = invoice['quote_date']
+                single_invoice['quote_amount'] = invoice['grand_total']
+                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['id'] = invoice['id']
+
+                single_data.append(single_invoice)
+
+            context['message'] = single_data
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -8450,14 +9768,27 @@ def quote_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 6.2
-    elif measure == "amount search":
+    elif measure == "quote by amount search":
         invoices = Quote.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
 
         if len(invoices) > 0:
             invoice_ser = QuoteSerailizer(invoices, many=True)
-            context['message'] = invoice_ser.data
+            single_data = []
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['quote_number'] = invoice['quote_number']
+                single_invoice['quote_date'] = invoice['quote_date']
+                single_invoice['quote_amount'] = invoice['grand_total']
+                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['id'] = invoice['id']
+
+                single_data.append(single_invoice)
+
+            # context['message'] = invoice_ser.data
+            context["message"] = single_data
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -8467,7 +9798,7 @@ def quote_report(request):
     
 
     # 6.3
-    elif measure == "per customer":
+    elif measure == "quote total per customer":
         invoices = Quote.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
@@ -8496,7 +9827,7 @@ def quote_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 6.4
-    elif measure == "total per date":
+    elif measure == "quote total per date":
         context = {}
         how = request.query_params.get("how")
 
@@ -8507,7 +9838,7 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())\
@@ -8517,9 +9848,11 @@ def quote_report(request):
                 # for inv in invoice_ser.data:
                 total_amount = 0
                 for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                    total_amount += float(inv['grand_total'])
 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -8530,7 +9863,7 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())
@@ -8539,9 +9872,11 @@ def quote_report(request):
 
                 total_amount = 0
                 for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                    total_amount += float(inv['grand_total'])
 
-                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                total_data[current_time.strftime('%Y-%m-%d')] = total_amount
+
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -8553,6 +9888,7 @@ def quote_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -8567,10 +9903,11 @@ def quote_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
+                    total_data[key] = total_amount
                         
+                context["message"] = total_data
                     # context[key] = invoice_ser.data
                 
                 return Response(context, status=status.HTTP_200_OK)
@@ -8586,10 +9923,10 @@ def quote_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                    # context[key] = total_amount
+                    context['message'] = {key: total_amount}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8607,6 +9944,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -8622,9 +9960,10 @@ def quote_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
+                    total_data[key] = total_amount
+                context["message"] = total_data
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8639,10 +9978,10 @@ def quote_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                    # context[key] = total_amount
+                    context['message'] = {key: total_amount}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8664,10 +10003,10 @@ def quote_report(request):
 
                 total_amount = 0
                 for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                    total_amount += float(inv['grand_total'])
 
-                context[key] = total_amount
-                # context['message'] = invoice_ser.data
+                # context[key] = total_amount
+                context['message'] = {key: total_amount}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8678,7 +10017,7 @@ def quote_report(request):
 
     
     # 6.5
-    elif measure == "count quote email":
+    elif measure == "quote email per date":
         context = {}
         how = request.query_params.get("how")
 
@@ -8689,16 +10028,16 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = Quote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
-                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
 
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -8709,17 +10048,16 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = Quote.objects.filter(date_created__date=current_time.date())\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
 
-                
-
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -8731,6 +10069,7 @@ def quote_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -8742,9 +10081,9 @@ def quote_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
+                    total_data[key] = emailed_count
                             
-                    
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8756,7 +10095,8 @@ def quote_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                # context[key] = emailed_count
+                context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -8768,6 +10108,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -8780,7 +10121,9 @@ def quote_report(request):
                                                 .filter(emailed=True).count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
+                    total_data[key] = emailed_count
+
+                context["message"] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8791,7 +10134,8 @@ def quote_report(request):
                             .filter(emailed=True).count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                # context[key] = emailed_count
+                context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -8803,7 +10147,8 @@ def quote_report(request):
                             .filter(emailed=True).count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = emailed_count
+            # context[key] = emailed_count
+            context["message"] = {key: emailed_count}
             return Response(context, status=status.HTTP_200_OK)
     
 
@@ -8819,7 +10164,7 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())\
@@ -8827,13 +10172,21 @@ def quote_report(request):
                                           .filter(emailed=True)
                 invoice_ser = QuoteSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['quote_number'] = invoice['quote_number']
+                    single_invoice['quote_date'] = invoice['quote_date']
+                    single_invoice['quote_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+            
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -8845,7 +10198,7 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())\
@@ -8853,11 +10206,21 @@ def quote_report(request):
 
                 invoice_ser = QuoteSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['quote_number'] = invoice['quote_number']
+                    single_invoice['quote_date'] = invoice['quote_date']
+                    single_invoice['quote_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -8869,6 +10232,7 @@ def quote_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -8882,11 +10246,20 @@ def quote_report(request):
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['quote_number'] = invoice['quote_number']
+                        single_invoice['quote_date'] = invoice['quote_date']
+                        single_invoice['quote_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8901,12 +10274,20 @@ def quote_report(request):
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['quote_number'] = invoice['quote_number']
+                        single_invoice['quote_date'] = invoice['quote_date']
+                        single_invoice['quote_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8924,6 +10305,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -8938,14 +10320,20 @@ def quote_report(request):
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['quote_number'] = invoice['quote_number']
+                        single_invoice['quote_date'] = invoice['quote_date']
+                        single_invoice['quote_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
+                    total_data[key] = single_data
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -8959,12 +10347,19 @@ def quote_report(request):
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['quote_number'] = invoice['quote_number']
+                        single_invoice['quote_date'] = invoice['quote_date']
+                        single_invoice['quote_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8986,12 +10381,20 @@ def quote_report(request):
                 invoice_ser = QuoteSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['quote_number'] = invoice['quote_number']
+                    single_invoice['quote_date'] = invoice['quote_date']
+                    single_invoice['quote_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                # context[key] = invoice_ser.data
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9003,7 +10406,7 @@ def quote_report(request):
     
 
     # 6.7
-    elif measure == "count quote overdue":
+    elif measure == "quote overdue per date":
 
         context = {}
         how = request.query_params.get("how")
@@ -9015,16 +10418,16 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 overdue_count = Quote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(status="Overdue").count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
-                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
 
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9035,17 +10438,16 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 overdue_count = Quote.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Overdue").count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = overdue_count
+                total_data[current_time.strftime('%Y-%m-%d')] = overdue_count
 
-                
-
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9057,6 +10459,7 @@ def quote_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -9068,9 +10471,9 @@ def quote_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = overdue_count
-                            
-                    
+                    total_data[key] = overdue_count
+
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9082,7 +10485,8 @@ def quote_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = overdue_count
+                # context[key] = overdue_count
+                context["message"] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -9094,6 +10498,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -9106,7 +10511,9 @@ def quote_report(request):
                                                 .filter(status="Overdue").count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = overdue_count
+                    total_data[key] = overdue_count
+
+                context["message"] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9117,7 +10524,8 @@ def quote_report(request):
                             .filter(status="Overdue").count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = overdue_count
+                # context[key] = overdue_count
+                context["message"] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -9129,12 +10537,13 @@ def quote_report(request):
                             .filter(status="Overdue").count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = overdue_count
+            # context[key] = overdue_count
+            context["message"] = {key: overdue_count}
             return Response(context, status=status.HTTP_200_OK)
 
 
     # 6.8
-    elif measure == "detail quote overdue":
+    elif measure == "list of quote overdue":
         context = {}
         how = request.query_params.get("how")
 
@@ -9145,7 +10554,7 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())\
@@ -9154,13 +10563,22 @@ def quote_report(request):
                                             .order_by("date_created")
                 invoice_ser = QuoteSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['quote_number'] = invoice['quote_number']
+                    single_invoice['quote_date'] = invoice['quote_date']
+                    single_invoice['quote_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+
+            context["message"] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -9172,7 +10590,7 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())\
@@ -9181,11 +10599,23 @@ def quote_report(request):
 
                 invoice_ser = QuoteSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['quote_number'] = invoice['quote_number']
+                    single_invoice['quote_date'] = invoice['quote_date']
+                    single_invoice['quote_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+            
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9197,6 +10627,7 @@ def quote_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -9211,11 +10642,22 @@ def quote_report(request):
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['quote_number'] = invoice['quote_number']
+                        single_invoice['quote_date'] = invoice['quote_date']
+                        single_invoice['quote_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9230,12 +10672,22 @@ def quote_report(request):
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['quote_number'] = invoice['quote_number']
+                        single_invoice['quote_date'] = invoice['quote_date']
+                        single_invoice['quote_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
+
+                        single_data.append(single_invoice)
 
                     # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -9253,6 +10705,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -9267,14 +10720,21 @@ def quote_report(request):
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['quote_number'] = invoice['quote_number']
+                        single_invoice['quote_date'] = invoice['quote_date']
+                        single_invoice['quote_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
+                    total_data[key] = single_data
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -9288,12 +10748,20 @@ def quote_report(request):
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['quote_number'] = invoice['quote_number']
+                        single_invoice['quote_date'] = invoice['quote_date']
+                        single_invoice['quote_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -9315,12 +10783,21 @@ def quote_report(request):
                 invoice_ser = QuoteSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['quote_number'] = invoice['quote_number']
+                    single_invoice['quote_date'] = invoice['quote_date']
+                    single_invoice['quote_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                # context[key] = invoice_ser.data
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9330,7 +10807,7 @@ def quote_report(request):
 
     
     # 6.9
-    elif measure == "detail quote pending":
+    elif measure == "list of quote pending":
         context = {}
         how = request.query_params.get("how")
 
@@ -9341,7 +10818,7 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())\
@@ -9350,14 +10827,22 @@ def quote_report(request):
                                             .order_by("date_created")
                 invoice_ser = QuoteSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['quote_number'] = invoice['quote_number']
+                    single_invoice['quote_date'] = invoice['quote_date']
+                    single_invoice['quote_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
 
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9368,7 +10853,7 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())\
@@ -9377,11 +10862,22 @@ def quote_report(request):
 
                 invoice_ser = QuoteSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['quote_number'] = invoice['quote_number']
+                    single_invoice['quote_date'] = invoice['quote_date']
+                    single_invoice['quote_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9393,6 +10889,7 @@ def quote_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -9407,11 +10904,22 @@ def quote_report(request):
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['quote_number'] = invoice['quote_number']
+                        single_invoice['quote_date'] = invoice['quote_date']
+                        single_invoice['quote_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9426,12 +10934,20 @@ def quote_report(request):
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['quote_number'] = invoice['quote_number']
+                        single_invoice['quote_date'] = invoice['quote_date']
+                        single_invoice['quote_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -9449,6 +10965,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -9463,14 +10980,21 @@ def quote_report(request):
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['quote_number'] = invoice['quote_number']
+                        single_invoice['quote_date'] = invoice['quote_date']
+                        single_invoice['quote_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
+                    total_data[key] = single_data
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -9484,12 +11008,20 @@ def quote_report(request):
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['quote_number'] = invoice['quote_number']
+                        single_invoice['quote_date'] = invoice['quote_date']
+                        single_invoice['quote_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -9511,12 +11043,21 @@ def quote_report(request):
                 invoice_ser = QuoteSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['quote_number'] = invoice['quote_number']
+                    single_invoice['quote_date'] = invoice['quote_date']
+                    single_invoice['quote_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                # context[key] = invoice_ser.data
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9538,6 +11079,11 @@ def receipt_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if measure:
+        measure = measure.lower()
+    else:
+        return Response({"message": "You need to pass 'measure'"}, status=status.HTTP_400_BAD_REQUEST)
+
     # 7.1
     if measure == "receipt search":
         invoices = Receipt.objects.filter(vendor=request.user.id)\
@@ -9545,7 +11091,19 @@ def receipt_report(request):
                             .filter(date_created__lte=end_date).all().order_by("date_created")
         if len(invoices) > 0:
             invoice_ser = ReceiptSerailizer(invoices, many=True)
-            context['message'] = invoice_ser.data
+            single_data = []
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['receipt_number'] = invoice['receipt_number']
+                single_invoice['receipt_date'] = invoice['receipt_date']
+                single_invoice['receipt_amount'] = invoice['grand_total']
+                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['id'] = invoice['id']
+
+                single_data.append(single_invoice)
+            # context['message'] = invoice_ser.data
+            context["message"] = single_data
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -9554,14 +11112,26 @@ def receipt_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 7.2
-    elif measure == "amount search":
+    elif measure == "receipt by amount search":
         invoices = Receipt.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
 
         if len(invoices) > 0:
             invoice_ser = ReceiptSerailizer(invoices, many=True)
-            context['message'] = invoice_ser.data
+            single_data = []
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['receipt_number'] = invoice['receipt_number']
+                single_invoice['receipt_date'] = invoice['receipt_date']
+                single_invoice['receipt_amount'] = invoice['grand_total']
+                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['id'] = invoice['id']
+
+                single_data.append(single_invoice)
+
+            context['message'] = single_data
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -9571,7 +11141,7 @@ def receipt_report(request):
     
 
     # 7.3
-    elif measure == "per customer":
+    elif measure == "receipt total per customer":
         invoices = Receipt.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
@@ -9600,7 +11170,7 @@ def receipt_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 7.4
-    elif measure == "total per date":
+    elif measure == "receipt total per date":
         context = {}
         how = request.query_params.get("how")
 
@@ -9611,7 +11181,7 @@ def receipt_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Receipt.objects.filter(date_created__date=current_time.date())\
@@ -9621,9 +11191,11 @@ def receipt_report(request):
                 # for inv in invoice_ser.data:
                 total_amount = 0
                 for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                    total_amount += float(inv['grand_total'])
 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9634,7 +11206,7 @@ def receipt_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Receipt.objects.filter(date_created__date=current_time.date())
@@ -9643,9 +11215,11 @@ def receipt_report(request):
 
                 total_amount = 0
                 for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                    total_amount += float(inv['grand_total'])
 
-                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                total_data[current_time.strftime('%Y-%m-%d')] = total_amount
+
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9657,6 +11231,7 @@ def receipt_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -9671,11 +11246,11 @@ def receipt_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                        
-                    # context[key] = invoice_ser.data
+                    total_data[key] = total_amount
+                
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9690,10 +11265,10 @@ def receipt_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                    # context[key] = total_amount
+                    context['message'] = {key: total_amount}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -9711,6 +11286,7 @@ def receipt_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -9726,9 +11302,11 @@ def receipt_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
+                    total_data[key] = total_amount
+
+                context["message"] = total_data
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9743,10 +11321,10 @@ def receipt_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                    # context[key] = total_amount
+                    context['message'] = {key: total_amount}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -9768,10 +11346,10 @@ def receipt_report(request):
 
                 total_amount = 0
                 for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                    total_amount += float(inv['grand_total'])
 
-                context[key] = total_amount
-                # context['message'] = invoice_ser.data
+                # context[key] = total_amount
+                context['message'] = {key: total_amount}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9782,7 +11360,7 @@ def receipt_report(request):
 
     
     # 7.5
-    elif measure == "count receipt email":
+    elif measure == "receipt email per date":
         context = {}
         how = request.query_params.get("how")
 
@@ -9793,16 +11371,16 @@ def receipt_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = Receipt.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
-                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
 
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9813,17 +11391,16 @@ def receipt_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = Receipt.objects.filter(date_created__date=current_time.date())\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
 
-                
-
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9835,6 +11412,7 @@ def receipt_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -9846,9 +11424,9 @@ def receipt_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
+                    total_data[key] = emailed_count
                             
-                    
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9860,7 +11438,8 @@ def receipt_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                # context[key] = emailed_count
+                context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -9872,6 +11451,7 @@ def receipt_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -9884,7 +11464,9 @@ def receipt_report(request):
                                                 .filter(emailed=True).count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
+                    total_data[key] = emailed_count
+
+                context["message"] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9895,7 +11477,8 @@ def receipt_report(request):
                             .filter(emailed=True).count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                # context[key] = emailed_count
+                context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -9907,7 +11490,8 @@ def receipt_report(request):
                             .filter(emailed=True).count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = emailed_count
+            # context[key] = emailed_count
+            context["message"] = {key: emailed_count}
             return Response(context, status=status.HTTP_200_OK)
     
 
@@ -9923,7 +11507,7 @@ def receipt_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Receipt.objects.filter(date_created__date=current_time.date())\
@@ -9931,14 +11515,22 @@ def receipt_report(request):
                                           .filter(emailed=True)
                 invoice_ser = ReceiptSerailizer(invoices, many=True)
 
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['receipt_number'] = invoice['receipt_number']
+                    single_invoice['receipt_date'] = invoice['receipt_date']
+                    single_invoice['receipt_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
+
+                    single_data.append(single_invoice)
+
                 # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
-
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9949,7 +11541,7 @@ def receipt_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Receipt.objects.filter(date_created__date=current_time.date())\
@@ -9957,11 +11549,21 @@ def receipt_report(request):
 
                 invoice_ser = ReceiptSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['receipt_number'] = invoice['receipt_number']
+                    single_invoice['receipt_date'] = invoice['receipt_date']
+                    single_invoice['receipt_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9973,6 +11575,7 @@ def receipt_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -9986,11 +11589,21 @@ def receipt_report(request):
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['receipt_number'] = invoice['receipt_number']
+                        single_invoice['receipt_date'] = invoice['receipt_date']
+                        single_invoice['receipt_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+
+                context["message"] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10005,12 +11618,19 @@ def receipt_report(request):
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['receipt_number'] = invoice['receipt_number']
+                        single_invoice['receipt_date'] = invoice['receipt_date']
+                        single_invoice['receipt_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10028,6 +11648,7 @@ def receipt_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -10042,14 +11663,20 @@ def receipt_report(request):
 
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['receipt_number'] = invoice['receipt_number']
+                        single_invoice['receipt_date'] = invoice['receipt_date']
+                        single_invoice['receipt_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
+                    total_data[key] = single_data
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -10063,12 +11690,19 @@ def receipt_report(request):
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['receipt_number'] = invoice['receipt_number']
+                        single_invoice['receipt_date'] = invoice['receipt_date']
+                        single_invoice['receipt_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10090,12 +11724,19 @@ def receipt_report(request):
                 invoice_ser = ReceiptSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['receipt_number'] = invoice['receipt_number']
+                    single_invoice['receipt_date'] = invoice['receipt_date']
+                    single_invoice['receipt_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+                # context[key] = invoice_ser.data
+                context["message"] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10117,6 +11758,11 @@ def credit_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if measure:
+        measure = measure.lower()
+    else:
+        return Response({"message": "You need to pass 'measure'"}, status=status.HTTP_400_BAD_REQUEST)
+
     # 8.1
     if measure == "credit search":
         invoices = CreditNote.objects.filter(vendor=request.user.id)\
@@ -10124,7 +11770,18 @@ def credit_report(request):
                             .filter(date_created__lte=end_date).all().order_by("date_created")
         if len(invoices) > 0:
             invoice_ser = CreditNoteSerailizer(invoices, many=True)
-            context['message'] = invoice_ser.data
+            single_data = []
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['credit_number'] = invoice['cn_number']
+                single_invoice['credit_date'] = invoice['cn_date']
+                single_invoice['crdit_amount'] = invoice['grand_total']
+                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['id'] = invoice['id']
+
+                single_data.append(single_invoice)
+            context['message'] = single_data
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -10133,14 +11790,26 @@ def credit_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 8.2
-    elif measure == "amount search":
+    elif measure == "credit by amount search":
         invoices = CreditNote.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
 
         if len(invoices) > 0:
             invoice_ser = CreditNoteSerailizer(invoices, many=True)
-            context['message'] = invoice_ser.data
+            single_data = []
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['credit_number'] = invoice['cn_number']
+                single_invoice['credit_date'] = invoice['cn_date']
+                single_invoice['credit_amount'] = invoice['grand_total']
+                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['id'] = invoice['id']
+
+                single_data.append(single_invoice)
+
+            context['message'] = single_data
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -10150,7 +11819,7 @@ def credit_report(request):
     
 
     # 8.3
-    elif measure == "per customer":
+    elif measure == "credit total per customer":
         invoices = CreditNote.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
@@ -10179,7 +11848,7 @@ def credit_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 8.4
-    elif measure == "total per date":
+    elif measure == "credit total per date":
         context = {}
         how = request.query_params.get("how")
 
@@ -10190,7 +11859,7 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
@@ -10200,9 +11869,11 @@ def credit_report(request):
                 # for inv in invoice_ser.data:
                 total_amount = 0
                 for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                    total_amount += float(inv['grand_total'])
 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -10213,7 +11884,7 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = CreditNote.objects.filter(date_created__date=current_time.date())
@@ -10222,9 +11893,11 @@ def credit_report(request):
 
                 total_amount = 0
                 for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                    total_amount += float(inv['grand_total'])
 
-                context[current_time.strftime('%Y-%m-%d')] = total_amount
+                total_data[current_time.strftime('%Y-%m-%d')] = total_amount
+
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -10236,6 +11909,7 @@ def credit_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -10250,12 +11924,12 @@ def credit_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
+                    total_data[key] = total_amount
                         
-                    # context[key] = invoice_ser.data
-                
+                context["message"] = total_data
+            
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -10269,10 +11943,10 @@ def credit_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                    # context[key] = total_amount
+                    context['message'] = {key: total_amount}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10290,6 +11964,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -10305,9 +11980,11 @@ def credit_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
+                    total_data[key] = total_amount
+
+                context["message"] = total_data
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10322,10 +11999,10 @@ def credit_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    context[key] = total_amount
-                    # context['message'] = invoice_ser.data
+                    # context[key] = total_amount
+                    context['message'] = {key: total_amount}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10347,10 +12024,10 @@ def credit_report(request):
 
                 total_amount = 0
                 for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                    total_amount += float(inv['grand_total'])
 
-                context[key] = total_amount
-                # context['message'] = invoice_ser.data
+                # context[key] = total_amount
+                context['message'] = {key: total_amount}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10361,7 +12038,7 @@ def credit_report(request):
 
     
     # 8.5
-    elif measure == "count credit email":
+    elif measure == "credit email per date":
         context = {}
         how = request.query_params.get("how")
 
@@ -10372,16 +12049,16 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = CreditNote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
-                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
 
+            context["message"] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -10392,17 +12069,16 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = CreditNote.objects.filter(date_created__date=current_time.date())\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
 
-                
-
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -10414,6 +12090,7 @@ def credit_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -10425,10 +12102,10 @@ def credit_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
-                            
-                    
-                
+                    total_data[key] = emailed_count
+
+                context["message"] = total_data
+
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -10439,7 +12116,8 @@ def credit_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                # context[key] = emailed_count
+                context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -10451,6 +12129,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -10463,7 +12142,9 @@ def credit_report(request):
                                                 .filter(emailed=True).count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
+                    total_data[key] = emailed_count
+
+                context["message"] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10474,7 +12155,8 @@ def credit_report(request):
                             .filter(emailed=True).count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                # context[key] = emailed_count
+                context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -10486,12 +12168,13 @@ def credit_report(request):
                             .filter(emailed=True).count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = emailed_count
+            # context[key] = emailed_count
+            context["message"] = {key: emailed_count}
             return Response(context, status=status.HTTP_200_OK)
     
 
     # 8.6
-    elif measure == "detail credit email":
+    elif measure == "detail credit note email":
         context = {}
         how = request.query_params.get("how")
 
@@ -10502,7 +12185,7 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
@@ -10510,15 +12193,21 @@ def credit_report(request):
                                           .filter(emailed=True)
                 invoice_ser = CreditNoteSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['credit_number'] = invoice['cn_number']
+                    single_invoice['credit_date'] = invoice['cn_date']
+                    single_invoice['credit_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
 
-            
+            context["message"] = total_data
+
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "day":
@@ -10528,7 +12217,7 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
@@ -10536,11 +12225,21 @@ def credit_report(request):
 
                 invoice_ser = CreditNoteSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['credit_number'] = invoice['cn_number']
+                    single_invoice['credit_date'] = invoice['cn_date']
+                    single_invoice['credit_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+
+            context["message"] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -10552,6 +12251,7 @@ def credit_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -10565,11 +12265,21 @@ def credit_report(request):
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['credit_number'] = invoice['cn_number']
+                        single_invoice['credit_date'] = invoice['cn_date']
+                        single_invoice['credit_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+
+                context['message'] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10584,12 +12294,20 @@ def credit_report(request):
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['credit_number'] = invoice['cn_number']
+                        single_invoice['credit_date'] = invoice['cn_date']
+                        single_invoice['credit_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    # context[key] = invoice_ser.data
+                    context['message'] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10607,6 +12325,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -10621,14 +12340,20 @@ def credit_report(request):
 
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['credit_number'] = invoice['cn_number']
+                        single_invoice['credit_date'] = invoice['cn_date']
+                        single_invoice['credit_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
+                    total_data[key] = single_data
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                context['message'] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -10642,12 +12367,19 @@ def credit_report(request):
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['credit_number'] = invoice['cn_number']
+                        single_invoice['credit_date'] = invoice['cn_date']
+                        single_invoice['credit_amount'] = invoice['grand_total']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context['message'] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10669,12 +12401,20 @@ def credit_report(request):
                 invoice_ser = CreditNoteSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['credit_number'] = invoice['cn_number']
+                    single_invoice['credit_date'] = invoice['cn_date']
+                    single_invoice['credit_amount'] = invoice['grand_total']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                # context[key] = invoice_ser.data
+                context['message'] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10686,7 +12426,7 @@ def credit_report(request):
     
 
     # 8.7
-    elif measure == "count credit pending":
+    elif measure == "credit note pending":
 
         context = {}
         how = request.query_params.get("how")
@@ -10698,16 +12438,16 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 overdue_count = CreditNote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(status="Pending").count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
-                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
 
+            context['message'] = total_data
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -10718,18 +12458,17 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 overdue_count = CreditNote.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Pending").count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = overdue_count
+                total_data[current_time.strftime('%Y-%m-%d')] = overdue_count
 
-                
+            context['message'] = total_data
 
-                
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "week":
@@ -10740,6 +12479,7 @@ def credit_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -10751,10 +12491,10 @@ def credit_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending").count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = overdue_count
-                            
-                    
-                
+                    total_data[key] = overdue_count
+
+                context['message'] = total_data
+
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -10765,7 +12505,8 @@ def credit_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = overdue_count
+                # context[key] = overdue_count
+                context['message'] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -10777,6 +12518,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -10789,7 +12531,9 @@ def credit_report(request):
                                                 .filter(status="Pending").count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = overdue_count
+                    total_data[key] = overdue_count
+
+                context['message'] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10800,7 +12544,8 @@ def credit_report(request):
                             .filter(status="Pending").count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = overdue_count
+                # context[key] = overdue_count
+                context['message'] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -10812,12 +12557,13 @@ def credit_report(request):
                             .filter(status="Pending").count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = overdue_count
+            # context[key] = overdue_count
+            context['message'] = {key: overdue_count}
             return Response(context, status=status.HTTP_200_OK)
 
 
     # 8.8
-    elif measure == "detail invoice pending":
+    elif measure == "list of credit note pending":
         context = {}
         how = request.query_params.get("how")
 
@@ -10828,7 +12574,7 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
@@ -10837,15 +12583,23 @@ def credit_report(request):
                                             .order_by("date_created")
                 invoice_ser = CreditNoteSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['credit_number'] = invoice['cn_number']
+                    single_invoice['cnredit_date'] = invoice['cn_date']
+                    single_invoice['credit_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
 
-            
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+
+            context['message'] = total_data
+
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "day":
@@ -10855,7 +12609,7 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
@@ -10864,11 +12618,22 @@ def credit_report(request):
 
                 invoice_ser = CreditNoteSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['credit_number'] = invoice['cn_number']
+                    single_invoice['credit_date'] = invoice['cn_date']
+                    single_invoice['credit_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+
+            context['message'] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -10880,6 +12645,7 @@ def credit_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -10894,11 +12660,22 @@ def credit_report(request):
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['credit_number'] = invoice['cn_number']
+                        single_invoice['credit_date'] = invoice['cn_date']
+                        single_invoice['credit_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+
+                context['message'] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10913,12 +12690,20 @@ def credit_report(request):
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['credit_number'] = invoice['cn_number']
+                        single_invoice['credit_date'] = invoice['cn_date']
+                        single_invoice['credit_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context['message'] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10936,6 +12721,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -10950,14 +12736,21 @@ def credit_report(request):
 
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['credit_number'] = invoice['cn_number']
+                        single_invoice['credit_date'] = invoice['cn_date']
+                        single_invoice['credit_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
+                    total_data[key] = single_data
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                context['message'] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -10971,12 +12764,20 @@ def credit_report(request):
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['credit_number'] = invoice['cn_number']
+                        single_invoice['credit_date'] = invoice['cn_date']
+                        single_invoice['credit_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context['message'] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10998,12 +12799,21 @@ def credit_report(request):
                 invoice_ser = CreditNoteSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['credit_number'] = invoice['cn_number']
+                    single_invoice['credit_date'] = invoice['cn_date']
+                    single_invoice['credit_amount'] = invoice['grand_total']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                # context[key] = invoice_ser.data
+                context['message'] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11025,40 +12835,39 @@ def delivery_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if measure:
+        measure = measure.lower()
+    else:
+        return Response({"message": "You need to pass 'measure'"}, status=status.HTTP_400_BAD_REQUEST)
+
     # 9.1
-    if measure == "delivery search":
+    if measure == "delivery note search":
         invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
         if len(invoices) > 0:
             invoice_ser = DNSerailizer(invoices, many=True)
-            context['message'] = invoice_ser.data
+            single_data = []
+            for invoice in invoice_ser.data:
+                single_invoice = {}
+                single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                single_invoice['delivery_number'] = invoice['dn_number']
+                single_invoice['delivery_date'] = invoice['dn_date']
+                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['id'] = invoice['id']
+
+                single_data.append(single_invoice)
+            context['message'] = single_data
 
             return Response(context, status=status.HTTP_200_OK)
 
         else:
             context["message"] = "No delivery notes were created within this date range"
             return Response(context, status=status.HTTP_404_NOT_FOUND)
-    
-    # # 9.2
-    # elif measure == "amount search":
-    #     invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
-    #                         .filter(date_created__gte=start_date)\
-    #                         .filter(date_created__lte=end_date).all().order_by("date_created")
 
-    #     if len(invoices) > 0:
-    #         invoice_ser = DNSerailizer(invoices, many=True)
-    #         context['message'] = invoice_ser.data
-
-    #         return Response(context, status=status.HTTP_200_OK)
-
-    #     else:
-    #         context["message"] = "No invoices were created within this date range"
-    #         return Response(context, status=status.HTTP_404_NOT_FOUND)
-    
 
     # 9.2
-    elif measure == "per customer":
+    elif measure == "delivery note total per customer":
         invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
@@ -11086,190 +12895,10 @@ def delivery_report(request):
             context["message"] = "No delivery notes were created within this date range"
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
-    # # 9.4
-    # elif measure == "total per date":
-    #     context = {}
-    #     how = request.query_params.get("how")
-
-    #     if how == "hour":
-    #         start_time = datetime.strptime(start_date, "%Y-%m-%d")
-    #         end_time = datetime.strptime(end_date, "%Y-%m-%d")
-
-    #         interval = (end_time - start_time)
-    #         total_hours = int((interval.days*1440 + interval.seconds/60)/60)
-
-    #         # total_data = {}
-    #         for hour in range(0, total_hours+1):
-    #             current_time = start_time + timedelta(hours=hour)
-    #             invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
-    #                                       .filter(date_created__hour=current_time.hour)
-    #             invoice_ser = DNSerailizer(invoices, many=True)
-
-    #             # for inv in invoice_ser.data:
-    #             total_amount = 0
-    #             for inv in invoice_ser.data:
-    #                     total_amount += float(inv['grand_total'])
-
-    #             context[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
-            
-    #         return Response(context, status=status.HTTP_200_OK)
-        
-    #     elif how == "day":
-    #         start_time = datetime.strptime(start_date, "%Y-%m-%d")
-    #         end_time = datetime.strptime(end_date, "%Y-%m-%d")
-
-    #         interval = (end_time - start_time)
-    #         total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
-
-    #         # total_data = {}
-    #         for day in range(0, total_days+1):
-    #             current_time = start_time + timedelta(days=day)
-    #             invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())
-
-    #             invoice_ser = DNSerailizer(invoices, many=True)
-
-    #             total_amount = 0
-    #             for inv in invoice_ser.data:
-    #                     total_amount += float(inv['grand_total'])
-
-    #             context[current_time.strftime('%Y-%m-%d')] = total_amount
-                
-    #         return Response(context, status=status.HTTP_200_OK)
-        
-    #     elif how == "week":
-    #         start_time = datetime.strptime(start_date, "%Y-%m-%d")
-    #         end_time = datetime.strptime(end_date, "%Y-%m-%d")
-
-    #         interval = (end_time - start_time)
-    #         total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
-
-    #         if total_weeks > 0:
-    #             for week in range(0, total_weeks+1):
-    #                 start_time += timedelta(weeks=week)
-    #                 current_week = start_time + timedelta(weeks=week+1)
-
-    #                 if current_week > end_time:
-    #                     current_week = end_time
-
-    #                 invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
-    #                                             .filter(date_created__lte=current_week)
-    #                 invoice_ser = DNSerailizer(invoices, many=True)
-    #                 key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-
-    #                 total_amount = 0
-    #                 for inv in invoice_ser.data:
-    #                         total_amount += float(inv['grand_total'])
-
-    #                 context[key] = total_amount
-                        
-    #                 # context[key] = invoice_ser.data
-                
-    #             return Response(context, status=status.HTTP_200_OK)
-
-    #         else:
-    #             invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
-    #                         .filter(date_created__gte=start_date)\
-    #                         .filter(date_created__lte=end_date).all().order_by("date_created")
-
-    #             if len(invoices) > 0:
-    #                 invoice_ser = DNSerailizer(invoices, many=True)
-    #                 key = f"{start_date} - {end_date}"
-
-    #                 total_amount = 0
-    #                 for inv in invoice_ser.data:
-    #                         total_amount += float(inv['grand_total'])
-
-    #                 context[key] = total_amount
-    #                     # context['message'] = invoice_ser.data
-
-    #                 return Response(context, status=status.HTTP_200_OK)
-
-    #             else:
-    #                 context["message"] = "No delivery notes were created within this date range"
-    #                 return Response(context, status=status.HTTP_404_NOT_FOUND)
-            
-    #         # return Response(context, status=status.HTTP_200_OK)
-        
-    #     elif how == "months":
-    #         start_time = datetime.strptime(start_date, "%Y-%m-%d")
-    #         end_time = datetime.strptime(end_date, "%Y-%m-%d")
-
-    #         interval = (end_time - start_time)
-    #         total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
-
-    #         if total_months > 0:
-    #             for week in range(0, total_months+1):
-    #                 start_time += timedelta(weeks=week*4)
-    #                 current_week = start_time + timedelta(weeks=(week+1)*4)
-
-    #                 if current_week > end_time:
-    #                     current_week = end_time
-
-    #                 invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
-    #                                             .filter(date_created__lte=current_week)
-    #                 invoice_ser = DNSerailizer(invoices, many=True)
-    #                 key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-    #                 # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-
-    #                 total_amount = 0
-    #                 for inv in invoice_ser.data:
-    #                         total_amount += float(inv['grand_total'])
-
-    #                 context[key] = total_amount
-    #                 # context[key] = invoice_ser.data
-    #             return Response(context, status=status.HTTP_200_OK)
-
-    #         else:
-    #             invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
-    #                         .filter(date_created__gte=start_date)\
-    #                         .filter(date_created__lte=end_date).all().order_by("date_created")
-
-    #             if len(invoices) > 0:
-    #                 invoice_ser = DNSerailizer(invoices, many=True)
-    #                 key = f"{start_date} - {end_date}"
-
-    #                 total_amount = 0
-    #                 for inv in invoice_ser.data:
-    #                         total_amount += float(inv['grand_total'])
-
-    #                 context[key] = total_amount
-    #                 # context['message'] = invoice_ser.data
-
-    #                 return Response(context, status=status.HTTP_200_OK)
-
-    #             else:
-    #                 context["message"] = "No delivery notes were created within this date range"
-    #                 return Response(context, status=status.HTTP_404_NOT_FOUND)
-            
-    #         # return Response(context, status=status.HTTP_200_OK)
-        
-
-    #     elif how == "custom date":
-    #         invoices = DeliveryNote.objects.filter(vendor=request.user.id)\
-    #                         .filter(date_created__gte=start_date)\
-    #                         .filter(date_created__lte=end_date).all().order_by("date_created")
-
-    #         if len(invoices) > 0:
-    #             invoice_ser = DNSerailizer(invoices, many=True)
-    #             key = f"{start_date} - {end_date}"
-
-    #             total_amount = 0
-    #             for inv in invoice_ser.data:
-    #                     total_amount += float(inv['grand_total'])
-
-    #             context[key] = total_amount
-    #             # context['message'] = invoice_ser.data
-
-    #             return Response(context, status=status.HTTP_200_OK)
-
-    #         else:
-    #             context["message"] = "No delivery notes were created within this date range"
-    #             return Response(context, status=status.HTTP_404_NOT_FOUND)
-
 
     
     # 9.3
-    elif measure == "count delivery email":
+    elif measure == "delivery note email":
         context = {}
         how = request.query_params.get("how")
 
@@ -11280,17 +12909,17 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = DeliveryNote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
-                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
 
-            
+            context['message'] = total_data
+
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "day":
@@ -11300,18 +12929,17 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = DeliveryNote.objects.filter(date_created__date=current_time.date())\
                                             .filter(emailed=True).count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
 
-                
+            context['message'] = total_data
 
-                
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "week":
@@ -11322,6 +12950,7 @@ def delivery_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -11333,10 +12962,10 @@ def delivery_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
-                            
-                    
-                
+                    total_data[key] = emailed_count
+
+                context['message'] = total_data
+
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -11347,7 +12976,8 @@ def delivery_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                # context[key] = emailed_count
+                context['message'] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -11359,6 +12989,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -11371,7 +13002,9 @@ def delivery_report(request):
                                                 .filter(emailed=True).count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = emailed_count
+                    total_data[key] = emailed_count
+
+                context['message'] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11382,7 +13015,8 @@ def delivery_report(request):
                             .filter(emailed=True).count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = emailed_count
+                # context[key] = emailed_count
+                context['message'] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -11394,12 +13028,13 @@ def delivery_report(request):
                             .filter(emailed=True).count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = emailed_count
+            # context[key] = emailed_count
+            context['message'] = {key: emailed_count}
             return Response(context, status=status.HTTP_200_OK)
     
 
     # 9.4
-    elif measure == "detail delivery email":
+    elif measure == "detail delivery note email":
         context = {}
         how = request.query_params.get("how")
 
@@ -11410,7 +13045,7 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
@@ -11418,15 +13053,20 @@ def delivery_report(request):
                                               .filter(emailed=True)
                 invoice_ser = DNSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['delivery_number'] = invoice['dn_number']
+                    single_invoice['delivery_date'] = invoice['dn_date']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
 
-            
+            context['message'] = total_data
+
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "day":
@@ -11436,19 +13076,27 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
                                             .filter(emailed=True)
 
                 invoice_ser = DNSerailizer(invoices, many=True)
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['delivery_number'] = invoice['dn_number']
+                    single_invoice['delivery_date'] = invoice['dn_date']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+
+            context['message'] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -11460,6 +13108,7 @@ def delivery_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -11473,11 +13122,20 @@ def delivery_report(request):
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['delivery_number'] = invoice['dn_number']
+                        single_invoice['delivery_date'] = invoice['dn_date']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+
+                context['message'] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11492,12 +13150,18 @@ def delivery_report(request):
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['delivery_number'] = invoice['dn_number']
+                        single_invoice['delivery_date'] = invoice['dn_date']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context['message'] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -11515,6 +13179,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -11529,14 +13194,19 @@ def delivery_report(request):
 
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['delivery_number'] = invoice['dn_number']
+                        single_invoice['delivery_date'] = invoice['dn_date']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                        single_data.append(single_invoice)
+                    total_data[key] = single_data
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                context['message'] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -11550,12 +13220,19 @@ def delivery_report(request):
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['delivery_number'] = invoice['dn_number']
+                        single_invoice['delivery_date'] = invoice['dn_date']
+                        single_invoice['emailed_date'] = invoice['emailed_date']
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+
+                    # context[key] = invoice_ser.data
+                    context['message'] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -11563,7 +13240,6 @@ def delivery_report(request):
                     context["message"] = "No emailed delivery note within this date range"
                     return Response(context, status=status.HTTP_404_NOT_FOUND)
             
-            # return Response(context, status=status.HTTP_200_OK)
         
 
         elif how == "custom date":
@@ -11577,12 +13253,19 @@ def delivery_report(request):
                 invoice_ser = DNSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['delivery_number'] = invoice['dn_number']
+                    single_invoice['delivery_date'] = invoice['dn_date']
+                    single_invoice['emailed_date'] = invoice['emailed_date']
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                # context[key] = invoice_ser.data
+                context['message'] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11594,7 +13277,7 @@ def delivery_report(request):
     
 
     # 9.5
-    elif measure == "count delivery overdue":
+    elif measure == "delivery note overdue":
 
         context = {}
         how = request.query_params.get("how")
@@ -11606,17 +13289,17 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 overdue_count = DeliveryNote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                             .filter(status="Overdue").count()
                 
-                context[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
-                
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
 
-            
+            context['message'] = total_data
+
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "day":
@@ -11626,18 +13309,17 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 overdue_count = DeliveryNote.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Overdue").count()
                 
-                context[current_time.strftime('%Y-%m-%d')] = overdue_count
+                total_data[current_time.strftime('%Y-%m-%d')] = overdue_count
 
-                
+            context['message'] = total_data
 
-                
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "week":
@@ -11648,6 +13330,7 @@ def delivery_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -11659,10 +13342,10 @@ def delivery_report(request):
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = overdue_count
-                            
-                    
-                
+                    total_data[key] = overdue_count
+
+                context['message'] = total_data
+
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -11673,7 +13356,8 @@ def delivery_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = overdue_count
+                # context[key] = overdue_count
+                context['message'] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -11685,6 +13369,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -11697,7 +13382,9 @@ def delivery_report(request):
                                                 .filter(status="Overdue").count()
                     
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    context[key] = overdue_count
+                    total_data[key] = overdue_count
+
+                context['message'] = total_data
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11708,7 +13395,8 @@ def delivery_report(request):
                             .filter(status="Overdue").count()
 
                 key = f"{start_date} - {end_date}"
-                context[key] = overdue_count
+                # context[key] = overdue_count
+                context['message'] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -11720,11 +13408,12 @@ def delivery_report(request):
                             .filter(status="Overdue").count()
                 
             key = f"{start_date} - {end_date}"
-            context[key] = overdue_count
+            # context[key] = overdue_count
+            context['message'] = {key: overdue_count}
             return Response(context, status=status.HTTP_200_OK)
 
     # 9.6
-    elif measure == "detail delivery overdue":
+    elif measure == "list of delivery note overdue":
         context = {}
         how = request.query_params.get("how")
 
@@ -11735,7 +13424,7 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
@@ -11744,13 +13433,22 @@ def delivery_report(request):
                                             .order_by("date_created")
                 invoice_ser = DNSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['delivery_number'] = invoice['dn_number']
+                    single_invoice['delivery_date'] = invoice['dn_date']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+
+                # context['message'] = invoice_ser.data
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+
+            context['message'] = total_data
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -11762,7 +13460,7 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
@@ -11771,11 +13469,21 @@ def delivery_report(request):
 
                 invoice_ser = DNSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['delivery_number'] = invoice['dn_number']
+                    single_invoice['delivery_date'] = invoice['dn_date']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+
+            context['message'] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -11787,6 +13495,7 @@ def delivery_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -11801,11 +13510,20 @@ def delivery_report(request):
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['delivery_number'] = invoice['dn_number']
+                        single_invoice['delivery_date'] = invoice['dn_date']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                context['message'] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11820,12 +13538,19 @@ def delivery_report(request):
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['delivery_number'] = invoice['dn_number']
+                        single_invoice['delivery_date'] = invoice['dn_date']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context['message'] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -11843,6 +13568,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -11857,14 +13583,19 @@ def delivery_report(request):
 
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['delivery_number'] = invoice['dn_number']
+                        single_invoice['delivery_date'] = invoice['dn_date']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
-
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    total_data[key] = single_data
+                context['message'] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -11878,12 +13609,19 @@ def delivery_report(request):
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['delivery_number'] = invoice['dn_number']
+                        single_invoice['delivery_date'] = invoice['dn_date']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context['message'] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -11905,12 +13643,20 @@ def delivery_report(request):
                 invoice_ser = DNSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['delivery_number'] = invoice['dn_number']
+                    single_invoice['delivery_date'] = invoice['dn_date']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                # context[key] = invoice_ser.data
+                context['message'] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11920,7 +13666,7 @@ def delivery_report(request):
     
 
     # 9.7
-    elif measure == "detail delivery pending":
+    elif measure == "list of delivery note pending":
         context = {}
         how = request.query_params.get("how")
 
@@ -11931,7 +13677,7 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            # total_data = {}
+            total_data = {}
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
@@ -11940,15 +13686,20 @@ def delivery_report(request):
                                             .order_by("date_created")
                 invoice_ser = DNSerailizer(invoices, many=True)
 
-                # context['message'] = invoice_ser.data
-                context[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['delivery_number'] = invoice['dn_number']
+                    single_invoice['delivery_date'] = invoice['dn_date']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                    single_data.append(single_invoice)
+                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+            context['message'] = total_data
 
-            
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "day":
@@ -11958,7 +13709,7 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            # total_data = {}
+            total_data = {}
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
@@ -11967,11 +13718,21 @@ def delivery_report(request):
 
                 invoice_ser = DNSerailizer(invoices, many=True)
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['delivery_number'] = invoice['dn_number']
+                    single_invoice['delivery_date'] = invoice['dn_date']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+
+            context['message'] = total_data
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -11983,6 +13744,7 @@ def delivery_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     start_time += timedelta(weeks=week)
                     current_week = start_time + timedelta(weeks=week+1)
@@ -11997,11 +13759,20 @@ def delivery_report(request):
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['delivery_number'] = invoice['dn_number']
+                        single_invoice['delivery_date'] = invoice['dn_date']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    context[key] = invoice_ser.data                        
+                        single_data.append(single_invoice)
+
+                    total_data[key] = single_data
+                context['message'] = total_data
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -12016,12 +13787,19 @@ def delivery_report(request):
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['delivery_number'] = invoice['dn_number']
+                        single_invoice['delivery_date'] = invoice['dn_date']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context['message'] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -12039,6 +13817,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
+                total_data = {}
                 for week in range(0, total_months+1):
                     start_time += timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
@@ -12053,14 +13832,19 @@ def delivery_report(request):
 
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['delivery_number'] = invoice['dn_number']
+                        single_invoice['delivery_date'] = invoice['dn_date']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
-
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    total_data[key] = single_data
+                context['message'] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -12074,12 +13858,19 @@ def delivery_report(request):
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
-                    # total_amount = 0
-                    # for inv in invoice_ser.data:
-                    #         total_amount += float(inv['grand_total'])
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['delivery_number'] = invoice['dn_number']
+                        single_invoice['delivery_date'] = invoice['dn_date']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
 
-                    # context[key] = total_amount
-                    context[key] = invoice_ser.data
+                        single_data.append(single_invoice)
+                    # context[key] = invoice_ser.data
+                    context['message'] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -12101,12 +13892,20 @@ def delivery_report(request):
                 invoice_ser = DNSerailizer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
+                single_data = []
+                for invoice in invoice_ser.data:
+                    single_invoice = {}
+                    single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                    single_invoice['delivery_number'] = invoice['dn_number']
+                    single_invoice['delivery_date'] = invoice['dn_date']
+                    single_invoice['status'] = invoice['status']
+                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['id'] = invoice['id']
 
-                # context[key] = total_amount
-                context[key] = invoice_ser.data
+                    single_data.append(single_invoice)
+
+                # context[key] = invoice_ser.data
+                context['message'] = {key: single_data}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -12131,9 +13930,14 @@ def item_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if measure:
+        measure = measure.lower()
+    else:
+        return Response({"message": "You need to pass 'measure'"}, status=status.HTTP_400_BAD_REQUEST)
+
 
     # 10.1
-    if measure == "item search":
+    if measure == "items search":
         items = Item.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
@@ -12141,7 +13945,20 @@ def item_report(request):
         if len(items) > 0:
             item_ser = ItemSerializer(items, many=True)
 
-            context['message'] = item_ser.data
+            single_data = []
+            for item in item_ser.data:
+                single_item = {}
+                single_item['id'] = item['id']
+                single_item['name'] = item['dn_number']
+                single_item['sku'] = item['dn_date']
+                single_item['date_created'] = item['date_created'].strftime("%d-%m-%Y")
+                single_item['cost_price'] = item['cost_price']
+                single_item['sales_price'] = item['sales_price']
+                single_item['sales_tax'] = item['sales_tax']
+
+                single_data.append(single_item)
+
+            context['message'] = single_data
             
             return Response(context, status=status.HTTP_200_OK)
         else:
@@ -12151,7 +13968,7 @@ def item_report(request):
 
 
     # 10.2
-    elif measure == "sales price search":
+    elif measure == "item sales price search":
 
         items = Item.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
@@ -12159,7 +13976,8 @@ def item_report(request):
                             .order_by("sales_price")\
                             .order_by("date_created")
         if len(items) > 0:
-            item_ser = ItemSerializer(items, many=True)
+            item_ser = ItemSerializer(items, many=True, fields=("id", "name", "sku", "cost_price", "sales_price", "sales_tax"))
+            
             context['message'] = item_ser.data
             return Response(context, status=status.HTTP_200_OK)
 
@@ -12169,7 +13987,7 @@ def item_report(request):
 
     
     # 10.3
-    elif measure == "item search name":
+    elif measure == "items search":
 
         items = Item.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
@@ -12177,7 +13995,19 @@ def item_report(request):
                             .order_by("name")
         if len(items) > 0:
             item_ser = ItemSerializer(items, many=True)
-            context['message'] = item_ser.data
+            single_data = []
+            for item in item_ser.data:
+                single_item = {}
+                single_item['id'] = item['id']
+                single_item['name'] = item['dn_number']
+                single_item['sku'] = item['dn_date']
+                single_item['date_created'] = item['date_created'].strftime("%d-%m-%Y")
+                single_item['cost_price'] = item['cost_price']
+                single_item['sales_price'] = item['sales_price']
+                single_item['sales_tax'] = item['sales_tax']
+
+                single_data.append(single_item)
+            context['message'] = single_data
             return Response(context, status=status.HTTP_200_OK)
 
         else:
@@ -12196,7 +14026,7 @@ def item_report(request):
 
 
     # 10.5
-    elif measure == "sales price range":
+    elif measure == "item search by sales price":
         upper_price = request.query_params.get("upper_price")
         lower_price = request.query_params.get("lower_price")
 
@@ -12207,7 +14037,7 @@ def item_report(request):
                             .filter(sales_price__lte=upper_price)\
                             .order_by("date_created")
         if len(items) > 0:
-            item_ser = ItemSerializer(items, many=True)
+            item_ser = ItemSerializer(items, many=True, fields=("id", "name", "cost_price", "sales_price"))
             context['message'] = item_ser.data
             return Response(context, status=status.HTTP_200_OK)
 
@@ -12217,8 +14047,27 @@ def item_report(request):
 
 
 
-    return Response(context, status=status.HTTP_200_OK)
 
+
+    # 10.6
+    elif measure == "item search by cost price":
+        upper_price = request.query_params.get("upper_price")
+        lower_price = request.query_params.get("lower_price")
+
+        items = Item.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(sales_price__gte=lower_price)\
+                            .filter(sales_price__lte=upper_price)\
+                            .order_by("date_created")
+        if len(items) > 0:
+            item_ser = ItemSerializer(items, many=True, fields=("id", "name", "cost_price", "sales_price"))
+            context['message'] = item_ser.data
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["message"] = "No items matched the given parameters"
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
 
 
 

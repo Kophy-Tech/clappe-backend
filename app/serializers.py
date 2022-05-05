@@ -158,6 +158,36 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 
+
+
+
+
+
+
+
+
+class DynamicFieldsModelSerializer(serializers.ModelSerializer):
+    """
+    A ModelSerializer that takes an additional `fields` argument that
+    controls which fields should be displayed.
+    """
+
+    def __init__(self, *args, **kwargs):
+        # Don't pass the 'fields' arg up to the superclass
+        fields = kwargs.pop('fields', None)
+
+        # Instantiate the superclass normally
+        super().__init__(*args, **kwargs)
+
+        if fields is not None:
+            # Drop any fields that are not specified in the `fields` argument.
+            allowed = set(fields)
+            existing = set(self.fields)
+            for field_name in existing - allowed:
+                self.fields.pop(field_name)
+
+
+
 ############################################### customer #############################################################################
 
 
@@ -256,7 +286,7 @@ class CustomerEditSerializer(ModelSerializer):
 
 
 
-class CustomerSerializer(serializers.ModelSerializer):
+class CustomerSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = Customer
@@ -273,7 +303,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 ###################################################### items ########################################################
 
-class ItemSerializer(serializers.ModelSerializer):
+class ItemSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Item
         fields = ["id", "name", "description", "cost_price", "sales_price", "sales_tax", "sku"]
@@ -503,7 +533,7 @@ class InvoiceCreate(ModelSerializer):
 
 
 
-class InvoiceSerializer(serializers.ModelSerializer):
+class InvoiceSerializer(DynamicFieldsModelSerializer):
     customer = CustomerSerializer(read_only=True)
     class Meta:
         model = Invoice
@@ -777,7 +807,7 @@ class ProformaCreateSerializer(ModelSerializer):
 
 
 
-class ProformerInvoiceSerailizer(serializers.ModelSerializer):
+class ProformerInvoiceSerailizer(DynamicFieldsModelSerializer):
     customer = CustomerSerializer(read_only=True)
     class Meta:
         model = ProformaInvoice
@@ -1048,7 +1078,7 @@ class PurchaseCreateSerializer(ModelSerializer):
 
 
 
-class PurchaseOrderSerailizer(serializers.ModelSerializer):
+class PurchaseOrderSerailizer(DynamicFieldsModelSerializer):
     customer = CustomerSerializer(read_only=True)
     class Meta:
         model = PurchaseOrder
@@ -1313,7 +1343,7 @@ class EstimateCreateSerializer(ModelSerializer):
 
 
 
-class EstimateSerailizer(serializers.ModelSerializer):
+class EstimateSerailizer(DynamicFieldsModelSerializer):
     customer = CustomerSerializer(read_only=True)
     class Meta:
         model = Estimate
@@ -1583,7 +1613,7 @@ class QuoteCreateSerializer(ModelSerializer):
 
 
 
-class QuoteSerailizer(serializers.ModelSerializer):
+class QuoteSerailizer(DynamicFieldsModelSerializer):
     customer = CustomerSerializer(read_only=True)
     class Meta:
         model = Quote
@@ -1851,7 +1881,7 @@ class CNCreateSerializer(ModelSerializer):
 
 
 
-class CreditNoteSerailizer(serializers.ModelSerializer):
+class CreditNoteSerailizer(DynamicFieldsModelSerializer):
     customer = CustomerSerializer(read_only=True)
     class Meta:
         model = CreditNote
@@ -2126,7 +2156,7 @@ class REceiptCreateSerializer(ModelSerializer):
 
 
 
-class ReceiptSerailizer(serializers.ModelSerializer):
+class ReceiptSerailizer(DynamicFieldsModelSerializer):
     customer = CustomerSerializer(read_only=True)
     class Meta:
         model = Receipt
@@ -2406,7 +2436,7 @@ class DNCreateSerializer(ModelSerializer):
 
 
 
-class DNSerailizer(serializers.ModelSerializer):
+class DNSerailizer(DynamicFieldsModelSerializer):
     customer = CustomerSerializer(read_only=True)
     class Meta:
         model = DeliveryNote
