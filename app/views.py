@@ -2728,7 +2728,7 @@ def customer_report(request):
                         return Response(context, status=status.HTTP_404_NOT_FOUND)
                 
                 # 1.2
-                elif measure == "surchase summary search":
+                elif measure == "purchase summary search":
                     context = {"message": []}
                     customers = Customer.objects.filter(vendor=request.user.id)\
                                                 .order_by("first_name")
@@ -3142,7 +3142,7 @@ def invoice_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 2.4
-    elif measure == "Invoice total per-date Search":
+    elif measure == "invoice total per-date search":
         context = {}
         how = request.query_params.get("how")
 
@@ -3205,16 +3205,20 @@ def invoice_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
                     for inv in invoice_ser.data:
@@ -3261,16 +3265,20 @@ def invoice_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
@@ -3389,16 +3397,20 @@ def invoice_report(request):
 
             if total_weeks > 0:
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = Invoice.objects.filter(date_created__gte=start_time)\
+                    emailed_count = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = emailed_count
                 
                 context["message"] = total_data
@@ -3428,17 +3440,21 @@ def invoice_report(request):
 
             if total_months > 0:
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = Invoice.objects.filter(date_created__gte=start_time)\
+                    emailed_count = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = emailed_count
                 context["message"] = total_data
                     
@@ -3560,17 +3576,21 @@ def invoice_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -3636,19 +3656,23 @@ def invoice_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -3797,16 +3821,20 @@ def invoice_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    overdue_count = Invoice.objects.filter(date_created__gte=start_time)\
+                    overdue_count = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = overdue_count
                 
                 context["message"] = total_data
@@ -3835,17 +3863,21 @@ def invoice_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    overdue_count = Invoice.objects.filter(date_created__gte=start_time)\
+                    overdue_count = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = overdue_count
                 
                 context["message"] = total_data
@@ -3965,18 +3997,22 @@ def invoice_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
                                                 .order_by("date_created")
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -4042,19 +4078,23 @@ def invoice_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -4225,18 +4265,22 @@ def invoice_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -4299,19 +4343,23 @@ def invoice_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -4484,18 +4532,22 @@ def invoice_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Paid")\
                                                 .order_by("date_created")
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -4559,19 +4611,23 @@ def invoice_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Paid")\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -4743,18 +4799,22 @@ def invoice_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Unpaid")\
                                                 .order_by("date_created")
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -4818,19 +4878,23 @@ def invoice_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Unpaid")\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -4995,16 +5059,20 @@ def invoice_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -5063,16 +5131,20 @@ def invoice_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
@@ -5245,18 +5317,22 @@ def invoice_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices_percent = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices_percent = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(discount_type="percent")\
                                                 .order_by("date_created")
 
-                    invoices_value = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices_value = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(discount_type="value")\
                                                 .order_by("date_created")
@@ -5264,7 +5340,7 @@ def invoice_report(request):
                     invoice_pser = InvoiceSerializer(invoices_percent, many=True)
                     invoice_vser = InvoiceSerializer(invoices_value, many=True)
 
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     p_amount = 0
@@ -5327,25 +5403,29 @@ def invoice_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices_percent = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices_percent = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(discount_type="percent")\
                                                 .order_by("date_created")
                     
-                    invoices_value = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices_value = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(discount_type="value")\
                                                 .order_by("date_created")
 
                     invoice_pser = InvoiceSerializer(invoices_percent, many=True)
                     invoice_vser = InvoiceSerializer(invoices_value, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     p_amount = 0
@@ -5510,17 +5590,21 @@ def invoice_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(recurring=True)
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -5582,19 +5666,23 @@ def invoice_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Invoice.objects.filter(date_created__gte=start_time)\
+                    invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(recurring=True)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -5757,7 +5845,7 @@ def proforma_report(request):
     
 
     # 3.3
-    elif measure == "invoice total search":
+    elif measure == "proforma invoice customer search":
         invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
@@ -5787,7 +5875,7 @@ def proforma_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 3.4
-    elif measure == "invoice total search":
+    elif measure == "proforma invoice total search":
         context = {}
         how = request.query_params.get("how")
 
@@ -5848,16 +5936,20 @@ def proforma_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
                     for inv in invoice_ser.data:
@@ -5904,16 +5996,20 @@ def proforma_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
@@ -5975,7 +6071,7 @@ def proforma_report(request):
 
     
     # 3.5
-    elif measure == "invoice email search":
+    elif measure == "proforma invoice email search":
         context = {}
         how = request.query_params.get("how")
 
@@ -6031,16 +6127,20 @@ def proforma_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                    emailed_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     
                     total_data[key] = emailed_count
                 
@@ -6071,17 +6171,21 @@ def proforma_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                    emailed_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = emailed_count
                 
                 context["message"] = total_data
@@ -6193,17 +6297,21 @@ def proforma_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -6266,19 +6374,23 @@ def proforma_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
                                                 .order_by("date_created")
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -6420,16 +6532,20 @@ def proforma_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    overdue_count = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                    overdue_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     
                     total_data[key] = overdue_count
                             
@@ -6460,17 +6576,21 @@ def proforma_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    overdue_count = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                    overdue_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = overdue_count
                 context["message"] = total_data
                     
@@ -6586,18 +6706,22 @@ def proforma_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
                                                 .order_by("date_created")
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -6662,19 +6786,23 @@ def proforma_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
                                                 .order_by("date_created")
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -6847,18 +6975,22 @@ def proforma_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -6923,19 +7055,23 @@ def proforma_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = ProformaInvoice.objects.filter(date_created__gte=start_time)\
+                    invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -7188,16 +7324,20 @@ def purchase_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
                     for inv in invoice_ser.data:
@@ -7244,16 +7384,20 @@ def purchase_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
@@ -7369,16 +7513,20 @@ def purchase_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                    emailed_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     
                     total_data[key] = emailed_count
 
@@ -7409,17 +7557,21 @@ def purchase_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                    emailed_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = emailed_count
                 
                 context["message"] = total_data
@@ -7532,17 +7684,21 @@ def purchase_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -7608,19 +7764,23 @@ def purchase_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
                                                 .order_by("date_created")
 
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -7764,16 +7924,20 @@ def purchase_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    overdue_count = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                    overdue_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_data[key] = overdue_count
 
@@ -7804,17 +7968,21 @@ def purchase_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    overdue_count = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                    overdue_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_data[key] = overdue_count
                 
@@ -7931,18 +8099,22 @@ def purchase_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
                                                 .order_by("date_created")
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -8008,19 +8180,23 @@ def purchase_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
                                                 .order_by("date_created")
 
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -8111,7 +8287,7 @@ def purchase_report(request):
 
     
     # 4.9
-    elif measure == "list of proforma invoice pending":
+    elif measure == "list of purchase order pending":
         context = {}
         how = request.query_params.get("how")
 
@@ -8196,18 +8372,22 @@ def purchase_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -8272,19 +8452,23 @@ def purchase_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = PurchaseOrder.objects.filter(date_created__gte=start_time)\
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
 
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -8539,16 +8723,20 @@ def estimate_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                    invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = EstimateSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
                     for inv in invoice_ser.data:
@@ -8594,16 +8782,20 @@ def estimate_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                    invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = EstimateSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
@@ -8719,16 +8911,20 @@ def estimate_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = Estimate.objects.filter(date_created__gte=start_time)\
+                    emailed_count = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = emailed_count
 
                 context["message"] = total_data
@@ -8758,17 +8954,21 @@ def estimate_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = Estimate.objects.filter(date_created__gte=start_time)\
+                    emailed_count = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = emailed_count
 
                 context["message"] = total_data
@@ -8882,17 +9082,21 @@ def estimate_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                    invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)
                     invoice_ser = EstimateSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -8956,19 +9160,23 @@ def estimate_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                    invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
                                                 .order_by("date_created")
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -9112,16 +9320,20 @@ def estimate_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    overdue_count = Estimate.objects.filter(date_created__gte=start_time)\
+                    overdue_count = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = overdue_count
 
                 context["message"] = total_data
@@ -9151,17 +9363,21 @@ def estimate_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    overdue_count = Estimate.objects.filter(date_created__gte=start_time)\
+                    overdue_count = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = overdue_count
                 
                 context["message"] = total_data
@@ -9277,18 +9493,22 @@ def estimate_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                    invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
                                                 .order_by("date_created")
                     invoice_ser = EstimateSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -9353,19 +9573,23 @@ def estimate_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                    invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
                                                 .order_by("date_created")
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -9540,18 +9764,22 @@ def estimate_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                    invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
                     invoice_ser = EstimateSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -9616,19 +9844,23 @@ def estimate_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Estimate.objects.filter(date_created__gte=start_time)\
+                    invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -9890,16 +10122,20 @@ def quote_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                    invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = QuoteSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
                     for inv in invoice_ser.data:
@@ -9946,16 +10182,20 @@ def quote_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                    invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = QuoteSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
@@ -10071,16 +10311,20 @@ def quote_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = Quote.objects.filter(date_created__gte=start_time)\
+                    emailed_count = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = emailed_count
                             
                 context["message"] = total_data
@@ -10110,17 +10354,21 @@ def quote_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = Quote.objects.filter(date_created__gte=start_time)\
+                    emailed_count = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = emailed_count
 
                 context["message"] = total_data
@@ -10234,17 +10482,21 @@ def quote_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                    invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)
                     invoice_ser = QuoteSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -10307,19 +10559,23 @@ def quote_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                    invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
                                                 .order_by("date_created")
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -10461,16 +10717,20 @@ def quote_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    overdue_count = Quote.objects.filter(date_created__gte=start_time)\
+                    overdue_count = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = overdue_count
 
                 context["message"] = total_data
@@ -10500,17 +10760,21 @@ def quote_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    overdue_count = Quote.objects.filter(date_created__gte=start_time)\
+                    overdue_count = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = overdue_count
 
                 context["message"] = total_data
@@ -10629,18 +10893,22 @@ def quote_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                    invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
                                                 .order_by("date_created")
                     invoice_ser = QuoteSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -10707,19 +10975,23 @@ def quote_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                    invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
                                                 .order_by("date_created")
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -10891,18 +11163,22 @@ def quote_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                    invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
                     invoice_ser = QuoteSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -10967,19 +11243,23 @@ def quote_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Quote.objects.filter(date_created__gte=start_time)\
+                    invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -11233,16 +11513,20 @@ def receipt_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Receipt.objects.filter(date_created__gte=start_time)\
+                    invoices = Receipt.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
                     for inv in invoice_ser.data:
@@ -11288,16 +11572,20 @@ def receipt_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Receipt.objects.filter(date_created__gte=start_time)\
+                    invoices = Receipt.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
@@ -11414,16 +11702,20 @@ def receipt_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = Receipt.objects.filter(date_created__gte=start_time)\
+                    emailed_count = Receipt.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = emailed_count
                             
                 context["message"] = total_data
@@ -11453,17 +11745,21 @@ def receipt_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = Receipt.objects.filter(date_created__gte=start_time)\
+                    emailed_count = Receipt.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = emailed_count
 
                 context["message"] = total_data
@@ -11577,17 +11873,21 @@ def receipt_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Receipt.objects.filter(date_created__gte=start_time)\
+                    invoices = Receipt.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -11650,19 +11950,23 @@ def receipt_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = Receipt.objects.filter(date_created__gte=start_time)\
+                    invoices = Receipt.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
                                                 .order_by("date_created")
 
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -11764,7 +12068,7 @@ def credit_report(request):
         return Response({"message": "You need to pass 'measure'"}, status=status.HTTP_400_BAD_REQUEST)
 
     # 8.1
-    if measure == "credit search":
+    if measure == "credit note search":
         invoices = CreditNote.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
@@ -11790,7 +12094,7 @@ def credit_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 8.2
-    elif measure == "credit by amount search":
+    elif measure == "credit note by amount search":
         invoices = CreditNote.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
@@ -11819,7 +12123,7 @@ def credit_report(request):
     
 
     # 8.3
-    elif measure == "credit total per customer":
+    elif measure == "credit note total per customer":
         invoices = CreditNote.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
@@ -11848,7 +12152,7 @@ def credit_report(request):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     # 8.4
-    elif measure == "credit total per date":
+    elif measure == "credit note total per date":
         context = {}
         how = request.query_params.get("how")
 
@@ -11911,16 +12215,20 @@ def credit_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = CreditNote.objects.filter(date_created__gte=start_time)\
+                    invoices = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
                     for inv in invoice_ser.data:
@@ -11966,16 +12274,20 @@ def credit_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = CreditNote.objects.filter(date_created__gte=start_time)\
+                    invoices = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
@@ -12038,7 +12350,7 @@ def credit_report(request):
 
     
     # 8.5
-    elif measure == "credit email per date":
+    elif measure == "credit note email per date":
         context = {}
         how = request.query_params.get("how")
 
@@ -12092,16 +12404,20 @@ def credit_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = CreditNote.objects.filter(date_created__gte=start_time)\
+                    emailed_count = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = emailed_count
 
                 context["message"] = total_data
@@ -12131,17 +12447,21 @@ def credit_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = CreditNote.objects.filter(date_created__gte=start_time)\
+                    emailed_count = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = emailed_count
 
                 context["message"] = total_data
@@ -12253,17 +12573,21 @@ def credit_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = CreditNote.objects.filter(date_created__gte=start_time)\
+                    invoices = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -12327,19 +12651,23 @@ def credit_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = CreditNote.objects.filter(date_created__gte=start_time)\
+                    invoices = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
                                                 .order_by("date_created")
 
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -12481,16 +12809,20 @@ def credit_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    overdue_count = CreditNote.objects.filter(date_created__gte=start_time)\
+                    overdue_count = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending").count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = overdue_count
 
                 context['message'] = total_data
@@ -12520,17 +12852,21 @@ def credit_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    overdue_count = CreditNote.objects.filter(date_created__gte=start_time)\
+                    overdue_count = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending").count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = overdue_count
 
                 context['message'] = total_data
@@ -12647,18 +12983,22 @@ def credit_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = CreditNote.objects.filter(date_created__gte=start_time)\
+                    invoices = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -12723,19 +13063,23 @@ def credit_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = CreditNote.objects.filter(date_created__gte=start_time)\
+                    invoices = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
 
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -12952,16 +13296,20 @@ def delivery_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                    emailed_count = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = emailed_count
 
                 context['message'] = total_data
@@ -12991,17 +13339,21 @@ def delivery_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    emailed_count = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                    emailed_count = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = emailed_count
 
                 context['message'] = total_data
@@ -13110,17 +13462,21 @@ def delivery_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                    invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)
                     invoice_ser = DNSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -13181,19 +13537,23 @@ def delivery_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                             current_week = end_time
 
-                    invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                    invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
                                                 .order_by("date_created")
 
                     invoice_ser = DNSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -13332,16 +13692,20 @@ def delivery_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    overdue_count = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                    overdue_count = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = overdue_count
 
                 context['message'] = total_data
@@ -13371,17 +13735,21 @@ def delivery_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    overdue_count = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                    overdue_count = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue").count()
                     
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     total_data[key] = overdue_count
 
                 context['message'] = total_data
@@ -13497,18 +13865,22 @@ def delivery_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                    invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
                                                 .order_by("date_created")
                     invoice_ser = DNSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -13570,19 +13942,23 @@ def delivery_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                    invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
                                                 .order_by("date_created")
 
                     invoice_ser = DNSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
@@ -13746,18 +14122,22 @@ def delivery_report(request):
             if total_weeks > 0:
                 total_data = {}
                 for week in range(0, total_weeks+1):
-                    start_time += timedelta(weeks=week)
-                    current_week = start_time + timedelta(weeks=week+1)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
+                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week)
+                    # current_week = start_time + timedelta(weeks=week+1)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                    invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
                     invoice_ser = DNSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     single_data = []
                     for invoice in invoice_ser.data:
@@ -13819,19 +14199,23 @@ def delivery_report(request):
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
-                    start_time += timedelta(weeks=week*4)
+                    if week == 0:
+                        continue
+                    begin = start_time + timedelta(weeks=week*4)
                     current_week = start_time + timedelta(weeks=(week+1)*4)
+                    # start_time += timedelta(weeks=week*4)
+                    # current_week = start_time + timedelta(weeks=(week+1)*4)
 
                     if current_week > end_time:
                         current_week = end_time
 
-                    invoices = DeliveryNote.objects.filter(date_created__gte=start_time)\
+                    invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
 
                     invoice_ser = DNSerailizer(invoices, many=True)
-                    key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
                         single_invoice = {}
