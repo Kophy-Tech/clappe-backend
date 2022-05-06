@@ -3207,8 +3207,8 @@ def invoice_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -3388,7 +3388,6 @@ def invoice_report(request):
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "week":
-            total_data = {}
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
             end_time = datetime.strptime(end_date, "%Y-%m-%d")
 
@@ -3396,11 +3395,12 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
+                total_data = {}
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -3578,8 +3578,8 @@ def invoice_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -3823,8 +3823,8 @@ def invoice_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -3999,8 +3999,8 @@ def invoice_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -4267,8 +4267,8 @@ def invoice_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -4534,8 +4534,8 @@ def invoice_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -4801,8 +4801,8 @@ def invoice_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -5061,8 +5061,8 @@ def invoice_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -5319,8 +5319,8 @@ def invoice_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -5592,8 +5592,8 @@ def invoice_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -5938,8 +5938,8 @@ def proforma_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -6129,8 +6129,8 @@ def proforma_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -6299,8 +6299,8 @@ def proforma_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -6534,8 +6534,8 @@ def proforma_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -6708,8 +6708,8 @@ def proforma_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -6977,8 +6977,8 @@ def proforma_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -7326,8 +7326,8 @@ def purchase_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -7515,8 +7515,8 @@ def purchase_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -7686,8 +7686,8 @@ def purchase_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -7926,8 +7926,8 @@ def purchase_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -8101,8 +8101,8 @@ def purchase_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -8374,8 +8374,8 @@ def purchase_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -8725,8 +8725,8 @@ def estimate_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -8913,8 +8913,8 @@ def estimate_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -9084,8 +9084,8 @@ def estimate_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -9322,8 +9322,8 @@ def estimate_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -9495,8 +9495,8 @@ def estimate_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -9766,8 +9766,8 @@ def estimate_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -10124,8 +10124,8 @@ def quote_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -10313,8 +10313,8 @@ def quote_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -10484,8 +10484,8 @@ def quote_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -10719,8 +10719,8 @@ def quote_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -10895,8 +10895,8 @@ def quote_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -11165,8 +11165,8 @@ def quote_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -11515,8 +11515,8 @@ def receipt_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -11704,8 +11704,8 @@ def receipt_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -11875,8 +11875,8 @@ def receipt_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -12217,8 +12217,8 @@ def credit_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -12406,8 +12406,8 @@ def credit_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -12575,8 +12575,8 @@ def credit_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -12811,8 +12811,8 @@ def credit_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -12985,8 +12985,8 @@ def credit_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -13298,8 +13298,8 @@ def delivery_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -13464,8 +13464,8 @@ def delivery_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -13694,8 +13694,8 @@ def delivery_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -13867,8 +13867,8 @@ def delivery_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
@@ -14124,8 +14124,8 @@ def delivery_report(request):
                 for week in range(0, total_weeks+1):
                     if week == 0:
                         continue
-                    begin = start_time + timedelta(weeks=week*4)
-                    current_week = start_time + timedelta(weeks=(week+1)*4)
+                    begin = start_time + timedelta(weeks=week)
+                    current_week = start_time + timedelta(weeks=week+1)
                     # start_time += timedelta(weeks=week)
                     # current_week = start_time + timedelta(weeks=week+1)
 
