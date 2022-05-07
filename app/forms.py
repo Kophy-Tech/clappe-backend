@@ -166,25 +166,25 @@ def set_tasks(document, doc_type, save=True):
 
         to_pending_schedule = ScheduleForm(to_pending_details)
         if to_pending_schedule.is_valid():
-            _, _ = to_pending_schedule.save()
+            _ = to_pending_schedule.save()
 
         to_unpaid_schedule = ScheduleForm(to_unpaid_details)
         if to_unpaid_schedule.is_valid():
-            _, _ = to_unpaid_schedule.save()
+            _ = to_unpaid_schedule.save()
     
     else:
         email_notif_schedule = ScheduleForm(email_notif_details)
         if email_notif_schedule.is_valid():
-            _, _ = email_notif_schedule.update()
+            _ = email_notif_schedule.update()
 
 
         to_pending_schedule = ScheduleForm(to_pending_details)
         if to_pending_schedule.is_valid():
-            _, _ = to_pending_schedule.update()
+            _ = to_pending_schedule.update()
 
         to_unpaid_schedule = ScheduleForm(to_unpaid_details)
         if to_unpaid_schedule.is_valid():
-            _, _ = to_unpaid_schedule.update()
+            _ = to_unpaid_schedule.update()
 
 
 
