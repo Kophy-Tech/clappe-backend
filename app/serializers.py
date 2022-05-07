@@ -480,6 +480,7 @@ class InvoiceCreate(ModelSerializer):
 
 
     def save(self, request):
+        print(self.validated_data)
 
         print("send email: ", self.validated_data["send_email"])
         print("download: ", self.validated_data["download"])
@@ -620,6 +621,9 @@ class InvoiceEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data, request):
+
+        print(self.validated_data)
+
         # instance.first_name = validated_data["first_name"]
         # instance.last_name = validated_data["last_name"]
         # instance.address = validated_data["address"]
