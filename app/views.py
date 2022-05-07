@@ -3212,7 +3212,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -3271,7 +3273,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -3321,6 +3325,8 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
+            # print(total_months)
+
             if total_months > 0:
                 total_data = {}
                 for week in range(0, total_months+1):
@@ -3330,8 +3336,12 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
+
+                    
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)
@@ -3344,6 +3354,7 @@ def invoice_report(request):
                         total_amount += float(inv['grand_total'])
 
                     total_data[key] = total_amount
+                print(total_data)
                 context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -3387,7 +3398,9 @@ def invoice_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -3520,7 +3533,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Invoice.objects.filter(date_created__gte=begin)\
@@ -3562,7 +3577,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Invoice.objects.filter(date_created__gte=begin)\
@@ -3603,7 +3620,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Invoice.objects.filter(date_created__gte=begin)\
@@ -3643,7 +3662,9 @@ def invoice_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Invoice.objects.filter(date_created__gte=begin)\
@@ -3779,7 +3800,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -3858,7 +3881,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -3940,7 +3965,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -4019,7 +4046,9 @@ def invoice_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -4185,7 +4214,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = Invoice.objects.filter(date_created__gte=begin)\
@@ -4226,7 +4257,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = Invoice.objects.filter(date_created__gte=begin)\
@@ -4269,7 +4302,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = Invoice.objects.filter(date_created__gte=begin)\
@@ -4309,7 +4344,9 @@ def invoice_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = Invoice.objects.filter(date_created__gte=begin)\
@@ -4443,7 +4480,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -4523,7 +4562,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -4602,7 +4643,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -4680,7 +4723,9 @@ def invoice_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -4868,7 +4913,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -4945,7 +4992,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -5022,7 +5071,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -5097,7 +5148,9 @@ def invoice_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -5287,7 +5340,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -5365,7 +5420,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -5443,7 +5500,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -5520,7 +5579,9 @@ def invoice_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -5708,7 +5769,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -5786,7 +5849,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -5865,7 +5930,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -5943,7 +6010,9 @@ def invoice_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -6124,7 +6193,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -6195,7 +6266,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -6265,7 +6338,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -6334,7 +6409,9 @@ def invoice_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -6520,7 +6597,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices_percent = Invoice.objects.filter(date_created__gte=begin)\
@@ -6605,7 +6684,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices_percent = Invoice.objects.filter(date_created__gte=begin)\
@@ -6687,7 +6768,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices_percent = Invoice.objects.filter(date_created__gte=begin)\
@@ -6768,7 +6851,9 @@ def invoice_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices_percent = Invoice.objects.filter(date_created__gte=begin)\
@@ -6955,7 +7040,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -7030,7 +7117,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -7107,7 +7196,9 @@ def invoice_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -7183,7 +7274,9 @@ def invoice_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
@@ -7453,7 +7546,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -7512,7 +7607,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -7570,7 +7667,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -7627,7 +7726,9 @@ def proforma_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -7758,7 +7859,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -7801,7 +7904,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -7842,7 +7947,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -7882,7 +7989,9 @@ def proforma_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -8007,7 +8116,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -8083,7 +8194,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -8159,7 +8272,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -8234,7 +8349,9 @@ def proforma_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -8392,7 +8509,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -8435,7 +8554,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -8475,7 +8596,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -8514,7 +8637,9 @@ def proforma_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -8644,7 +8769,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -8723,7 +8850,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -8803,7 +8932,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -8882,7 +9013,9 @@ def proforma_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -9071,7 +9204,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -9150,7 +9285,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -9229,7 +9366,9 @@ def proforma_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -9307,7 +9446,9 @@ def proforma_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
@@ -9576,7 +9717,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -9635,7 +9778,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -9693,7 +9838,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -9750,7 +9897,9 @@ def purchase_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -9878,7 +10027,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -9921,7 +10072,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -9963,7 +10116,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -10004,7 +10159,9 @@ def purchase_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -10131,7 +10288,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -10210,7 +10369,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -10286,7 +10447,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -10361,7 +10524,9 @@ def purchase_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -10520,7 +10685,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -10563,7 +10730,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -10606,7 +10775,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -10648,7 +10819,9 @@ def purchase_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -10778,7 +10951,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -10858,7 +11033,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -10938,7 +11115,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -11017,7 +11196,9 @@ def purchase_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -11208,7 +11389,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -11287,7 +11470,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -11365,7 +11550,9 @@ def purchase_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -11441,7 +11628,9 @@ def purchase_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
@@ -11712,7 +11901,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -11770,7 +11961,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -11827,7 +12020,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -11884,7 +12079,9 @@ def estimate_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -12013,7 +12210,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Estimate.objects.filter(date_created__gte=begin)\
@@ -12055,7 +12254,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Estimate.objects.filter(date_created__gte=begin)\
@@ -12097,7 +12298,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Estimate.objects.filter(date_created__gte=begin)\
@@ -12138,7 +12341,9 @@ def estimate_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Estimate.objects.filter(date_created__gte=begin)\
@@ -12266,7 +12471,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -12343,7 +12550,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -12420,7 +12629,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -12495,7 +12706,9 @@ def estimate_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -12654,7 +12867,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = Estimate.objects.filter(date_created__gte=begin)\
@@ -12696,7 +12911,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = Estimate.objects.filter(date_created__gte=begin)\
@@ -12738,7 +12955,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = Estimate.objects.filter(date_created__gte=begin)\
@@ -12779,7 +12998,9 @@ def estimate_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = Estimate.objects.filter(date_created__gte=begin)\
@@ -12909,7 +13130,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -12988,7 +13211,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -13066,7 +13291,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -13144,7 +13371,9 @@ def estimate_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -13334,7 +13563,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -13413,7 +13644,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -13492,7 +13725,9 @@ def estimate_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -13570,7 +13805,9 @@ def estimate_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
@@ -13847,7 +14084,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -13906,7 +14145,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -13965,7 +14206,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -14022,7 +14265,9 @@ def quote_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -14150,7 +14395,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Quote.objects.filter(date_created__gte=begin)\
@@ -14192,7 +14439,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Quote.objects.filter(date_created__gte=begin)\
@@ -14235,7 +14484,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Quote.objects.filter(date_created__gte=begin)\
@@ -14276,7 +14527,9 @@ def quote_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Quote.objects.filter(date_created__gte=begin)\
@@ -14403,7 +14656,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -14479,7 +14734,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -14555,7 +14812,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -14629,7 +14888,9 @@ def quote_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -14786,7 +15047,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = Quote.objects.filter(date_created__gte=begin)\
@@ -14828,7 +15091,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = Quote.objects.filter(date_created__gte=begin)\
@@ -14870,7 +15135,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = Quote.objects.filter(date_created__gte=begin)\
@@ -14911,7 +15178,9 @@ def quote_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = Quote.objects.filter(date_created__gte=begin)\
@@ -15044,7 +15313,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -15125,7 +15396,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -15203,7 +15476,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -15279,7 +15554,9 @@ def quote_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -15466,7 +15743,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -15545,7 +15824,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -15622,7 +15903,9 @@ def quote_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -15698,7 +15981,9 @@ def quote_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
@@ -15967,7 +16252,9 @@ def receipt_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
@@ -16025,7 +16312,9 @@ def receipt_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
@@ -16084,7 +16373,9 @@ def receipt_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
@@ -16142,7 +16433,9 @@ def receipt_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
@@ -16271,7 +16564,9 @@ def receipt_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Receipt.objects.filter(date_created__gte=begin)\
@@ -16313,7 +16608,9 @@ def receipt_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Receipt.objects.filter(date_created__gte=begin)\
@@ -16355,7 +16652,9 @@ def receipt_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Receipt.objects.filter(date_created__gte=begin)\
@@ -16396,7 +16695,9 @@ def receipt_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = Receipt.objects.filter(date_created__gte=begin)\
@@ -16523,7 +16824,9 @@ def receipt_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
@@ -16599,7 +16902,9 @@ def receipt_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
@@ -16674,7 +16979,9 @@ def receipt_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
@@ -16748,7 +17055,9 @@ def receipt_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
@@ -17012,7 +17321,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
@@ -17070,7 +17381,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
@@ -17129,7 +17442,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
@@ -17187,7 +17502,9 @@ def credit_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
@@ -17316,7 +17633,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = CreditNote.objects.filter(date_created__gte=begin)\
@@ -17358,7 +17677,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = CreditNote.objects.filter(date_created__gte=begin)\
@@ -17400,7 +17721,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = CreditNote.objects.filter(date_created__gte=begin)\
@@ -17441,7 +17764,9 @@ def credit_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = CreditNote.objects.filter(date_created__gte=begin)\
@@ -17566,7 +17891,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
@@ -17643,7 +17970,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
@@ -17718,7 +18047,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
@@ -17792,7 +18123,9 @@ def credit_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
@@ -17949,7 +18282,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = CreditNote.objects.filter(date_created__gte=begin)\
@@ -17991,7 +18326,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = CreditNote.objects.filter(date_created__gte=begin)\
@@ -18033,7 +18370,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = CreditNote.objects.filter(date_created__gte=begin)\
@@ -18074,7 +18413,9 @@ def credit_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = CreditNote.objects.filter(date_created__gte=begin)\
@@ -18204,7 +18545,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
@@ -18283,7 +18626,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
@@ -18360,7 +18705,9 @@ def credit_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
@@ -18436,7 +18783,9 @@ def credit_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
@@ -18668,7 +19017,9 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -18710,7 +19061,9 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -18752,7 +19105,9 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -18794,7 +19149,9 @@ def delivery_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     emailed_count = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -18916,7 +19273,9 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -18990,8 +19349,10 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                            # current_week = end_time
-                            break
+                        current_week = end_time
+                            # break
+                    if begin > end_time:
+                        break
 
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
@@ -19063,8 +19424,10 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                            # current_week = end_time
-                            break
+                        current_week = end_time
+                            # break
+                    if begin > end_time:
+                        break
 
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
@@ -19135,7 +19498,9 @@ def delivery_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -19289,7 +19654,9 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -19331,7 +19698,9 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -19373,7 +19742,9 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -19414,7 +19785,9 @@ def delivery_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     overdue_count = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -19543,7 +19916,9 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -19619,7 +19994,9 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -19693,7 +20070,9 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -19766,7 +20145,9 @@ def delivery_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -19945,7 +20326,9 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -20021,7 +20404,9 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -20095,7 +20480,9 @@ def delivery_report(request):
                     
 
                     if current_week > end_time:
-                        # current_week = end_time
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
@@ -20168,7 +20555,9 @@ def delivery_report(request):
                     current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_date:
-                        # current_week = end_date
+                        current_week = end_date
+                        # break
+                    if begin > end_time:
                         break
 
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
