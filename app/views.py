@@ -467,16 +467,18 @@ def create_invoice(request):
 
             
             if form.validated_data['download']:
+                print("The user wants to download the pdf")
                 buffer = io.BytesIO()
                 invoice_ser = InvoiceSerializer(new_invoice).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
                 file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
-
+                print("This is the name of the generated pdf", file_name)
                 buffer.seek(0)
                 return FileResponse(buffer, as_attachment=True, filename=file_name)
             
             elif form.validated_data['send_email']:
                 # for sending email when creating a new document
+                print("The user wants to send the pdf to email")
                 now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
                 file_name = f"{'invoice'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = InvoiceSerializer(new_invoice).data
@@ -489,6 +491,7 @@ def create_invoice(request):
                 new_invoice.emailed = True
                 new_invoice.emailed_date = datetime.now().strftime("%d-%m-%Y")
                 new_invoice.save()
+                print("Email sent")
 
 
             # if pdf_file:
@@ -554,15 +557,17 @@ def edit_invoice(request, id):
 
 
                 if form.validated_data['download']:
+                    print("The user wants to download the pdf")
                     buffer = io.BytesIO()
                     invoice_ser = InvoiceSerializer(updated_invoice).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_invoice.item_list, updated_invoice.quantity_list)
                     file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
-
+                    print("This is the name of the generated PDF", file_name)
                     buffer.seek(0)
                     return FileResponse(buffer, as_attachment=True, filename=file_name)
 
                 if form.validated_data['send_email']:
+                    print("The user wants to send the pdf to their email")
                     # for sending email when creating a new document
                     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
                     file_name = f"{'invoice'.title()} for {request.user.email} - {now}.pdf"
@@ -576,6 +581,7 @@ def edit_invoice(request, id):
                     updated_invoice.emailed = True
                     updated_invoice.emailed_date = datetime.now().strftime("%d-%m-%Y")
                     updated_invoice.save()
+                    print("Pdf sent to email")
 
 
 

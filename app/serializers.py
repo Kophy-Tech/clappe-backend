@@ -481,6 +481,9 @@ class InvoiceCreate(ModelSerializer):
 
     def save(self, request):
 
+        print("send email: ", self.validated_data["send_email"])
+        print("download: ", self.validated_data["download"])
+
         new_invoice = Invoice()
         new_invoice.customer = Customer.objects.get(id=self.validated_data['customer_id'])
 
