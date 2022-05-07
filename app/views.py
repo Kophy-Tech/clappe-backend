@@ -3207,8 +3207,8 @@ def invoice_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -3515,8 +3515,8 @@ def invoice_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -3774,8 +3774,8 @@ def invoice_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -4180,8 +4180,8 @@ def invoice_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -4438,8 +4438,8 @@ def invoice_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -4863,8 +4863,8 @@ def invoice_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -5282,8 +5282,8 @@ def invoice_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -5703,8 +5703,8 @@ def invoice_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -6119,8 +6119,8 @@ def invoice_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -6515,8 +6515,8 @@ def invoice_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -6950,8 +6950,8 @@ def invoice_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -7448,8 +7448,8 @@ def proforma_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -7753,8 +7753,8 @@ def proforma_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -8002,8 +8002,8 @@ def proforma_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -8387,8 +8387,8 @@ def proforma_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -8639,8 +8639,8 @@ def proforma_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -9066,8 +9066,8 @@ def proforma_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -9571,8 +9571,8 @@ def purchase_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -9873,8 +9873,8 @@ def purchase_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -10126,8 +10126,8 @@ def purchase_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -10515,8 +10515,8 @@ def purchase_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -10773,8 +10773,8 @@ def purchase_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -11203,8 +11203,8 @@ def purchase_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -11707,8 +11707,8 @@ def estimate_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -12008,8 +12008,8 @@ def estimate_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -12261,8 +12261,8 @@ def estimate_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -12649,8 +12649,8 @@ def estimate_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -12904,8 +12904,8 @@ def estimate_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -13329,8 +13329,8 @@ def estimate_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -13842,8 +13842,8 @@ def quote_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -14145,8 +14145,8 @@ def quote_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -14398,8 +14398,8 @@ def quote_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -14781,8 +14781,8 @@ def quote_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -15039,8 +15039,8 @@ def quote_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -15461,8 +15461,8 @@ def quote_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -15962,8 +15962,8 @@ def receipt_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -16266,8 +16266,8 @@ def receipt_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -16518,8 +16518,8 @@ def receipt_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -17007,8 +17007,8 @@ def credit_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -17311,8 +17311,8 @@ def credit_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -17561,8 +17561,8 @@ def credit_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -17944,8 +17944,8 @@ def credit_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -18199,8 +18199,8 @@ def credit_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -18663,8 +18663,8 @@ def delivery_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -18911,8 +18911,8 @@ def delivery_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -19284,8 +19284,8 @@ def delivery_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -19538,8 +19538,8 @@ def delivery_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
@@ -19940,8 +19940,8 @@ def delivery_report(request):
                 total_data = {}
                 for week in range(0, total_weeks+1):
                     
-                    begin = start_date + relativedelta(weeks=week)
-                    current_week = start_date + relativedelta(weeks=week+1)
+                    begin = start_time + relativedelta(weeks=week)
+                    current_week = start_time + relativedelta(weeks=week+1)
                     
 
                     if current_week > end_time:
