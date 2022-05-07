@@ -770,6 +770,7 @@ class ProformaCreateSerializer(ModelSerializer):
 
 
     def save(self, request):
+        print(self.validated_data)
         new_proforma = ProformaInvoice()
         # new_proforma.first_name = self.validated_data["first_name"]
         # new_proforma.last_name = self.validated_data["last_name"]
@@ -894,6 +895,7 @@ class ProformaEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
+        print(self.validated_data)
         # instance.first_name = validated_data["first_name"]
         # instance.last_name = validated_data["last_name"]
         # instance.address = validated_data["address"]
@@ -1039,6 +1041,7 @@ class PurchaseCreateSerializer(ModelSerializer):
 
 
     def save(self, request):
+        print(self.validated_data)
         new_purchaseorder = PurchaseOrder()
         # new_purchaseorder.first_name = self.validated_data["first_name"]
         # new_purchaseorder.last_name = self.validated_data["last_name"]
@@ -1172,6 +1175,7 @@ class PurchaseEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
+        print(self.validated_data)
         # instance.first_name = validated_data["first_name"]
         # instance.last_name = validated_data["last_name"]
         # instance.address = validated_data["address"]
@@ -1303,6 +1307,7 @@ class EstimateCreateSerializer(ModelSerializer):
 
 
     def save(self, request):
+        print(self.validated_data)
         new_estimate = Estimate()
         # new_estimate.first_name = self.validated_data["first_name"]
         # new_estimate.last_name = self.validated_data["last_name"]
@@ -1435,6 +1440,7 @@ class EstimateEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
+        print(self.validated_data)
         # instance.first_name = validated_data["first_name"]
         # instance.last_name = validated_data["last_name"]
         # instance.address = validated_data["address"]
@@ -1572,6 +1578,7 @@ class QuoteCreateSerializer(ModelSerializer):
 
 
     def save(self, request):
+        print(self.validated_data)
         new_quote = Quote()
         # new_quote.first_name = self.validated_data["first_name"]
         # new_quote.last_name = self.validated_data["last_name"]
@@ -1702,6 +1709,7 @@ class QuoteEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
+        print(self.validated_data)
         # instance.first_name = validated_data["first_name"]
         # instance.last_name = validated_data["last_name"]
         # instance.address = validated_data["address"]
@@ -1842,6 +1850,7 @@ class CNCreateSerializer(ModelSerializer):
 
 
     def save(self, request):
+        print(self.validated_data)
         new_credit = CreditNote()
         # new_credit.first_name = self.validated_data["first_name"]
         # new_credit.last_name = self.validated_data["last_name"]
@@ -1975,6 +1984,7 @@ class CNEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
+        print(self.validated_data)
         # instance.first_name = validated_data["first_name"]
         # instance.last_name = validated_data["last_name"]
         # instance.address = validated_data["address"]
@@ -2116,6 +2126,7 @@ class REceiptCreateSerializer(ModelSerializer):
 
 
     def save(self, request):
+        print(self.validated_data)
         new_receipt = Receipt()
         # new_receipt.first_name = self.validated_data["first_name"]
         # new_receipt.last_name = self.validated_data["last_name"]
@@ -2255,6 +2266,7 @@ class ReceiptEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
+        print(self.validated_data)
         # instance.first_name = validated_data["first_name"]
         # instance.last_name = validated_data["last_name"]
         # instance.address = validated_data["address"]
@@ -2398,6 +2410,7 @@ class DNCreateSerializer(ModelSerializer):
 
 
     def save(self, request):
+        print(self.validated_data)
         new_delivery = DeliveryNote()
         # new_delivery.first_name = self.validated_data["first_name"]
         # new_delivery.last_name = self.validated_data["last_name"]
@@ -2533,6 +2546,7 @@ class DNEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data):
+        print(self.validated_data)
         # instance.first_name = validated_data["first_name"]
         # instance.last_name = validated_data["last_name"]
         # instance.address = validated_data["address"]
