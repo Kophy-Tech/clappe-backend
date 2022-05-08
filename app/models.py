@@ -12,7 +12,6 @@ from cloudinary.models import CloudinaryField
 
 class MyUsers(AbstractUser):
     username = models.CharField("Username", max_length=1024, null=True, unique=False, blank=True)
-    # photo_path = models.CharField("Profile Photo Path", max_length=2048, null=True, blank=True)
     photo_path = CloudinaryField("Profile Photo", null=True, blank=True)
     logo_path = CloudinaryField("Logo Image", null=True,blank=True)
     signature = CloudinaryField("Signature", null=True, blank=True)
@@ -24,7 +23,6 @@ class MyUsers(AbstractUser):
     other_phone_number = models.CharField("Other phone number", max_length=24, null=True, blank=True)
     fax = models.CharField("Fax", max_length=24, null=True, blank=True)
     business_number = models.CharField("Business Number", max_length=50, null=True, blank=True)
-    # logo_path = models.CharField("Logo Path", max_length=2048, blank=True, null=True)
     tax_type = models.CharField("Tax Type", max_length=24, null=False, blank=False, default="On Total")
     tax_rate = models.FloatField("Tax Rate", null=False, blank=False, default=0.0)
     lang_pref = models.CharField("Language Preference", max_length=50, null=True, blank=True, default="English")
@@ -60,15 +58,12 @@ class Customer(models.Model):
     phone_number = models.CharField("Phone Number", max_length=15, null=False, blank=False)
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
-    # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
     logo_path = CloudinaryField("Logo photo", null=True, blank=True)
     ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
     shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
     billing_address = models.CharField("Billing Address", max_length=500, null=False, blank=False)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
     status = models.CharField("Status", max_length=20, null=True, blank=True, default="New")
-    # invoice_number = models.CharField("Invoice Number", null=True, blank=True, default=1, max_length=2048)
-    # amount = models.FloatField("Amount", null=True, blank=True, default=0.00)
 
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
 
@@ -85,23 +80,15 @@ class Customer(models.Model):
 
 
 class Invoice(models.Model):
-    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    # address = models.CharField("Address", max_length=500, null=True, blank=True)
-    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
-
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
     emailed = models.BooleanField(default=False)
     emailed_date = models.CharField(max_length=64, blank=True, null=True)
     recurring = models.BooleanField(default=False)
     recurring_date = models.DateField(blank=True, null=True)
-
+    recurring_data = models.JSONField(default=dict)
     
-    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    # invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
-    # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
-    # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
+
+
     invoice_number = models.CharField("Invoice number", blank=False, null=False, max_length=2048)
     invoice_date = models.DateField("Invoice Date", blank=False, null=False)
     po_number = models.CharField("PO number", blank=True, null=True, max_length=2048)
@@ -140,22 +127,12 @@ class Invoice(models.Model):
 
 
 class ProformaInvoice(models.Model):
-    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    # address = models.CharField("Address", max_length=500, null=True, blank=True)
-    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
-
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
     emailed = models.BooleanField(default=False)
     emailed_date = models.CharField(max_length=64, blank=True, null=True)
     recurring = models.BooleanField(default=False)
     recurring_date = models.DateField(blank=True, null=True)
-
-    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    # invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
-    # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
-    # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
+    recurring_data = models.JSONField(default=dict)
     invoice_number = models.CharField("Invoice number", blank=True, null=True, max_length=2048)
     invoice_date = models.DateField("Invoice Date", blank=False, null=False)
     po_number = models.CharField("PO number", blank=False, null=False, max_length=2048)
@@ -187,22 +164,12 @@ class ProformaInvoice(models.Model):
 
 
 class PurchaseOrder(models.Model):
-    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    # address = models.CharField("Address", max_length=500, null=True, blank=True)
-    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
-
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
     emailed = models.BooleanField(default=False)
     emailed_date = models.CharField(max_length=64, blank=True, null=True)
     recurring = models.BooleanField(default=False)
     recurring_date = models.DateField(blank=True, null=True)
-
-    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    # po_pref = models.CharField("Purchase Order Preference", max_length=15, blank=False, null=False)
-    # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
-    # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
+    recurring_data = models.JSONField(default=dict)
 
     po_number = models.CharField("PO number", blank=True, null=True, max_length=2048)
     po_date = models.DateField("Purchase Order Date", blank=False, null=False)
@@ -235,22 +202,12 @@ class PurchaseOrder(models.Model):
 
 
 class Estimate(models.Model):
-    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    # address = models.CharField("Address", max_length=500, null=True, blank=True)
-    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
-
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
     emailed = models.BooleanField(default=False)
     emailed_date = models.CharField(max_length=64, blank=True, null=True)
     recurring = models.BooleanField(default=False)
     recurring_date = models.DateField(blank=True, null=True)
-
-    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    # estimate_pref = models.CharField("Estimate Preference", max_length=15, blank=False, null=False, default="a")
-    # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
-    # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
+    recurring_data = models.JSONField(default=dict)    
 
     estimate_number = models.CharField("Estimate number", blank=False, null=False, max_length=2048)
     estimate_date = models.DateField("Estimate Date", blank=False, null=False)
@@ -288,22 +245,12 @@ class Estimate(models.Model):
 
 
 class Quote(models.Model):
-    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    # address = models.CharField("Address", max_length=500, null=True, blank=True)
-    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
-
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
     emailed = models.BooleanField(default=False)
     emailed_date = models.CharField(max_length=64, blank=True, null=True)
     recurring = models.BooleanField(default=False)
     recurring_date = models.DateField(blank=True, null=True)
-
-    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    # quote_pref = models.CharField("Quote Preference", max_length=15, blank=False, null=False)
-    # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
-    # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
+    recurring_data = models.JSONField(default=dict)
 
     quote_number = models.CharField("Quote number", blank=False, null=False, max_length=2048)
     quote_date = models.DateField("Quote Date", blank=False, null=False)
@@ -314,7 +261,6 @@ class Quote(models.Model):
     bill_to = models.CharField("Bill To", max_length=2048, blank=True, null=True)
     billing_address = models.CharField("Billing Address", max_length=500, null=True, blank=True)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
-
     
     item_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
     quantity_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
@@ -342,22 +288,13 @@ class Quote(models.Model):
 
 
 class Receipt(models.Model):
-    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    # address = models.CharField("Address", max_length=500, null=True, blank=True)
-    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
-
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
     emailed = models.BooleanField(default=False)
     emailed_date = models.CharField(max_length=64, blank=True, null=True)
     recurring = models.BooleanField(default=False)
     recurring_date = models.DateField(blank=True, null=True)
+    recurring_data = models.JSONField(default=dict)
 
-    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    # receipt_pref = models.CharField("Receipt Preference", max_length=15, blank=False, null=False)
-    # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
-    # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
 
     receipt_number = models.CharField("Receipt number", blank=False, null=False, max_length=2048)
     receipt_date = models.DateField("Receipt Date", blank=False, null=False)
@@ -369,7 +306,6 @@ class Receipt(models.Model):
     billing_address = models.CharField("Billing Address", max_length=500, null=True, blank=True)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
 
-    
     item_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
     quantity_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
     item_total = models.FloatField("Item Total", blank=False, null=False)
@@ -397,22 +333,12 @@ class Receipt(models.Model):
 
 
 class CreditNote(models.Model):
-    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    # address = models.CharField("Address", max_length=500, null=True, blank=True)
-    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
-
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
     emailed = models.BooleanField(default=False)
     emailed_date = models.CharField(max_length=64, blank=True, null=True)
     recurring = models.BooleanField(default=False)
     recurring_date = models.DateField(blank=True, null=True)
-
-    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    # cn_pref = models.CharField("Credit Note Preference", max_length=15, blank=False, null=False)
-    # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
-    # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
+    recurring_data = models.JSONField(default=dict)
 
     cn_number = models.CharField("Credit Note number", blank=False, null=False, max_length=2048)
     cn_date = models.DateField("Credit Note Date", blank=False, null=False)
@@ -422,7 +348,6 @@ class CreditNote(models.Model):
     shipping_address = models.CharField("Shipping Address", max_length=500, null=True, blank=True)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
 
-    
     item_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
     quantity_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
     item_total = models.FloatField("Item Total", blank=False, null=False)
@@ -453,22 +378,12 @@ class CreditNote(models.Model):
 
 
 class DeliveryNote(models.Model):
-    # first_name = models.CharField("First Name", max_length=50, blank=True, null=True)
-    # last_name = models.CharField("Last Name", max_length=50, blank=True, null=True)
-    # address = models.CharField("Address", max_length=500, null=True, blank=True)
-    # email = models.EmailField("Email", max_length=50, null=True, blank=True)
-    # phone_number = models.CharField("Phone Number", max_length=15, null=True, blank=True)
-
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, default=1)
     emailed = models.BooleanField(default=False)
     emailed_date = models.CharField(max_length=64, blank=True, null=True)
     recurring = models.BooleanField(default=False)
     recurring_date = models.DateField(blank=True, null=True)
-
-    # taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
-    # dn_pref = models.CharField("Delivery Note Preference", max_length=15, blank=False, null=False)
-    # logo_path = models.CharField("Logo Path", max_length=150, null=False, blank=False)
-    # logo_path = CloudinaryField("Logo photo", null=True, blank=True)
+    recurring_data = models.JSONField(default=dict)
 
     dn_number = models.CharField("Delivery Note number", blank=False, null=False, max_length=2048)
     dn_date = models.DateField("Delivery Note Date", blank=False, null=False)
@@ -477,7 +392,6 @@ class DeliveryNote(models.Model):
     ship_to = models.CharField("Ship to", max_length=500, null=True, blank=True)
     shipping_address = models.CharField("Shipping Address", max_length=500, null=True, blank=True)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
-
     
     item_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
     quantity_list = ArrayField(models.PositiveIntegerField(blank=True), default=list)
@@ -672,21 +586,6 @@ class Item(models.Model):
 
     def __str__(self):
         return self.name
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

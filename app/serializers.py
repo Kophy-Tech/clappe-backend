@@ -1,113 +1,16 @@
-import json
 from rest_framework import serializers
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.hashers import check_password
 from drf_tweaks.serializers import ModelSerializer
 
-from .models import CreditNote, Customer, DeliveryNote, Item, MyUsers, Invoice, PayCreditNote, PayDeliveryNote, PayQuote, PayReceipt, ProformaInvoice, \
-                    Estimate, PurchaseOrder, PayInvoice, PayEstimate, PayProforma, PayPurchaseOrder, Quote, Receipt
+from .models import CreditNote, Customer, DeliveryNote, Item, MyUsers, Invoice, PayCreditNote, PayDeliveryNote,\
+                    PayQuote, PayReceipt, ProformaInvoice, Estimate, PurchaseOrder, PayInvoice, PayEstimate, \
+                    PayProforma, PayPurchaseOrder, Quote, Receipt
 
-from .forms import set_tasks, delete_tasks
-from django_celery_beat.models import PeriodicTask
+from .forms import set_tasks, set_recurring_task
+from .utils import delete_tasks, get_sku, validate_add_charges, validate_discount_amount,validate_item_list,\
+                    validate_recurring, validate_tax, password_validator, process_picture, get_number
 
-import cloudinary, string
-# from datetime import timedelta
-from random import choices
-
-
-
-
-
-CURRENCY_MAPPING = {
-    "Dollar": "$",
-    "Pound": "£",
-    "Rupees": "₹",
-    "Naira": "₦",
-
-}
-
-
-def get_sku():
-    all_xter = string.ascii_uppercase + string.digits
-    sku = ''.join(choices(all_xter, k=8))
-
-    return sku
-
-
-
-
-def get_number(request, num_type):
-
-    # invoice, proforma, pruchase_order, estimate, quote, receipt, credit_note, delivery_note, 
-
-    if num_type == "invoice":
-        count = len(Invoice.objects.filter(vendor=request.user.id).all())
-
-    elif num_type == "proforma":
-        count = len(ProformaInvoice.objects.filter(vendor=request.user.id).all())
-
-    elif num_type == "purchase_order":
-        count = len(PurchaseOrder.objects.filter(vendor=request.user.id).all())
-
-    elif num_type == "estimate":
-        count = len(Estimate.objects.filter(vendor=request.user.id).all())
-
-    elif num_type == "quote":
-        count = len(Quote.objects.filter(vendor=request.user.id).all())
-
-    elif num_type == "receipt":
-        count = len(Receipt.objects.filter(vendor=request.user.id).all())
-
-    elif num_type == "credit_note":
-        count = len(CreditNote.objects.filter(vendor=request.user.id).all())
-
-    elif num_type == "delivery_note":
-        count = len(DeliveryNote.objects.filter(vendor=request.user.id).all())
-
-
-    return "00" + str(count)
-
-
-
-
-
-
-
-def process_picture(media, models, type="profile"):
-    if type == 'profile':
-        file_url = cloudinary.uploader.upload(media, folder="profile_photos", 
-                                          public_id = f"{models.email}_picture", 
-                                          use_filename=True, unique_filename=False)['url']
-    
-    elif type=="logo":
-        file_url = cloudinary.uploader.upload(media, folder="logos", 
-                                            public_id = f"{models.email}_logo",
-                                            use_filename=True, unique_filename=False)['url']
-    else:
-        file_url = cloudinary.uploader.upload(media, folder="signatures", 
-                                            public_id = f"{models.email}_signature",
-                                            use_filename=True, unique_filename=False)['url']
-
-    return file_url
-
-
-
-
-
-# def integer_validator(value):
-#     try:
-#         return int(value)
-#     except Exception as e:
-#         raise serializers.ValidationError("A valid number is required for cost price")
-
-
-
-
-
-
-def password_validator(value):
-    if len(value) < 8:
-        raise serializers.ValidationError("Password must have at least 8 characters.")
 
 
 
@@ -185,6 +88,17 @@ class DynamicFieldsModelSerializer(serializers.ModelSerializer):
             existing = set(self.fields)
             for field_name in existing - allowed:
                 self.fields.pop(field_name)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -410,20 +324,19 @@ def pdf_item_serializer(items, quantities):
 
 
 
-
-
 ############################################### invoice ####################################################################
 
 
 class InvoiceCreate(ModelSerializer):
     # invoice_date = serializers.DateField(required=True)
-    item_list = serializers.ListField(required=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_discount_amount])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id= serializers.IntegerField(required=True)
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -433,7 +346,7 @@ class InvoiceCreate(ModelSerializer):
         fields = [
             "customer_id", "po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","item_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "send_email", "download", "terms",
-            "invoice_date"]
+            "invoice_date", "recurring"]
 
 
     def validate(self, data):
@@ -441,49 +354,8 @@ class InvoiceCreate(ModelSerializer):
             raise serializers.ValidationError("Invoice date is required")
         return data
 
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
-
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
-    
-    def validate_discount_amount(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for discount amount")
-        else:
-            return 0
-
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
-
-
 
     def save(self, request):
-        print(self.validated_data)
-
-        print("send email: ", self.validated_data["send_email"])
-        print("download: ", self.validated_data["download"])
 
         new_invoice = Invoice()
         new_invoice.customer = Customer.objects.get(id=self.validated_data['customer_id'])
@@ -493,7 +365,7 @@ class InvoiceCreate(ModelSerializer):
         # new_invoice.logo_path = self.validated_data["logo_path"]
         new_invoice.invoice_number = get_number(request, 'invoice')
         new_invoice.invoice_date = self.validated_data['invoice_date']
-        new_invoice.po_number = self.validated_data.get('po_number', None)
+        new_invoice.po_number = self.validated_data.get('po_number', 0)
         new_invoice.due_date = self.validated_data['due_date']
 
         new_invoice.ship_to = self.validated_data.get("ship_to", "")
@@ -518,15 +390,24 @@ class InvoiceCreate(ModelSerializer):
         new_invoice.discount_type = self.validated_data["discount_type"]
         new_invoice.discount_amount = self.validated_data.get("discount_amount", 0)
         new_invoice.grand_total = self.validated_data["grand_total"]
-        
+
         new_invoice.status = "New"
-        
         new_invoice.vendor = request.user
+        new_invoice.save()
+        set_tasks(new_invoice, "invoice", True)
+
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            new_invoice.recurring_data = recurring_data
+            new_invoice.recurring = True
+        else:
+            new_invoice.recurring = False
 
         new_invoice.save()
 
-
-        set_tasks(new_invoice, "invoice", True)
+        if len(recurring_data) > 0:
+            set_recurring_task(new_invoice, "invoice", "save")
 
 
 
@@ -543,18 +424,8 @@ class InvoiceSerializer(DynamicFieldsModelSerializer):
         model = Invoice
         fields = [ "id", "customer","invoice_number",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes", "quantity_list",
-            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list", "notes", "terms"]
-
-
-
-# class InvoicePDFSerializer(serializers.ModelSerializer):
-#     customer = CustomerSerializer(read_only=True)
-#     class Meta:
-#         model = Invoice
-#         fields = [ "id", "customer","invoice_number",
-#             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes", "quantity_list",
-#             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list", "notes", "terms"]
-
+            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list", "notes", "terms",
+            "recurring", "recurring_data"]
 
 
 
@@ -563,67 +434,32 @@ class InvoiceSerializer(DynamicFieldsModelSerializer):
 
 class InvoiceEditSerializer(ModelSerializer):
     customer_id = serializers.IntegerField(required=True)
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_discount_amount])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Invoice
         fields = ["customer_id", "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "item_list",
-                    "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "send_email", "download", "terms"]
+                    "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "send_email", "download", "terms",
+                    "recurring"]
 
     def validate(self, data):
         if not data.get("invoice_date"):
             raise serializers.ValidationError("Invoice date is required")
         return data
 
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
 
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
-    
-    def validate_discount_amount(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for discount amount")
-        else:
-            return 0
-
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
 
 
     def update(self, instance, validated_data, request):
-
-        print(self.validated_data)
-
         # instance.first_name = validated_data["first_name"]
         # instance.last_name = validated_data["last_name"]
         # instance.address = validated_data["address"]
@@ -666,6 +502,19 @@ class InvoiceEditSerializer(ModelSerializer):
 
 
         set_tasks(instance, "invoice", False)
+
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            instance.recurring_data = recurring_data
+            instance.recurring = True
+        else:
+            instance.recurring = False
+
+        instance.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(instance, "invoice", "update")
 
 
         return instance
@@ -714,14 +563,14 @@ class PayInvoiceSerializer(ModelSerializer):
 ######################################### proforma invoice #########################################################################
 
 class ProformaCreateSerializer(ModelSerializer):
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    # discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
 
     required_error = "{fieldname} is required."
@@ -729,7 +578,7 @@ class ProformaCreateSerializer(ModelSerializer):
     class Meta:
         model = ProformaInvoice
         fields = [
-                "customer_id", 
+                "customer_id", "recurring",
                 "invoice_date", "po_number", "due_date", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
 
@@ -738,54 +587,19 @@ class ProformaCreateSerializer(ModelSerializer):
             raise serializers.ValidationError("Invoice date is required")
         return data
 
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
-
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
     
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
+
     
 
 
 
 
     def save(self, request):
-        print(self.validated_data)
         new_proforma = ProformaInvoice()
-        # new_proforma.first_name = self.validated_data["first_name"]
-        # new_proforma.last_name = self.validated_data["last_name"]
-        # new_proforma.address = self.validated_data["address"]
-        # new_proforma.email = self.validated_data["email"]
-        # new_proforma.phone_number = self.validated_data["phone_number"]
-
         new_proforma.customer = Customer.objects.get(id=self.validated_data['customer_id'])
-
-        # new_proforma.taxable = self.validated_data["taxable"]
-        # new_proforma.invoice_pref = self.validated_data["invoice_pref"]
-        # new_proforma.logo_path = self.validated_data["logo_path"]
         new_proforma.invoice_number = get_number(request, 'proforma')
         new_proforma.invoice_date = self.validated_data["invoice_date"]
-        new_proforma.po_number = self.validated_data["po_number"]
+        new_proforma.po_number = self.validated_data.get('po_number', 0)
         new_proforma.due_date = self.validated_data["due_date"]
         new_proforma.notes = self.validated_data.get("notes", "")
         new_proforma.terms = self.validated_data.get("terms", "")
@@ -811,6 +625,19 @@ class ProformaCreateSerializer(ModelSerializer):
 
         set_tasks(new_proforma, "proforma", True)
 
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            new_proforma.recurring_data = recurring_data
+            new_proforma.recurring = True
+        else:
+            new_proforma.recurring = False
+
+        new_proforma.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(new_proforma, "proforma invoice", "save")
+
         return new_proforma
 
 
@@ -822,19 +649,10 @@ class ProformerInvoiceSerailizer(DynamicFieldsModelSerializer):
         fields = [
                 "id", "customer", 
                     "invoice_number", "invoice_date", "po_number", "due_date", "notes", "item_list", "quantity_list",
-                    "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
+                    "item_total", "tax", "add_charges", "grand_total", "status", "terms", "recurring", "recurring_data"]
 
 
 
-
-# class ProformerInvoicePDFSerailizer(serializers.ModelSerializer):
-#     customer = CustomerSerializer(read_only=True)
-#     class Meta:
-#         model = ProformaInvoice
-#         fields = [
-#                 "id", "customer", 
-#                     "invoice_number", "invoice_date", "po_number", "due_date", "notes", "item_list", "quantity_list",
-#                     "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
 
 
 
@@ -842,21 +660,22 @@ class ProformerInvoiceSerailizer(DynamicFieldsModelSerializer):
 
 
 class ProformaEditSerializer(ModelSerializer):
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    # discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = ProformaInvoice
         fields = ["customer_id", "invoice_date", "po_number", "due_date", "notes", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
+                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms",
+                    "recurring"]
 
 
     def validate(self, data):
@@ -864,49 +683,14 @@ class ProformaEditSerializer(ModelSerializer):
             raise serializers.ValidationError("Invoice date is required")
         return data
 
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
 
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
 
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
     
 
 
 
     def update(self, instance, validated_data):
-        print(self.validated_data)
-        # instance.first_name = validated_data["first_name"]
-        # instance.last_name = validated_data["last_name"]
-        # instance.address = validated_data["address"]
-        # instance.email = validated_data["email"]
-        # instance.phone_number = validated_data["phone_number"]
-
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
-
-        # instance.taxable = validated_data["taxable"]
-        # instance.invoice_pref = validated_data["invoice_pref"]
-        # instance.logo_path = validated_data["logo_path"]
         instance.invoice_date = validated_data.get("invoice_date", instance.invoice_date)
         instance.po_number = validated_data.get("po_number", instance.po_number)
         instance.due_date = validated_data.get("due_date", instance.due_date)
@@ -928,7 +712,20 @@ class ProformaEditSerializer(ModelSerializer):
 
         instance.save()
 
-        set_tasks(instance, "proforma", False)
+        set_tasks(instance, "proforma invoice", False)
+
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            instance.recurring_data = recurring_data
+            instance.recurring = True
+        else:
+            instance.recurring = False
+
+        instance.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(instance, "proforma invoice", "update")
 
         return instance
 
@@ -947,12 +744,6 @@ class PayProformaSerializer(ModelSerializer):
 
 
     def save(self, proforma):
-
-        # try:
-        #     proforma = ProformaInvoice.objects.get(id=self.validated_data['proforma_id'])
-        # except Exception as e:
-        #     print(e)
-        #     return None
 
         pay_proforma = PayProforma()
         pay_proforma.payment_type = self.validated_data["payment_type"]
@@ -985,14 +776,14 @@ class PayProformaSerializer(ModelSerializer):
 ############################################## purchase order ########################################################################
 
 class PurchaseCreateSerializer(ModelSerializer):
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    # discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
 
     required_error = "{fieldname} is required."
@@ -1002,57 +793,13 @@ class PurchaseCreateSerializer(ModelSerializer):
         fields = [
                 "customer_id", 
                     "po_date", "ship_to", "notes", "shipping_address", "item_list", "due_date",
-                    "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
-
-    def validate(self, data):
-        if not data.get("invoice_date"):
-            raise serializers.ValidationError("Invoice date is required")
-        return data
-
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
-
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
-
-    
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
-    
+                    "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms", "recurring"]
 
 
 
     def save(self, request):
-        print(self.validated_data)
         new_purchaseorder = PurchaseOrder()
-        # new_purchaseorder.first_name = self.validated_data["first_name"]
-        # new_purchaseorder.last_name = self.validated_data["last_name"]
-        # new_purchaseorder.address = self.validated_data["address"]
-        # new_purchaseorder.email = self.validated_data["email"]
-        # new_purchaseorder.phone_number = self.validated_data["phone_number"]
         new_purchaseorder.customer = Customer.objects.get(id=self.validated_data['customer_id'])
-
-        # new_purchaseorder.taxable = self.validated_data["taxable"]
-        # new_purchaseorder.po_pref = self.validated_data["po_pref"]
-        # new_purchaseorder.logo_path = self.validated_data["logo_path"]
         new_purchaseorder.po_number = get_number(request, 'purchase_order')
         new_purchaseorder.po_date = self.validated_data["po_date"]
         new_purchaseorder.due_date = self.validated_data["due_date"]
@@ -1084,6 +831,19 @@ class PurchaseCreateSerializer(ModelSerializer):
 
         set_tasks(new_purchaseorder, "purchase order", True)
 
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            new_purchaseorder.recurring_data = recurring_data
+            new_purchaseorder.recurring = True
+        else:
+            new_purchaseorder.recurring = False
+
+        new_purchaseorder.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(new_purchaseorder, "purchase order", "save")
+
         return new_purchaseorder
 
 
@@ -1095,20 +855,10 @@ class PurchaseOrderSerailizer(DynamicFieldsModelSerializer):
         fields = [
                 "id", "customer", 
                     "po_number", "po_date", "due_date", "ship_to", "notes", "shipping_address",  "item_list", "quantity_list",
-                    "item_total", "tax", "add_charges", "grand_total",  "status", "terms"]
+                    "item_total", "tax", "add_charges", "grand_total",  "status", "terms", "recurring", "recurring_data"]
 
 
 
-
-
-# class PurchaseOrderPDFSerailizer(serializers.ModelSerializer):
-#     customer = CustomerSerializer(read_only=True)
-#     class Meta:
-#         model = PurchaseOrder
-#         fields = [
-#                 "id", "customer", 
-#                     "po_number", "po_date", "due_date", "ship_to", "notes", "shipping_address",  "item_list", "quantity_list",
-#                     "item_total", "tax", "add_charges", "grand_total",  "status", "terms"]
 
 
 
@@ -1117,14 +867,14 @@ class PurchaseOrderSerailizer(DynamicFieldsModelSerializer):
 
 
 class PurchaseEditSerializer(ModelSerializer):
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    # discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
 
 
@@ -1133,58 +883,15 @@ class PurchaseEditSerializer(ModelSerializer):
     class Meta:
         model = PurchaseOrder
         fields = ["customer_id", "po_date", "due_date", "ship_to", "notes", "shipping_address", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
-
-
-    def validate(self, data):
-        if not data.get("invoice_date"):
-            raise serializers.ValidationError("Invoice date is required")
-        return data
-
-
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
-
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
-
-
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
+                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms",
+                    "recurring"]
     
 
 
 
 
     def update(self, instance, validated_data):
-        print(self.validated_data)
-        # instance.first_name = validated_data["first_name"]
-        # instance.last_name = validated_data["last_name"]
-        # instance.address = validated_data["address"]
-        # instance.email = validated_data["email"]
-        # instance.phone_number = validated_data["phone_number"]
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
-        # instance.taxable = validated_data["taxable"]
-        # instance.po_pref = validated_data["po_pref"]
-        # instance.logo_path = validated_data["logo_path"]
         instance.po_date = validated_data.get("po_date", instance.po_date)
         instance.notes = validated_data.get("notes", instance.notes)
         instance.terms = validated_data.get("terms", instance.terms)
@@ -1207,6 +914,19 @@ class PurchaseEditSerializer(ModelSerializer):
         instance.save()
 
         set_tasks(instance, "purchase order", False)
+
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            instance.recurring_data = recurring_data
+            instance.recurring = True
+        else:
+            instance.recurring = False
+
+        instance.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(instance, "purchase order", "update")
 
         return instance
 
@@ -1252,14 +972,14 @@ class PayPurchaseSerializer(ModelSerializer):
 ############################################ estimate ########################################################################
 
 class EstimateCreateSerializer(ModelSerializer):
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    # discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
 
     required_error = "{fieldname} is required."
@@ -1267,60 +987,18 @@ class EstimateCreateSerializer(ModelSerializer):
     class Meta:
         model = Estimate
         fields = [
-                "customer_id", "due_date", "po_number",
+                "customer_id", "due_date", "po_number", "recurring",
                     "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
-
-    def validate(self, data):
-        if not data.get("invoice_date"):
-            raise serializers.ValidationError("Invoice date is required")
-        return data
-
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
-
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
-
-
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
     
 
 
     def save(self, request):
-        print(self.validated_data)
         new_estimate = Estimate()
-        # new_estimate.first_name = self.validated_data["first_name"]
-        # new_estimate.last_name = self.validated_data["last_name"]
-        # new_estimate.address = self.validated_data["address"]
-        # new_estimate.email = self.validated_data["email"]
-        # new_estimate.phone_number = self.validated_data["phone_number"]
         new_estimate.customer = Customer.objects.get(id=self.validated_data['customer_id'])
-        # new_estimate.taxable = self.validated_data["taxable"]
-        # new_estimate.estimate_pref = self.validated_data["estimate_pref"]
-        # new_estimate.logo_path = self.validated_data["logo_path"]
         new_estimate.estimate_number = get_number(request, 'estimate')
         new_estimate.estimate_date = self.validated_data["estimate_date"]
-        new_estimate.po_number = self.validated_data["po_number"]
+        new_estimate.po_number = self.validated_data.get("po_number", 0)
         new_estimate.due_date = self.validated_data["due_date"]
         new_estimate.ship_to = self.validated_data.get("ship_to", "")
         new_estimate.shipping_address = self.validated_data.get("shipping_address", "")
@@ -1343,15 +1021,31 @@ class EstimateCreateSerializer(ModelSerializer):
         new_estimate.grand_total = self.validated_data["grand_total"]
 
         
-        new_estimate.status = "New"
+        new_estimate.status = "Pending"
 
         new_estimate.vendor = request.user
 
         new_estimate.save()
 
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            new_estimate.recurring_data = recurring_data
+            new_estimate.recurring = True
+        else:
+            new_estimate.recurring = False
+
+        new_estimate.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(new_estimate, "estimate", "save")
+
         set_tasks(new_estimate, "estimate", True)
 
         return new_estimate
+
+
+
 
 
 
@@ -1360,22 +1054,13 @@ class EstimateSerailizer(DynamicFieldsModelSerializer):
     class Meta:
         model = Estimate
         fields = [
-                "id", "customer", "po_number", "due_date",
+                "id", "customer", "po_number", "due_date", "recurring", "recurring_data",
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
 
 
-
-# class EstimatePDFSerailizer(serializers.ModelSerializer):
-#     customer = CustomerSerializer(read_only=True)
-#     class Meta:
-#         model = Estimate
-#         fields = [
-#                 "id", "customer", "po_number", "due_date",
-#                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-#                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
-      
+    
 
 
 
@@ -1384,13 +1069,14 @@ class EstimateSerailizer(DynamicFieldsModelSerializer):
 
 
 class EstimateEditSerializer(ModelSerializer):
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
 
     required_error = "{fieldname} is required."
@@ -1398,58 +1084,13 @@ class EstimateEditSerializer(ModelSerializer):
     class Meta:
         model = Estimate
         fields = ["customer_id", "po_number", "due_date", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
-
-
-
-    def validate(self, data):
-        if not data.get("invoice_date"):
-            raise serializers.ValidationError("Invoice date is required")
-        return data
-
-
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
-
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
-
-
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
-    
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms",
+                    "recurring"]
 
 
 
     def update(self, instance, validated_data):
-        print(self.validated_data)
-        # instance.first_name = validated_data["first_name"]
-        # instance.last_name = validated_data["last_name"]
-        # instance.address = validated_data["address"]
-        # instance.email = validated_data["email"]
-        # instance.phone_number = validated_data["phone_number"]
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
-        # instance.taxable = validated_data["taxable"]
-        # instance.estimate_pref = validated_data["estimate_pref"]
-        # instance.logo_path = validated_data["logo_path"]
         instance.estimate_date = validated_data.get("estimate_date", instance.estimate_date)
         instance.due_date = validated_data.get("due_date", instance.due_date)
         instance.po_number = validated_data.get("po_number", instance.po_number)
@@ -1473,9 +1114,24 @@ class EstimateEditSerializer(ModelSerializer):
         instance.add_charges = validated_data.get("add_charges", instance.add_charges)
         instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
+        instance.status = "Pending"
+
         instance.save()
 
         set_tasks(instance, "estimate", False)
+
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            instance.recurring_data = recurring_data
+            instance.recurring = True
+        else:
+            instance.recurring = False
+
+        instance.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(instance, "estimate", "update")
 
         return instance
 
@@ -1522,77 +1178,32 @@ class PayEstimateSerializer(ModelSerializer):
 
 
 class QuoteCreateSerializer(ModelSerializer):
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Quote
-        fields = [ "customer_id", "due_date",
+        fields = [ "customer_id", "due_date", "recurring",
                     "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes",  "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
-                        
-
-    def validate(self, data):
-        if not data.get("invoice_date"):
-            raise serializers.ValidationError("Invoice date is required")
-        return data
-
-
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
-
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
-
-
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
-    
-
 
 
     def save(self, request):
-        print(self.validated_data)
         new_quote = Quote()
-        # new_quote.first_name = self.validated_data["first_name"]
-        # new_quote.last_name = self.validated_data["last_name"]
-        # new_quote.address = self.validated_data["address"]
-        # new_quote.email = self.validated_data["email"]
-        # new_quote.phone_number = self.validated_data["phone_number"]
         new_quote.customer = Customer.objects.get(id=self.validated_data['customer_id'])
-        # new_quote.taxable = self.validated_data["taxable"]
-        # new_quote.quote_pref = self.validated_data["quote_pref"]
-        # new_quote.logo_path = self.validated_data["logo_path"]
         new_quote.quote_number = get_number(request, 'quote')
         new_quote.quote_date = self.validated_data["quote_date"]
         new_quote.due_date = self.validated_data["due_date"]
-        new_quote.po_number = self.validated_data["po_number"]
+        new_quote.po_number = self.validated_data.get('po_number', 0)
         new_quote.ship_to = self.validated_data.get("ship_to", "")
         new_quote.shipping_address = self.validated_data.get("shipping_address", "")
         new_quote.bill_to = self.validated_data.get("bill_to", "")
@@ -1623,6 +1234,19 @@ class QuoteCreateSerializer(ModelSerializer):
 
         set_tasks(new_quote, "quote", True)
 
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            new_quote.recurring_data = recurring_data
+            new_quote.recurring = True
+        else:
+            new_quote.recurring = False
+
+        new_quote.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(new_quote, "quote", "save")
+
         return new_quote
 
 
@@ -1632,22 +1256,9 @@ class QuoteSerailizer(DynamicFieldsModelSerializer):
     class Meta:
         model = Quote
         fields = [
-                "id", "customer", 
+                "id", "customer", "recurring", "recurring_data",
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
-
-
-
-
-# class QuotePDFSerailizer(serializers.ModelSerializer):
-#     customer = CustomerSerializer(read_only=True)
-#     class Meta:
-#         model = Quote
-#         fields = [
-#                 "id", "customer", 
-#                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-#                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
- 
 
 
 
@@ -1656,13 +1267,14 @@ class QuoteSerailizer(DynamicFieldsModelSerializer):
 
 
 class QuoteEditSerializer(ModelSerializer):
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
 
     required_error = "{fieldname} is required."
@@ -1670,55 +1282,14 @@ class QuoteEditSerializer(ModelSerializer):
     class Meta:
         model = Quote
         fields = ["customer_id", "due_date", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
-        
-    def validate(self, data):
-        if not data.get("invoice_date"):
-            raise serializers.ValidationError("Invoice date is required")
-        return data
+                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms",
+                    "recurring"]
 
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
-
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
-
-
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
-    
 
 
 
     def update(self, instance, validated_data):
-        print(self.validated_data)
-        # instance.first_name = validated_data["first_name"]
-        # instance.last_name = validated_data["last_name"]
-        # instance.address = validated_data["address"]
-        # instance.email = validated_data["email"]
-        # instance.phone_number = validated_data["phone_number"]
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
-        # instance.taxable = validated_data["taxable"]
-        # instance.quote_pref = validated_data["quote_pref"]
-        # instance.logo_path = validated_data["logo_path"]
         instance.quote_date = validated_data.get("quote_date", instance.quote_date)
         instance.due_date = validated_data.get("due_date", instance.due_date)
         instance.po_number = validated_data.get("po_number", instance.po_number)
@@ -1745,6 +1316,20 @@ class QuoteEditSerializer(ModelSerializer):
         instance.save()
 
         set_tasks(instance, "quote", False)
+
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            instance.recurring_data = recurring_data
+            instance.recurring = True
+        else:
+            instance.recurring = False
+
+        instance.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(instance, "quote", "update")
+
         return instance
 
 
@@ -1794,77 +1379,33 @@ class PayQuoteSerializer(ModelSerializer):
 
 
 class CNCreateSerializer(ModelSerializer):
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = CreditNote
-        fields = [ "customer_id", 
+        fields = [ "customer_id", "recurring",
                     "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]       
 
     
-    def validate(self, data):
-        if not data.get("invoice_date"):
-            raise serializers.ValidationError("Invoice date is required")
-        return data
-
-
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
-
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
-
-
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
-    
-
 
 
     def save(self, request):
-        print(self.validated_data)
         new_credit = CreditNote()
-        # new_credit.first_name = self.validated_data["first_name"]
-        # new_credit.last_name = self.validated_data["last_name"]
-        # new_credit.address = self.validated_data["address"]
-        # new_credit.email = self.validated_data["email"]
-        # new_credit.phone_number = self.validated_data["phone_number"]
         new_credit.customer = Customer.objects.get(id=self.validated_data['customer_id'])
-
-        # new_credit.taxable = self.validated_data["taxable"]
-        # new_credit.cn_pref = self.validated_data["cn_pref"]
-        # new_credit.logo_path = self.validated_data["logo_path"]
         new_credit.cn_number = get_number(request, 'credit_note')
         new_credit.cn_date = self.validated_data["cn_date"]
-        new_credit.po_number = self.validated_data["po_number"]
+        new_credit.po_number = self.validated_data.get('po_number', 0)
         new_credit.due_date = self.validated_data["due_date"]
         new_credit.ship_to = self.validated_data.get("ship_to", "")
         new_credit.shipping_address = self.validated_data.get("shipping_address", "")
@@ -1893,6 +1434,19 @@ class CNCreateSerializer(ModelSerializer):
 
         set_tasks(new_credit, "credit note", True)
 
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            new_credit.recurring_data = recurring_data
+            new_credit.recurring = True
+        else:
+            new_credit.recurring = False
+
+        new_credit.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(new_credit, "credit note", "save")
+
         return new_credit
 
 
@@ -1904,37 +1458,21 @@ class CreditNoteSerailizer(DynamicFieldsModelSerializer):
         fields = [
                 "id", "customer", 
                     "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes",  "item_list", "quantity_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
-        
-
-
-
-# class CreditNotePDFSerailizer(serializers.ModelSerializer):
-#     customer = CustomerSerializer(read_only=True)
-#     class Meta:
-#         model = CreditNote
-#         fields = [
-#                 "id", "customer", 
-#                     "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes",  "item_list", "quantity_list", 
-#                     "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
-        
-
-
-
-
+                    "item_total", "tax", "add_charges", "grand_total", "status", "terms", "recurring", "recurring_data"]
 
 
 
 
 
 class CNEditSerializer(ModelSerializer):
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
 
     required_error = "{fieldname} is required."
@@ -1942,58 +1480,15 @@ class CNEditSerializer(ModelSerializer):
     class Meta:
         model = CreditNote
         fields = [
-                "customer_id", 
+                "customer_id", "recurring",
                     "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
-
-    def validate(self, data):
-        if not data.get("invoice_date"):
-            raise serializers.ValidationError("Invoice date is required")
-        return data
-
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
-
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
-
-
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
-    
 
 
 
 
     def update(self, instance, validated_data):
-        print(self.validated_data)
-        # instance.first_name = validated_data["first_name"]
-        # instance.last_name = validated_data["last_name"]
-        # instance.address = validated_data["address"]
-        # instance.email = validated_data["email"]
-        # instance.phone_number = validated_data["phone_number"]
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
-        # instance.taxable = validated_data["taxable"]
-        # instance.cn_pref = validated_data["cn_pref"]
-        # instance.logo_path = validated_data["logo_path"]
         instance.cn_date = validated_data.get("cn_date", instance.cn_date)
         instance.po_number = validated_data.get("po_number", instance.po_number)
         instance.due_date = validated_data.get("due_date", instance.due_date)
@@ -2018,6 +1513,19 @@ class CNEditSerializer(ModelSerializer):
         instance.save()
 
         set_tasks(instance, "credit note", False)
+
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            instance.recurring_data = recurring_data
+            instance.recurring = True
+        else:
+            instance.recurring = False
+
+        instance.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(instance, "credit note", "update")
 
         return instance
 
@@ -2072,74 +1580,31 @@ class PayCNSerializer(ModelSerializer):
 
 
 class REceiptCreateSerializer(ModelSerializer):
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Receipt
-        fields = [ "customer_id", 
+        fields = [ "customer_id", "recurring",
                     "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
-        
-    def validate(self, data):
-        if not data.get("invoice_date"):
-            raise serializers.ValidationError("Invoice date is required")
-        return data
-
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
-
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
-
-
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
-    
-
 
 
     def save(self, request):
-        print(self.validated_data)
         new_receipt = Receipt()
-        # new_receipt.first_name = self.validated_data["first_name"]
-        # new_receipt.last_name = self.validated_data["last_name"]
-        # new_receipt.address = self.validated_data["address"]
-        # new_receipt.email = self.validated_data["email"]
-        # new_receipt.phone_number = self.validated_data["phone_number"]
         new_receipt.customer = Customer.objects.get(id=self.validated_data['customer_id'])
-        # new_receipt.taxable = self.validated_data["taxable"]
-        # new_receipt.receipt_pref = self.validated_data["receipt_pref"]
-        # new_receipt.logo_path = self.validated_data["logo_path"]
         new_receipt.receipt_number = get_number(request, 'receipt')
         new_receipt.receipt_date = self.validated_data["receipt_date"]
-        new_receipt.po_number = self.validated_data["po_number"]
+        new_receipt.po_number = self.validated_data.get('po_number', 0)
         new_receipt.due_date = self.validated_data["due_date"]
         new_receipt.ship_to = self.validated_data.get("ship_to", "")
         new_receipt.shipping_address = self.validated_data.get("shipping_address", "")
@@ -2170,6 +1635,19 @@ class REceiptCreateSerializer(ModelSerializer):
 
         set_tasks(new_receipt, "receipt", True)
 
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            new_receipt.recurring_data = recurring_data
+            new_receipt.recurring = True
+        else:
+            new_receipt.recurring = False
+
+        new_receipt.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(new_receipt, "receipt", "save")
+
         return new_receipt
 
 
@@ -2179,25 +1657,9 @@ class ReceiptSerailizer(DynamicFieldsModelSerializer):
     class Meta:
         model = Receipt
         fields = [
-                "id", "customer", 
+                "id", "customer", "recurring", "recurring_data",
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
-        
-
-
-
-
-
-
-# class ReceiptPDFSerailizer(serializers.ModelSerializer):
-#     customer = CustomerSerializer(read_only=True)
-#     class Meta:
-#         model = Receipt
-#         fields = [
-#                 "id", "customer", 
-#                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-#                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
-  
 
 
 
@@ -2209,13 +1671,14 @@ class ReceiptSerailizer(DynamicFieldsModelSerializer):
 
 
 class ReceiptEditSerializer(ModelSerializer):
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
 
     required_error = "{fieldname} is required."
@@ -2223,59 +1686,14 @@ class ReceiptEditSerializer(ModelSerializer):
     class Meta:
         model = Receipt
         fields = [
-                "customer_id", 
+                "customer_id", "reucrring",
                     "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
-
-        
-    def validate(self, data):
-        if not data.get("invoice_date"):
-            raise serializers.ValidationError("Invoice date is required")
-        return data
-
-
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
-
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
-
-
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
-    
 
 
 
     def update(self, instance, validated_data):
-        print(self.validated_data)
-        # instance.first_name = validated_data["first_name"]
-        # instance.last_name = validated_data["last_name"]
-        # instance.address = validated_data["address"]
-        # instance.email = validated_data["email"]
-        # instance.phone_number = validated_data["phone_number"]
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
-        # instance.taxable = validated_data["taxable"]
-        # instance.receipt_pref = validated_data["receipt_pref"]
-        # instance.logo_path = validated_data["logo_path"]
         instance.receipt_date = validated_data.get("receipt_date", instance.receipt_date)
         instance.po_number = validated_data.get("po_number", instance.po_number)
         instance.due_date = validated_data.get("due_date", instance.due_date)
@@ -2302,6 +1720,19 @@ class ReceiptEditSerializer(ModelSerializer):
         instance.save()
 
         set_tasks(instance, "receipt", False)
+
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            instance.recurring_data = recurring_data
+            instance.recurring = True
+        else:
+            instance.recurring = False
+
+        instance.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(instance, "receipt", "update")
 
         return instance
 
@@ -2354,76 +1785,32 @@ class PayReceiptSerializer(ModelSerializer):
 ################################################# delivery note ############################################################################
 
 class DNCreateSerializer(ModelSerializer):
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = DeliveryNote
-        fields = [ "customer_id",
+        fields = [ "customer_id", "recurring",
                     "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
-        
-
-    def validate(self, data):
-        if not data.get("invoice_date"):
-            raise serializers.ValidationError("Invoice date is required")
-        return data 
-
-
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
-
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
-
-
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
-    
 
 
 
     def save(self, request):
-        print(self.validated_data)
         new_delivery = DeliveryNote()
-        # new_delivery.first_name = self.validated_data["first_name"]
-        # new_delivery.last_name = self.validated_data["last_name"]
-        # new_delivery.address = self.validated_data["address"]
-        # new_delivery.email = self.validated_data["email"]
-        # new_delivery.phone_number = self.validated_data["phone_number"]
         new_delivery.customer = Customer.objects.get(id=self.validated_data['customer_id'])
-        # new_delivery.taxable = self.validated_data["taxable"]
-        # new_delivery.dn_pref = self.validated_data["dn_pref"]
-        # new_delivery.logo_path = self.validated_data["logo_path"]
         new_delivery.dn_number = get_number(request, 'delivery_note')
         new_delivery.dn_date = self.validated_data["dn_date"]
-        new_delivery.po_number = self.validated_data["po_number"]
+        new_delivery.po_number = self.validated_data.get('po_number', 0)
         new_delivery.due_date = self.validated_data["due_date"]
         new_delivery.ship_to = self.validated_data.get("ship_to", "")
         new_delivery.shipping_address = self.validated_data.get("shipping_address", "")
@@ -2452,6 +1839,19 @@ class DNCreateSerializer(ModelSerializer):
 
         set_tasks(new_delivery, "delivery note", True)
 
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            new_delivery.recurring_data = recurring_data
+            new_delivery.recurring = True
+        else:
+            new_delivery.recurring = False
+
+        new_delivery.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(new_delivery, "delivery note", "save")
+
         return new_delivery
 
 
@@ -2461,25 +1861,9 @@ class DNSerailizer(DynamicFieldsModelSerializer):
     class Meta:
         model = DeliveryNote
         fields = [
-                "id", "customer",
+                "id", "customer", "reucrring", "recurring_data",
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
-                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
-        
-
-
-
-
-
-
-# class DNPDFSerailizer(serializers.ModelSerializer):
-#     customer = CustomerSerializer(read_only=True)
-#     class Meta:
-#         model = DeliveryNote
-#         fields = [
-#                 "id", "customer",
-#                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
-#                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
-        
+                    "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]      
 
 
 
@@ -2490,13 +1874,14 @@ class DNSerailizer(DynamicFieldsModelSerializer):
 
 
 class DNEditSerializer(ModelSerializer):
-    item_list = serializers.ListField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
 
-    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    item_list = serializers.ListField(required=True, validators=[validate_item_list])
+    tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
+    add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
+    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
 
 
     required_error = "{fieldname} is required."
@@ -2504,58 +1889,15 @@ class DNEditSerializer(ModelSerializer):
     class Meta:
         model = DeliveryNote
         fields = [
-                "customer_id",
-                    "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
+                "customer_id", "recurring", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
+                "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", 
+                "download", "terms"]
 
-        
-    def validate(self, data):
-        if not data.get("invoice_date"):
-            raise serializers.ValidationError("Invoice date is required")
-        return data
-
-    def validate_tax(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for tax")
-        else:
-            return 0
-
-    def validate_add_charges(self, value):
-        if len(value) > 0:
-            try:
-                return int(value)
-            except Exception as e:
-                raise serializers.ValidationError("A valid number is required for additional charges")
-        else:
-            return 0
-
-
-    def validate_item_list(self, value):
-        if isinstance(value, list):
-            if len(value) >= 1:
-                return value
-            else:
-                raise serializers.ValidationError("Items are required")
-        else:
-            raise serializers.ValidationError("Items are required")
-    
 
 
 
     def update(self, instance, validated_data):
-        print(self.validated_data)
-        # instance.first_name = validated_data["first_name"]
-        # instance.last_name = validated_data["last_name"]
-        # instance.address = validated_data["address"]
-        # instance.email = validated_data["email"]
-        # instance.phone_number = validated_data["phone_number"]
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
-        # instance.taxable = validated_data["taxable"]
-        # instance.dn_pref = validated_data["dn_pref"]
-        # instance.logo_path = validated_data["logo_path"]
         instance.dn_date = validated_data.get("dn_date", instance.dn_date)
         instance.po_number = validated_data.get("po_number", instance.po_number)
         instance.due_date = validated_data.get("due_date", instance.due_date)
@@ -2580,6 +1922,19 @@ class DNEditSerializer(ModelSerializer):
         instance.save()
 
         set_tasks(instance, "delivery note", False)
+
+        recurring_data = self.validated_data['recurring']
+
+        if len(recurring_data) > 0:
+            instance.recurring_data = recurring_data
+            instance.recurring = True
+        else:
+            instance.recurring = False
+
+        instance.save()
+
+        if len(recurring_data) > 0:
+            set_recurring_task(instance, "delivery note", "update")
 
         return instance
 
@@ -2738,36 +2093,3 @@ class PreferenceSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
-
-
-
-
-# class PaymentSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = MyUsers
-#         fields = ["paypal", "bank_transfer", "e_transfer", "other_payment"]
-
-
-
-#     def update(self, request):
-#         current_user = MyUsers.objects.get(id=request.user.id)
-
-#         current_user.paypal = self.validated_data.get("paypal", None)
-#         current_user.bank_transfer = self.validated_data.get("bank_transfer", None)
-#         current_user.e_transfer = self.validated_data.get("e_transfer", None)
-#         current_user.other_payment = self.validated_data.get("other_payment", None)
-#         current_user.save()
-
-#         return current_user
-
-
-
-
-
-
-def custom_item_serializer(items, quantities):
-    total_list = [{"id": a, "quantity": b} for a,b in zip(items, quantities)]
-    return total_list
-
-
-

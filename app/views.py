@@ -1,34 +1,37 @@
-#django imports
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import os, io
 from django.contrib.auth import authenticate
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
 
-#rest_frameworf imports
 from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from django_celery_beat.models import PeriodicTask
 
-#import from custom files
-from .serializers import CNCreateSerializer, CNEditSerializer, CreateItemSerializer, CreditNoteSerailizer, CustomerCreateSerializer,\
-                        CustomerEditSerializer, CustomerSerializer, DNCreateSerializer, DNEditSerializer, DNSerailizer, \
-                        EstimateCreateSerializer, EstimateEditSerializer, EstimateSerailizer, InvoiceEditSerializer, \
-                        InvoiceSerializer, ItemSerializer, PayCNSerializer, PayDNSerializer, PayEstimateSerializer, PayInvoiceSerializer,\
+from .serializers import CNCreateSerializer, CNEditSerializer, CreateItemSerializer, CreditNoteSerailizer,\
+                         CustomerCreateSerializer,CustomerEditSerializer, CustomerSerializer, DNCreateSerializer,\
+                         DNEditSerializer, DNSerailizer,EstimateCreateSerializer, EstimateEditSerializer, \
+                        EstimateSerailizer, InvoiceEditSerializer, InvoiceSerializer, ItemSerializer,\
+                        PayCNSerializer, PayDNSerializer, PayEstimateSerializer, PayInvoiceSerializer, \
                         PayQuoteSerializer, PayReceiptSerializer, ProformaCreateSerializer, ProformaEditSerializer, \
-                        ProformerInvoiceSerailizer, QuoteCreateSerializer, QuoteEditSerializer, QuoteSerailizer, REceiptCreateSerializer,\
-                        ReceiptEditSerializer, ReceiptSerailizer, SignUpSerializer, LoginSerializer, UserSerializer, InvoiceCreate,\
-                        PayProformaSerializer, PurchaseCreateSerializer, PurchaseEditSerializer, PurchaseOrderSerailizer, \
+                        ProformerInvoiceSerailizer, QuoteCreateSerializer, QuoteEditSerializer, QuoteSerailizer,\
+                        REceiptCreateSerializer,ReceiptEditSerializer, ReceiptSerailizer, SignUpSerializer, \
+                        LoginSerializer, UserSerializer, InvoiceCreate, PayProformaSerializer, \
+                        PurchaseCreateSerializer, PurchaseEditSerializer, PurchaseOrderSerailizer, \
                         PayPurchaseSerializer, ProfileSerializer, PasswordChangeSerializer, PreferenceSerializer,\
-                        custom_item_serializer, CURRENCY_MAPPING, pdf_item_serializer, get_sku
+                        pdf_item_serializer, get_sku
+
+from .models import JWT, CreditNote, Customer, DeliveryNote, Estimate, Invoice, Item, MyUsers, \
+                    ProformaInvoice, PurchaseOrder, Quote, Receipt
 
 from app.pdf.main import get_report
 from app.my_email import send_my_email
 from .authentication import get_access_token, MyAuthentication
-from .models import JWT, CreditNote, Customer, DeliveryNote, Estimate, Invoice, Item, MyUsers, ProformaInvoice, PurchaseOrder, Quote, Receipt
-
+from app.utils import encode_estimate, decode_estimate, custom_item_serializer, CURRENCY_MAPPING
+from .forms import EstimateExpiration
 
 
 
@@ -467,35 +470,30 @@ def create_invoice(request):
 
             
             if form.validated_data['download']:
-                print("The user wants to download the pdf")
                 buffer = io.BytesIO()
                 invoice_ser = InvoiceSerializer(new_invoice).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
                 file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
-                print("This is the name of the generated pdf", file_name)
+
                 buffer.seek(0)
                 return FileResponse(buffer, as_attachment=True, filename=file_name)
             
             elif form.validated_data['send_email']:
                 # for sending email when creating a new document
-                print("The user wants to send the pdf to email")
                 now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
-                file_name = f"{'invoice'.title()} for {request.user.email} - {now}.pdf"
+                filename = f"{'invoice'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = InvoiceSerializer(new_invoice).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
-                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
+                _ = get_report(filename, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
-                send_my_email(new_invoice.customer.email, body, subject, file_name)
-                os.remove(file_name)
+                send_my_email(new_invoice.customer.email, body, subject, filename)
+                os.remove(filename)
                 new_invoice.emailed = True
                 new_invoice.emailed_date = datetime.now().strftime("%d-%m-%Y")
                 new_invoice.save()
-                print("Email sent")
 
 
-            # if pdf_file:
-            #     return FileResponse()
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -557,23 +555,21 @@ def edit_invoice(request, id):
 
 
                 if form.validated_data['download']:
-                    print("The user wants to download the pdf")
                     buffer = io.BytesIO()
                     invoice_ser = InvoiceSerializer(updated_invoice).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_invoice.item_list, updated_invoice.quantity_list)
                     file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
-                    print("This is the name of the generated PDF", file_name)
+
                     buffer.seek(0)
                     return FileResponse(buffer, as_attachment=True, filename=file_name)
 
                 if form.validated_data['send_email']:
-                    print("The user wants to send the pdf to their email")
                     # for sending email when creating a new document
                     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
                     file_name = f"{'invoice'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = InvoiceSerializer(updated_invoice).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_invoice.item_list, updated_invoice.quantity_list)
-                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
+                    _ = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_invoice.customer.email, body, subject, file_name)
@@ -581,7 +577,6 @@ def edit_invoice(request, id):
                     updated_invoice.emailed = True
                     updated_invoice.emailed_date = datetime.now().strftime("%d-%m-%Y")
                     updated_invoice.save()
-                    print("Pdf sent to email")
 
 
 
@@ -594,11 +589,6 @@ def edit_invoice(request, id):
                 context = {'message': errors_list[0], 'errors': new_errors}
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
-        
-        # except Exception as e:
-        #     print(e)
-        #     context = {'message' :"Invoice not found"}
-        #     return Response(context, status=status.HTTP_404_NOT_FOUND)
 
     
     elif request.method == "DELETE":
@@ -643,9 +633,6 @@ def pay_invoice(request):
                     context['pay_invoice'] = {"id": pay_invoice.id, **form.data}
 
                     return Response(context, status=status.HTTP_200_OK)
-                    # else:
-                    #     context['message'] = "Invalid Invoice ID"
-                    #     return Response(context, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
                 print(e)
 
@@ -730,7 +717,7 @@ def create_proforma(request):
                 file_name = f"{'proforma invoice'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = ProformerInvoiceSerailizer(new_invoice).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
-                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "proforma invoice", request, form.validated_data['terms'])
+                _ = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "proforma invoice", request, form.validated_data['terms'])
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
                 send_my_email(new_invoice.customer.email, body, subject, file_name)
@@ -814,7 +801,7 @@ def edit_proforma(request, id):
                     file_name = f"{'proforma invoice'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = ProformerInvoiceSerailizer(updated_proforma).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_proforma.item_list, updated_proforma.quantity_list)
-                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "proforma invoice", request, form.validated_data['terms'])
+                    _ = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "proforma invoice", request, form.validated_data['terms'])
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_proforma.customer.email, body, subject, file_name)
@@ -961,7 +948,7 @@ def create_purchaseorder(request):
                 file_name = f"{'purchase order'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = PurchaseOrderSerailizer(new_po).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_po.item_list, new_po.quantity_list)
-                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "purchase order", request, form.validated_data['terms'])
+                _ = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "purchase order", request, form.validated_data['terms'])
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
                 send_my_email(new_po.customer.email, body, subject, file_name)
@@ -1044,7 +1031,7 @@ def edit_purchaseorder(request, id):
                     file_name = f"{'purchase order'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = PurchaseOrderSerailizer(updated_purchase).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_purchase.item_list, updated_purchase.quantity_list)
-                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "purchase order", request, form.validated_data['terms'])
+                    _ = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "purchase order", request, form.validated_data['terms'])
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_purchase.customer.email, body, subject, file_name)
@@ -1183,7 +1170,6 @@ def create_estimate(request):
             new_estimate = form.save(request)
             context['message'] = "Estimate created successfully"
             context['estimate'] = {"id": new_estimate.id, **form.data}
-            # context['estimate']['item_list'] = custom_item_serializer(new_estimate.item_list, new_estimate.quantity_list)
 
             if form.validated_data['download']:
                 buffer = io.BytesIO()
@@ -1194,21 +1180,65 @@ def create_estimate(request):
                 buffer.seek(0)
                 return FileResponse(buffer, as_attachment=True, filename=file_name)
 
-
             elif form.validated_data['send_email']:
                 # for sending email when creating a new document
                 now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
-                file_name = f"{'estimate'.title()} for {request.user.email} - {now}.pdf"
+                filename = f"{'estimate'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = EstimateSerailizer(new_estimate).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_estimate.item_list, new_estimate.quantity_list)
-                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "estimate", request, form.validated_data['terms'])
+                _ = get_report(filename, invoice_ser, CURRENCY_MAPPING[request.user.currency], "estimate", request, form.validated_data['terms'])
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
-                send_my_email(new_estimate.customer.email, body, subject, file_name)
-                os.remove(file_name)
+                send_my_email(new_estimate.customer.email, body, subject, filename)
+                os.remove(filename)
                 new_estimate.emailed = True
                 new_estimate.emailed_date = datetime.now().strftime("%d-%m-%Y")
-                new_estimate.save()
+                new_estimate.save()  
+
+
+            accept_token = encode_estimate({"estimate_id": new_estimate.id, "accept": True})
+            reject_token = encode_estimate({"estimate_id": new_estimate.id, "accept": False})
+
+            accept_url = request.build_absolute_uri(f"/estimate/accept?estimate={accept_token}")
+            reject_url = request.build_absolute_uri(f"/estimate/accept?estimate={reject_token}")
+
+            with open("app/estimate_email.html") as f:
+                template = f.read()
+
+            template = template.replace("accept_link", accept_url)
+            template = template.replace("reject_link", reject_url)
+
+
+            now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+            filename = f"{'estimate'.title()} for {request.user.email} - {now}.pdf"
+            invoice_ser = EstimateSerailizer(new_estimate).data
+            invoice_ser['item_list'] = pdf_item_serializer(new_estimate.item_list, new_estimate.quantity_list)
+            file_name = get_report(filename, invoice_ser, CURRENCY_MAPPING[request.user.currency], "estimate", request, new_estimate.terms)
+            subject = "Estimate Approval"
+            body = template
+            send_my_email(new_estimate.customer.email, body, subject, filename, "html")
+            os.remove(filename)
+            
+            now = datetime.now()
+
+            if now.strftime("%A") == "Friday":
+                later = now + relativedelta(days=5)
+
+            elif now.strftime("%A") == "Saturday":
+                later = now + relativedelta(days=4)
+            
+            else:
+                later = now + relativedelta(days=3)
+
+            expire_details = {
+                "date_time": later.strftime("%Y-%m-%d %H:%M"),
+                "document_id": new_estimate.id,
+                "email": new_estimate.customer.email
+            }
+
+            new_expire = EstimateExpiration(expire_details)
+            if new_expire.is_valid():
+                _ = new_expire.save()
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -1225,6 +1255,54 @@ def create_estimate(request):
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total"]}
         return Response(context, status=status.HTTP_200_OK)
+
+
+
+
+
+@api_view(["GET"])
+def accept_estimate(request):
+    token = request.query_params.get("estimate")
+
+    decoded_token = decode_estimate(token)
+
+    if decoded_token:
+        estimate_id = int(decoded_token['estimate_id'])
+        accept = decoded_token['accept']
+
+        try:
+            estimate = Estimate.objects.get(id=estimate_id)
+        except Estimate.DoesNotExist:
+            return HttpResponse("Estimate not found.")
+
+        try:
+            name = f"Estimate approval for {estimate.customer.email} - ({estimate.id})"
+            my_task = PeriodicTask.objects.get(name=name)
+        except PeriodicTask.DoesNotExist:
+            return HttpResponse("You cannot perform any action again.")
+        
+        if accept:
+            estimate.status = "Accepted"
+            estimate.save()
+            # get the periodic task and delete it
+            my_task.crontab.delete()
+            return HttpResponse("Estimate have been accepted. Thank you")
+            
+        else:
+            estimate.status = "Rejected"
+            estimate.save()
+            # get the periodic task and delete it
+            my_task.crontab.delete()
+            return HttpResponse("Estimate have been rejected. Thank you")
+        
+    
+    else:
+        return HttpResponse("Estimate has expired")
+
+
+
+
+
 
 
 
@@ -1266,7 +1344,6 @@ def edit_estimate(request, id):
                 updated_estimate = form.update(estimate, form.validated_data)
                 context['message'] = "Estimate updated successfully"
                 context['estimate'] = {"id": updated_estimate.id, **form.validated_data}
-                # context['estimate']['item_list'] = custom_item_serializer(updated_estimate.item_list, updated_estimate.quantity_list)
 
                 if form.validated_data['download']:
                     buffer = io.BytesIO()
@@ -1280,17 +1357,60 @@ def edit_estimate(request, id):
                 elif form.validated_data['send_email']:
                     # for sending email when creating a new document
                     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
-                    file_name = f"{'estimate'.title()} for {request.user.email} - {now}.pdf"
+                    filename = f"{'estimate'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = EstimateSerailizer(updated_estimate).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_estimate.item_list, updated_estimate.quantity_list)
-                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "estimate", request, form.validated_data['terms'])
+                    file_name = get_report(filename, invoice_ser, CURRENCY_MAPPING[request.user.currency], "estimate", request, form.validated_data['terms'])
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
-                    send_my_email(updated_estimate.customer.email, body, subject, file_name)
-                    os.remove(file_name)
+                    send_my_email(updated_estimate.customer.email, body, subject, filename)
+                    os.remove(filename)
                     updated_estimate.emailed = True
                     updated_estimate.emailed_date = datetime.now().strftime("%d-%m-%Y")
                     updated_estimate.save()
+                
+                accept_token = encode_estimate({"estimate_id": updated_estimate.id, "accept": True})
+                reject_token = encode_estimate({"estimate_id": updated_estimate.id, "accept": False})
+
+                accept_url = request.build_absolute_uri(f"/estimate/accept?estimate={accept_token}")
+                reject_url = request.build_absolute_uri(f"/estimate/accept?estimate={reject_token}")
+
+                with open("app/estimate_email.html") as f:
+                    template = f.read()
+
+                template = template.replace("accept_link", accept_url)
+                template = template.replace("reject_link", reject_url)
+
+                now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                filename = f"{'estimate'.title()} for {request.user.email} - {now}.pdf"
+                invoice_ser = EstimateSerailizer(updated_estimate).data
+                invoice_ser['item_list'] = pdf_item_serializer(updated_estimate.item_list, updated_estimate.quantity_list)
+                file_name = get_report(filename, invoice_ser, CURRENCY_MAPPING[request.user.currency], "estimate", request, updated_estimate.terms)
+                subject = "Estimate Approval"
+                body = template
+                send_my_email(updated_estimate.customer.email, body, subject, filename, "html")
+                os.remove(filename)
+                
+                now = datetime.now()
+
+                if now.strftime("%A") == "Friday":
+                    later = now + relativedelta(days=5)
+
+                elif now.strftime("%A") == "Saturday":
+                    later = now + relativedelta(days=4)
+                
+                else:
+                    later = now + relativedelta(days=3)
+
+                expire_details = {
+                    "date_time": later.strftime("%Y-%m-%d %H:%M"),
+                    "document_id": updated_estimate.id,
+                    "email": updated_estimate.customer.email
+                }
+
+                new_expire = EstimateExpiration(expire_details)
+                if new_expire.is_valid():
+                    _ = new_expire.update()
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1300,7 +1420,7 @@ def edit_estimate(request, id):
                 errors_list = [k for k in new_errors.values()]
                 context = {'message': errors_list[0], 'errors': new_errors}
 
-                return Response(context, status=status.HTTP_400_BAD_REQUEST)
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
         
         except Exception as e:
             print(e)
@@ -1570,7 +1690,7 @@ def create_quote(request):
                 file_name = f"{'quote'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = QuoteSerailizer(new_quote).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_quote.item_list, new_quote.quantity_list)
-                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "quote", request, form.validated_data['terms'])
+                _ = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "quote", request, form.validated_data['terms'])
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
                 send_my_email(new_quote.customer.email, body, subject, file_name)
@@ -1654,7 +1774,7 @@ def edit_quote(request, id):
                     file_name = f"{'quote'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = QuoteSerailizer(updated_quote).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_quote.item_list, updated_quote.quantity_list)
-                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "quote", request, form.validated_data['terms'])
+                    _ = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "quote", request, form.validated_data['terms'])
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_quote.customer.email, body, subject, file_name)
@@ -1806,7 +1926,7 @@ def create_receipt(request):
                 file_name = f"{'receipt'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = ReceiptSerailizer(new_receipt).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_receipt.item_list, new_receipt.quantity_list)
-                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "receipt", request, form.validated_data['terms'])
+                _ = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "receipt", request, form.validated_data['terms'])
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
                 send_my_email(new_receipt.customer.email, body, subject, file_name)
@@ -1890,7 +2010,7 @@ def edit_receipt(request, id):
                     file_name = f"{'receipt'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = ReceiptSerailizer(updated_receipt).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_receipt.item_list, updated_receipt.quantity_list)
-                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "receipt", request, form.validated_data['terms'])
+                    _ = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "receipt", request, form.validated_data['terms'])
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_receipt.customer.email, body, subject, file_name)
@@ -2045,7 +2165,7 @@ def create_credit(request):
                 file_name = f"{'credit note'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = CreditNoteSerailizer(new_credit).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_credit.item_list, new_credit.quantity_list)
-                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "credit note", request, form.validated_data['terms'])
+                _ = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "credit note", request, form.validated_data['terms'])
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
                 send_my_email(new_credit.customer.email, body, subject, file_name)
@@ -2128,7 +2248,7 @@ def edit_credit(request, id):
                     file_name = f"{'credit note'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = CreditNoteSerailizer(updated_credit).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_credit.item_list, updated_credit.quantity_list)
-                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "credit note", request, form.validated_data['terms'])
+                    _ = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "credit note", request, form.validated_data['terms'])
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_credit.customer.email, body, subject, file_name)
@@ -2279,7 +2399,7 @@ def create_delivery(request):
                 file_name = f"{'delivery note'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = DNSerailizer(new_delivery).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_delivery.item_list, new_delivery.quantity_list)
-                file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "delivery note", request, form.validated_data['terms'])
+                _ = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "delivery note", request, form.validated_data['terms'])
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
                 send_my_email(new_delivery.customer.email, body, subject, file_name)
@@ -2362,7 +2482,7 @@ def edit_delivery(request, id):
                     file_name = f"{'delivery note'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = DNSerailizer(updated_delivery).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_delivery.item_list, updated_delivery.quantity_list)
-                    file_name = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "delivery note", request, form.validated_data['terms'])
+                    _ = get_report(file_name, invoice_ser, CURRENCY_MAPPING[request.user.currency], "delivery note", request, form.validated_data['terms'])
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_delivery.customer.email, body, subject, file_name)
@@ -2701,7 +2821,6 @@ def get_number(request):
 #################################################### report #######################################################################
 
 
-
 @api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
@@ -2789,6 +2908,12 @@ def get_all_report(request):
     else:
         context["message"] = "You need to pass the start date and end date"
         return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
 
 
 

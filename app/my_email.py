@@ -19,7 +19,7 @@ if PASSWORD is None or SENDER_MAIL is None:
 # sauce ocde: 152583
 
 
-def send_my_email(receiver_email, body, subject, filename=None):
+def send_my_email(receiver_email, body, subject, filename=None, body_type = "plain"):
     
     # Create a multipart message and set headers
     message = MIMEMultipart()
@@ -29,8 +29,9 @@ def send_my_email(receiver_email, body, subject, filename=None):
     # message["Bcc"] = receiver_email  # Recommended for mass emails
 
     # Add body to email
-    message.attach(MIMEText(body, "plain"))
+    message.attach(MIMEText(body, body_type))
 
+    # if you want to send attachemnt
     if filename:
         # Open file in binary mode
         with open(filename, "rb") as attachment:
@@ -50,6 +51,7 @@ def send_my_email(receiver_email, body, subject, filename=None):
 
         # Add attachment to message and convert message to string
         message.attach(part)
+        
     text = message.as_string()
 
     # Log in to server using secure context and send email

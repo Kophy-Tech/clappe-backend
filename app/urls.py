@@ -1,13 +1,14 @@
 from django.urls import path
-from .views import all_estimate, all_invoice, all_items, all_purchaseorder, create_estimate, create_invoice, create_item, \
-                    create_purchaseorder, credit_report, customer_report, delivery_report, \
-                    edit_estimate, edit_invoice, edit_item, edit_purchaseorder, estimate_report, home, invoice_report, item_report,\
-                    pay_estimate, pay_invoice, pay_purchaseorder, proforma_report, purchase_report, quote_report, receipt_report, \
-                    signup, login, logout, customer, edit_customer, my_customer, user_profile, create_proforma, edit_proforma, \
-                    pay_proforma, all_proforma, create_quote, edit_quote, all_quote, pay_quote, all_credit, create_credit, edit_credit, \
-                    pay_credit, all_receipt, create_receipt, edit_receipt, pay_receipt, create_delivery, edit_delivery, all_delivery,\
-                    pay_delivery, change_profile, change_preference, change_password, get_number, dashboard, get_code, confirm_code,\
-                    reset_password, get_all_report
+from .views import all_estimate, all_invoice, all_items, all_purchaseorder, create_estimate, create_invoice, \
+                    create_item, create_purchaseorder, credit_report, customer_report, delivery_report, \
+                    edit_estimate, edit_invoice, edit_item, edit_purchaseorder, estimate_report, home, \
+                    invoice_report, item_report, pay_estimate, pay_invoice, pay_purchaseorder, proforma_report, \
+                    purchase_report, quote_report, receipt_report, signup, login, logout, customer, edit_customer, \
+                    my_customer, user_profile, create_proforma, edit_proforma, pay_proforma, all_proforma, \
+                    create_quote, edit_quote, all_quote, pay_quote, all_credit, create_credit, edit_credit, \
+                    pay_credit, all_receipt, create_receipt, edit_receipt, pay_receipt, create_delivery, \
+                    edit_delivery, all_delivery, pay_delivery, change_profile, change_preference, change_password, \
+                    get_number, dashboard, get_code, confirm_code, reset_password, get_all_report, accept_estimate
 
 
 
@@ -60,6 +61,7 @@ urlpatterns = [
     path('estimate/all', all_estimate, name="all_estimate"),
     path("estimate/edit/<int:id>", edit_estimate, name="edit_estimate"),
     path("estimate/pay", pay_estimate, name="pay_estimate"),
+    path("estimate/accept", accept_estimate, name="accept_estimate"),
 
 
     # item urls
