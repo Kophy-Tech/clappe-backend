@@ -7,7 +7,7 @@ from .views import all_estimate, all_invoice, all_items, all_purchaseorder, crea
                     pay_proforma, all_proforma, create_quote, edit_quote, all_quote, pay_quote, all_credit, create_credit, edit_credit, \
                     pay_credit, all_receipt, create_receipt, edit_receipt, pay_receipt, create_delivery, edit_delivery, all_delivery,\
                     pay_delivery, change_profile, change_preference, change_password, get_number, dashboard, get_code, confirm_code,\
-                    reset_password
+                    reset_password, get_all_report
 
 
 
@@ -101,6 +101,10 @@ urlpatterns = [
 
     # other urls
     path("get_number", get_number, name="get_number"),
+
+
+    # reports
+    path("report/all", get_all_report, name="get_all_report"),
 
     path("report/customer", customer_report, name="customer_report"),
     path("report/invoice", invoice_report, name="invoice_report"),

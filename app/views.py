@@ -2705,6 +2705,101 @@ def get_number(request):
 @api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+def get_all_report(request):
+    start_date = request.query_params.get("start_date", None)
+    end_date = request.query_params.get("end_date", None)
+    context = {}
+
+    if start_date and end_date:
+        # all_customer
+        customers = Customer.objects.filter(vendor=request.user.id)\
+                                    .filter(date_created__gte=start_date)\
+                                    .filter(date_created__lte=end_date)
+        customers_ser = CustomerSerializer(customers, many=True)
+
+
+        invoices = Invoice.objects.filter(vendor=request.user.id)\
+                                    .filter(date_created__gte=start_date)\
+                                    .filter(date_created__lte=end_date)
+        invoices_ser = InvoiceSerializer(invoices, many=True)
+
+
+        proformas = ProformaInvoice.objects.filter(vendor=request.user.id)\
+                                    .filter(date_created__gte=start_date)\
+                                    .filter(date_created__lte=end_date)
+        proformas_ser = ProformerInvoiceSerailizer(proformas, many=True)
+
+
+        purchases = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                                    .filter(date_created__gte=start_date)\
+                                    .filter(date_created__lte=end_date)
+        purchases_ser = PurchaseOrderSerailizer(purchases, many=True)
+
+
+        estimates = Estimate.objects.filter(vendor=request.user.id)\
+                                    .filter(date_created__gte=start_date)\
+                                    .filter(date_created__lte=end_date)
+        estimates_ser = EstimateSerailizer(estimates, many=True)
+
+
+        quotes = Quote.objects.filter(vendor=request.user.id)\
+                                    .filter(date_created__gte=start_date)\
+                                    .filter(date_created__lte=end_date)
+        quotes_ser = QuoteSerailizer(quotes, many=True)
+
+
+        receipts = Receipt.objects.filter(vendor=request.user.id)\
+                                    .filter(date_created__gte=start_date)\
+                                    .filter(date_created__lte=end_date)
+        receipts_ser = ReceiptSerailizer(receipts, many=True)
+
+
+        credits = CreditNote.objects.filter(vendor=request.user.id)\
+                                    .filter(date_created__gte=start_date)\
+                                    .filter(date_created__lte=end_date)
+        credits_ser = CreditNoteSerailizer(credits, many=True)
+
+
+        deliverys = DeliveryNote.objects.filter(vendor=request.user.id)\
+                                    .filter(date_created__gte=start_date)\
+                                    .filter(date_created__lte=end_date)
+        deliverys_ser = DNSerailizer(deliverys, many=True)
+
+
+        items = Item.objects.filter(vendor=request.user.id)\
+                                    .filter(date_created__gte=start_date)\
+                                    .filter(date_created__lte=end_date)
+        items_ser = ItemSerializer(items, many=True)
+
+        context['message'] = {}
+        context['message']["customer"] = customers_ser.data
+        context['message']["invoice"] = invoices_ser.data
+        context['message']["profoma"] = proformas_ser.data
+        context['message']["purchase"] = purchases_ser.data
+        context['message']["estimate"] = estimates_ser.data
+        context['message']["quote"] = quotes_ser.data
+        context['message']["receipt"] = receipts_ser.data
+        context['message']["credit"] = credits_ser.data
+        context['message']["delivery"] = deliverys_ser.data
+        context['message']["item"] = items_ser.data
+
+
+        return Response(context, status=status.HTTP_200_OK)
+
+    else:
+        context["message"] = "You need to pass the start date and end date"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+
+@api_view(["GET"])
+@authentication_classes((MyAuthentication, ))
+@permission_classes((IsAuthenticated, ))
 def customer_report(request):
     context = {}
 
