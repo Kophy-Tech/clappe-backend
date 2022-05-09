@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import os, io
+from collections import namedtuple
 from django.contrib.auth import authenticate
 from django.http import FileResponse, HttpResponse
 
@@ -1286,6 +1287,59 @@ def accept_estimate(request):
             estimate.save()
             # get the periodic task and delete it
             my_task.crontab.delete()
+
+
+            estimate_details = EstimateSerailizer(estimate).data
+
+            invoice_details = {
+                "customer_id": estimate_details["customer"]["id"],
+                "po_number": estimate_details["po_number"],
+                "ship_to": estimate_details["ship_to"],
+                "shipping_address": estimate_details["shipping_address"],
+                "bill_to": estimate_details["bill_to"],
+                "billing_address": estimate_details["billing_address"],
+                "notes": estimate_details["notes"],
+                # "item_list": {k:v for k,v in zip(estimate_details["item_list"], estimate_details["quantity_list"])},
+                "item_list": custom_item_serializer(list(estimate_details["item_list"]), list(estimate_details["quantity_list"])),
+                "item_total": estimate_details["item_total"],
+                "grand_total": estimate_details["grand_total"],
+                "send_email": True,
+                "download": False,
+                "recurring": estimate_details["recurring_data"],
+                "invoice_date": estimate_details["estimate_date"],
+                "due_date": estimate_details["due_date"],
+                "terms": estimate_details["terms"],
+                "tax": estimate_details["tax"],
+                "add_charges": estimate_details["add_charges"],
+                "sub_total": 0.0,
+                "discount_type": "percent",
+                "discount_amount": 0.0
+            }
+
+            Request = namedtuple("Request", "user")
+            request = Request(estimate.vendor)
+
+            form = InvoiceCreate(data=invoice_details)
+            if form.is_valid():
+                new_invoice = form.save(request)
+
+                # for sending email when creating a new document
+                now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                filename = f"{'invoice'.title()} for {request.user.email} - {now}.pdf"
+                invoice_ser = InvoiceSerializer(new_invoice).data
+                invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
+                _ = get_report(filename, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
+                body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
+                subject = "Transaction Receipt"
+                send_my_email(new_invoice.customer.email, body, subject, filename)
+                os.remove(filename)
+                new_invoice.emailed = True
+                new_invoice.emailed_date = datetime.now().strftime("%d-%m-%Y")
+                new_invoice.save()
+            
+            else:
+                print(form.errors)
+
             return HttpResponse("Estimate have been accepted. Thank you")
             
         else:

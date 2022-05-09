@@ -117,7 +117,7 @@ def new_doc(document_type, data):
 
 
 
-# for sendingemail to user to notify them of due payment
+# for sending email to user to notify them of due payment
 @shared_task
 def send_due_mail_task(document_id: int, document_type: str):
 

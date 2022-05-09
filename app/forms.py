@@ -216,7 +216,7 @@ class EstimateExpiration(forms.Form):
 
     def save(self):
         date_time = self.cleaned_data['date_time']
-        document_id = self.cleaned_data['documnet_id']
+        document_id = self.cleaned_data['document_id']
         email = self.cleaned_data['email']
 
         task_date = datetime.strptime(date_time, "%Y-%m-%d %H:%M")
@@ -233,7 +233,7 @@ class EstimateExpiration(forms.Form):
         new_task.crontab = new_cron
         new_task.name = f"Estimate approval for {email} - ({document_id})"
         new_task.task = "app.tasks.estimate_expire"
-        new_task.args = json.dumps[document_id]
+        new_task.args = json.dumps(document_id)
 
         new_task.save()
 

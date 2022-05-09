@@ -360,9 +360,6 @@ class InvoiceCreate(ModelSerializer):
         new_invoice = Invoice()
         new_invoice.customer = Customer.objects.get(id=self.validated_data['customer_id'])
 
-        # new_invoice.taxable = self.validated_data["taxable"]
-        # new_invoice.invoice_pref = self.validated_data["invoice_pref"]
-        # new_invoice.logo_path = self.validated_data["logo_path"]
         new_invoice.invoice_number = get_number(request, 'invoice')
         new_invoice.invoice_date = self.validated_data['invoice_date']
         new_invoice.po_number = self.validated_data.get('po_number', 0)
@@ -394,6 +391,7 @@ class InvoiceCreate(ModelSerializer):
         new_invoice.status = "New"
         new_invoice.vendor = request.user
         new_invoice.save()
+
         set_tasks(new_invoice, "invoice", True)
 
         recurring_data = self.validated_data['recurring']
@@ -460,16 +458,8 @@ class InvoiceEditSerializer(ModelSerializer):
 
 
     def update(self, instance, validated_data, request):
-        # instance.first_name = validated_data["first_name"]
-        # instance.last_name = validated_data["last_name"]
-        # instance.address = validated_data["address"]
-        # instance.email = validated_data["email"]
-        # instance.phone_number = validated_data["phone_number"]
         instance.customer = Customer.objects.get(id=validated_data['customer_id'])
 
-        # instance.taxable = validated_data["taxable"]
-        # instance.invoice_pref = validated_data["invoice_pref"]
-        # instance.logo_path = validated_data["logo_path"]
         instance.invoice_date = validated_data.get('invoice_date', instance.invoice_date)
         instance.po_number = validated_data.get('po_number', instance.po_number)
         instance.due_date = validated_data.get('due_date', instance.due_date)
@@ -578,19 +568,13 @@ class ProformaCreateSerializer(ModelSerializer):
     class Meta:
         model = ProformaInvoice
         fields = [
-                "customer_id", "recurring",
-                "invoice_date", "po_number", "due_date", "notes", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
+                "customer_id", "recurring", "invoice_date", "po_number", "due_date", "notes", "item_list", "item_total", "tax", \
+                "add_charges", "grand_total", "send_email", "download", "terms"]
 
     def validate(self, data):
         if not data.get("invoice_date"):
             raise serializers.ValidationError("Invoice date is required")
         return data
-
-    
-
-    
-
 
 
 
@@ -623,7 +607,7 @@ class ProformaCreateSerializer(ModelSerializer):
 
         new_proforma.save()
 
-        set_tasks(new_proforma, "proforma", True)
+        set_tasks(new_proforma, "proforma invoice", True)
 
         recurring_data = self.validated_data['recurring']
 
@@ -654,11 +638,6 @@ class ProformerInvoiceSerailizer(DynamicFieldsModelSerializer):
 
 
 
-
-
-
-
-
 class ProformaEditSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
@@ -673,20 +652,14 @@ class ProformaEditSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = ProformaInvoice
-        fields = ["customer_id", "invoice_date", "po_number", "due_date", "notes", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms",
-                    "recurring"]
+        fields = ["customer_id", "invoice_date", "po_number", "due_date", "notes", "item_list", "item_total", "tax", "add_charges", \
+                    "grand_total", "status", "send_email", "download", "terms", "recurring"]
 
 
     def validate(self, data):
         if not data.get("invoice_date"):
             raise serializers.ValidationError("Invoice date is required")
         return data
-
-
-
-    
-
 
 
     def update(self, instance, validated_data):
@@ -758,7 +731,7 @@ class PayProformaSerializer(ModelSerializer):
 
         pay_proforma.save()
 
-        delete_tasks(proforma.customer.email, "proforma", proforma.id)
+        delete_tasks(proforma.customer.email, "proforma invoice", proforma.id)
 
         return pay_proforma
 
@@ -791,8 +764,7 @@ class PurchaseCreateSerializer(ModelSerializer):
     class Meta:
         model = PurchaseOrder
         fields = [
-                "customer_id", 
-                    "po_date", "ship_to", "notes", "shipping_address", "item_list", "due_date",
+                "customer_id", "po_date", "ship_to", "notes", "shipping_address", "item_list", "due_date",
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms", "recurring"]
 
 
@@ -863,9 +835,6 @@ class PurchaseOrderSerailizer(DynamicFieldsModelSerializer):
 
 
 
-
-
-
 class PurchaseEditSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
@@ -895,8 +864,8 @@ class PurchaseEditSerializer(ModelSerializer):
         instance.po_date = validated_data.get("po_date", instance.po_date)
         instance.notes = validated_data.get("notes", instance.notes)
         instance.terms = validated_data.get("terms", instance.terms)
-        instance.ship_to = validated_data.get("ship_to", "")
-        instance.shipping_address = validated_data.get("shipping_address", "")
+        instance.ship_to = validated_data.get("ship_to", instance.ship_to)
+        instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]

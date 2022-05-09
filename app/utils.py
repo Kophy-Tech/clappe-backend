@@ -86,11 +86,11 @@ def get_task_name(email, doc_type, doc_id, task_type):
 
 
 def delete_tasks(email, doc_type, doc_id):
-    for task_type in ["to pending", "to unpaid", "email notif"]:
+    for task_type in ["to pending", "to unpaid", "email notif", "recurring"]:
         name = get_task_name(email, doc_type, doc_id, task_type)
         try:
             p_task = PeriodicTask.objects.get(name=name)
-            p_task.delete()
+            p_task.crontab.delete()
         except Exception as e:
             print(e)
 
@@ -135,7 +135,7 @@ def custom_item_serializer(items, quantities):
 def validate_tax(value):
     if len(value) > 0:
         try:
-            return int(value)
+            return float(value)
         except Exception as e:
             raise serializers.ValidationError("A valid number is required for tax")
     else:
@@ -215,7 +215,7 @@ def validate_recurring(value: dict):
 def validate_add_charges(value):
         if len(value) > 0:
             try:
-                return int(value)
+                return float(value)
             except Exception as e:
                 raise serializers.ValidationError("A valid number is required for additional charges")
         else:
@@ -226,7 +226,7 @@ def validate_add_charges(value):
 def validate_discount_amount(value):
     if len(value) > 0:
         try:
-            return int(value)
+            return float(value)
         except Exception as e:
             raise serializers.ValidationError("A valid number is required for discount amount")
     else:
