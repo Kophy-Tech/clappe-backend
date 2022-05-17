@@ -2093,6 +2093,7 @@ class UploadPDFTemplate(serializers.Serializer):
 
 
 class PDFTemplateSerializer(serializers.ModelSerializer):
+    photo_path = serializers.ImageField(required=False)
     class Meta:
         model = PDFTemplate
         fields = ['name', 'photo_path']
