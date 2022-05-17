@@ -250,6 +250,7 @@ class CreateItemSerializer(ModelSerializer):
         name_count = Item.objects.filter(name=data['name']).filter(vendor__id=data['user_id']).count()
         if name_count > 0:
             raise serializers.ValidationError({"name":["Item with this name already exists"]})
+
         return data
 
     def validate_cost_price(self, value):
@@ -337,7 +338,8 @@ class InvoiceCreate(ModelSerializer):
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
     discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_discount_amount])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id= serializers.IntegerField(required=True)
@@ -350,12 +352,20 @@ class InvoiceCreate(ModelSerializer):
         fields = [
             "customer_id", "po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","item_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "send_email", "download", "terms",
-            "invoice_date", "recurring"]
+            "invoice_date", "recurring", "pdf_number"]
 
 
     def validate(self, data):
         if not data.get("invoice_date"):
             raise serializers.ValidationError("Invoice date is required")
+
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+        
         return data
 
 
@@ -443,7 +453,8 @@ class InvoiceEditSerializer(ModelSerializer):
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
     discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_discount_amount])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -451,11 +462,18 @@ class InvoiceEditSerializer(ModelSerializer):
         model = Invoice
         fields = ["customer_id", "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "item_list",
                     "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "send_email", "download", "terms",
-                    "recurring"]
+                    "recurring", "pdf_number"]
 
     def validate(self, data):
         if not data.get("invoice_date"):
             raise serializers.ValidationError("Invoice date is required")
+
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
         return data
 
 
@@ -564,7 +582,8 @@ class ProformaCreateSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
 
     required_error = "{fieldname} is required."
@@ -573,11 +592,18 @@ class ProformaCreateSerializer(ModelSerializer):
         model = ProformaInvoice
         fields = [
                 "customer_id", "recurring", "invoice_date", "po_number", "due_date", "notes", "item_list", "item_total", "tax", \
-                "add_charges", "grand_total", "send_email", "download", "terms"]
+                "add_charges", "grand_total", "send_email", "download", "terms", "pdf_number"]
 
     def validate(self, data):
         if not data.get("invoice_date"):
             raise serializers.ValidationError("Invoice date is required")
+
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
         return data
 
 
@@ -650,19 +676,27 @@ class ProformaEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = ProformaInvoice
         fields = ["customer_id", "invoice_date", "po_number", "due_date", "notes", "item_list", "item_total", "tax", "add_charges", \
-                    "grand_total", "status", "send_email", "download", "terms", "recurring"]
+                    "grand_total", "status", "send_email", "download", "terms", "recurring", "pdf_number"]
 
 
     def validate(self, data):
         if not data.get("invoice_date"):
             raise serializers.ValidationError("Invoice date is required")
+
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
         return data
 
 
@@ -760,7 +794,8 @@ class PurchaseCreateSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
 
     required_error = "{fieldname} is required."
@@ -769,8 +804,16 @@ class PurchaseCreateSerializer(ModelSerializer):
         model = PurchaseOrder
         fields = [
                 "customer_id", "po_date", "ship_to", "notes", "shipping_address", "item_list", "due_date",
-                    "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms", "recurring"]
+                    "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms", "recurring", "pdf_number"]
 
+
+    def validate(self, data):
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
 
 
     def save(self, request):
@@ -847,7 +890,8 @@ class PurchaseEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
 
 
@@ -857,9 +901,15 @@ class PurchaseEditSerializer(ModelSerializer):
         model = PurchaseOrder
         fields = ["customer_id", "po_date", "due_date", "ship_to", "notes", "shipping_address", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms",
-                    "recurring"]
+                    "recurring", "pdf_number"]
     
-
+    def validate(self, data):
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
 
 
 
@@ -952,7 +1002,8 @@ class EstimateCreateSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
 
     required_error = "{fieldname} is required."
@@ -961,10 +1012,16 @@ class EstimateCreateSerializer(ModelSerializer):
         model = Estimate
         fields = [
                 "customer_id", "due_date", "po_number", "recurring",
-                    "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
+                    "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address", "pdf_number",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
     
-
+    def validate(self, data):
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
 
     def save(self, request):
         new_estimate = Estimate()
@@ -1050,7 +1107,8 @@ class EstimateEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
 
     required_error = "{fieldname} is required."
@@ -1059,8 +1117,15 @@ class EstimateEditSerializer(ModelSerializer):
         model = Estimate
         fields = ["customer_id", "po_number", "due_date", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms",
-                    "recurring"]
+                    "recurring", "pdf_number"]
 
+    def validate(self, data):
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
 
 
     def update(self, instance, validated_data):
@@ -1159,16 +1224,26 @@ class QuoteCreateSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Quote
-        fields = [ "customer_id", "due_date", "recurring",
+        fields = [ "customer_id", "due_date", "recurring", "pdf_number",
                     "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes",  "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
+
+
+    def validate(self, data):
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
 
 
     def save(self, request):
@@ -1248,7 +1323,8 @@ class QuoteEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
 
     required_error = "{fieldname} is required."
@@ -1257,9 +1333,16 @@ class QuoteEditSerializer(ModelSerializer):
         model = Quote
         fields = ["customer_id", "due_date", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms",
-                    "recurring"]
+                    "recurring", "pdf_number"]
 
 
+    def validate(self, data):
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
 
 
     def update(self, instance, validated_data):
@@ -1360,18 +1443,26 @@ class CNCreateSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = CreditNote
-        fields = [ "customer_id", "recurring",
+        fields = [ "customer_id", "recurring", "pdf_number",
                     "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]       
 
     
+    def validate(self, data):
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
 
 
     def save(self, request):
@@ -1446,7 +1537,8 @@ class CNEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
 
     required_error = "{fieldname} is required."
@@ -1454,11 +1546,18 @@ class CNEditSerializer(ModelSerializer):
     class Meta:
         model = CreditNote
         fields = [
-                "customer_id", "recurring",
+                "customer_id", "recurring", "pdf_number"
                     "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
 
+    def validate(self, data):
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
 
 
     def update(self, instance, validated_data):
@@ -1561,16 +1660,29 @@ class REceiptCreateSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Receipt
-        fields = [ "customer_id", "recurring",
+        fields = [ "customer_id", "recurring", "pdf_number",
                     "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
+
+
+
+    def validate(self, data):
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+
+
 
 
     def save(self, request):
@@ -1652,7 +1764,8 @@ class ReceiptEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
 
     required_error = "{fieldname} is required."
@@ -1660,9 +1773,19 @@ class ReceiptEditSerializer(ModelSerializer):
     class Meta:
         model = Receipt
         fields = [
-                "customer_id", "reucrring",
+                "customer_id", "reucrring", "pdf_number",
                     "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
+
+
+
+    def validate(self, data):
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
 
 
 
@@ -1766,16 +1889,27 @@ class DNCreateSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = DeliveryNote
-        fields = [ "customer_id", "recurring",
+        fields = [ "customer_id", "recurring", "pdf_number",
                     "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
+
+
+    def validate(self, data):
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+
 
 
 
@@ -1855,7 +1989,8 @@ class DNEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.JSONField(required=True, validators = [validate_recurring])
+    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    pdf_number = serializers.CharField(required=False)
 
 
     required_error = "{fieldname} is required."
@@ -1865,7 +2000,16 @@ class DNEditSerializer(ModelSerializer):
         fields = [
                 "customer_id", "recurring", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                 "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", 
-                "download", "terms"]
+                "download", "terms", "pdf_number"]
+
+
+    def validate(self, data):
+        download = data['download']
+        send_email = data['send_email']
+        pdf_number = data.get("pdf_number", None)
+        if download or send_email:
+            if not pdf_number:
+                raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
 
 
 
@@ -1975,7 +2119,7 @@ class ProfileSerializer(serializers.Serializer):
         if "email" in data:
             if MyUsers.objects.filter(email=data['email']).exclude(id=self.instance.id).exists():
                 raise serializers.ValidationError("Email Already Exists")
-
+        
         return data
 
 

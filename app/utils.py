@@ -8,6 +8,8 @@ from rest_framework import serializers
 
 from .models import CreditNote, DeliveryNote, Invoice, Estimate, PurchaseOrder, Quote, Receipt, ProformaInvoice
 
+from app.pdf.utils import PDF_FUNCTION_DICT
+
 
 today_date = datetime.now()
 
@@ -308,3 +310,15 @@ def upload_pdf_template(media, name):
                                             use_filename=True, unique_filename=False)['url']
 
     return file_url
+
+
+
+def get_pdf_file(filename, document, currency, document_type, request, pdf_template):
+    template = PDF_FUNCTION_DICT.get(pdf_template, None)
+
+    if template:
+        file_name = template(filename, document, currency, document_type, request)
+        return file_name
+
+    else:
+        return None
