@@ -161,8 +161,8 @@ def validate_recurring(value: dict):
             for k, v in value.items():
                 if isinstance(v, str):
                     value[k] = v.lower()
-            for field in value.keys():
-                if field in fields:
+            for field in fields:
+                if field in value.keys():
                     if field == "frequency":
                         if value[field] not in frequencies:
                             raise serializers.ValidationError("Pass a valid frequency")
