@@ -50,6 +50,10 @@ class LoginSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.ModelSerializer):
 
+    photo_path = serializers.ImageField(required=False)
+    logo_path = serializers.ImageField(required=False)
+    signature = serializers.ImageField(required=False)
+
     class Meta:
         model = MyUsers
         fields = ["photo_path","logo_path","signature","business_name","first_name","last_name","address","email","phone_number",

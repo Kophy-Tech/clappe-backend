@@ -184,8 +184,8 @@ def validate_recurring(value: dict):
                             if len(value[field]) > 0:
                                 # confirm that each email is valid
                                 for email in value[field]:
-                                    if not verify_email(email):
-                                        raise serializers.ValidationError(f"For recurring details, {email} is an invalid email.")
+                                    if not verify_email(email.strip()):
+                                        raise serializers.ValidationError(f"For recurring details, '{email}' is an invalid email.")
                             else:
                                 raise serializers.ValidationError("For recurring details, you need to pass list of emails")
                         else:
