@@ -157,7 +157,6 @@ def validate_recurring(value: dict):
         frequencies = ["weekly", "biweekly", "monthly", "bimonthly", "quarterly", "yearly", "never"]
 
         if len(value) > 0:
-            # value = {k: v.lower() for k, v in value.items()}
             for k, v in value.items():
                 if isinstance(v, str):
                     value[k] = v.lower()
@@ -291,9 +290,21 @@ def process_picture(media, models, type="profile"):
         file_url = cloudinary.uploader.upload(media, folder="logos", 
                                             public_id = f"{models.email}_logo",
                                             use_filename=True, unique_filename=False)['url']
+
     else:
         file_url = cloudinary.uploader.upload(media, folder="signatures", 
                                             public_id = f"{models.email}_signature",
+                                            use_filename=True, unique_filename=False)['url']
+
+    print(file_url)
+    return file_url
+
+
+
+
+def upload_pdf_template(media, name):
+    file_url = cloudinary.uploader.upload(media, folder="pdfs", 
+                                            public_id = f"{name}_pdf",
                                             use_filename=True, unique_filename=False)['url']
 
     return file_url

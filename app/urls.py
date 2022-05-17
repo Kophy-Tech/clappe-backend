@@ -8,7 +8,8 @@ from .views import all_estimate, all_invoice, all_items, all_purchaseorder, crea
                     create_quote, edit_quote, all_quote, pay_quote, all_credit, create_credit, edit_credit, \
                     pay_credit, all_receipt, create_receipt, edit_receipt, pay_receipt, create_delivery, \
                     edit_delivery, all_delivery, pay_delivery, change_profile, change_preference, change_password, \
-                    get_number, dashboard, get_code, confirm_code, reset_password, get_all_report, accept_estimate
+                    get_number, dashboard, get_code, confirm_code, reset_password, get_all_report, accept_estimate, \
+                    upload_screenshot, get_pdf_details
 
 
 
@@ -118,4 +119,9 @@ urlpatterns = [
     path("report/credit", credit_report, name="credit_report"),
     path("report/delivery", delivery_report, name="delivery_report"),
     path("report/item", item_report, name="item_report"),
+
+
+    # pdf
+    path("pdf/upload", upload_screenshot, name="upload_screenshot"),
+    path("pdf/fetch", get_pdf_details, name="get_pdf_details"),
 ]

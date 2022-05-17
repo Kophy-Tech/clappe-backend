@@ -2,15 +2,17 @@ from django.contrib import admin
 
 from .models import CreditNote, Customer, DeliveryNote, Item, MyUsers, Invoice, PayCreditNote, PayDeliveryNote, PayQuote,\
                      PayReceipt, ProformaInvoice, Estimate, PurchaseOrder, PayInvoice, PayEstimate, PayProforma,\
-                     PayPurchaseOrder, Quote, Receipt, JWT
+                     PayPurchaseOrder, Quote, Receipt, JWT, PDFTemplate
 # Register your models here.
 
 class UserAdmin(admin.ModelAdmin):
     exclude = ("password_recovery","password_recovery_time")
 
-
+class PDFAdmin(admin.ModelAdmin):
+    readonly_fields = ['image_preview']
 
 admin.site.register(MyUsers, UserAdmin)
+admin.site.register(PDFTemplate, PDFAdmin)
 admin.site.register(JWT)
 admin.site.register(Invoice)
 admin.site.register(ProformaInvoice)

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-import os, io
+import os, io, base64
 from collections import namedtuple
 from django.contrib.auth import authenticate
 from django.http import FileResponse, HttpResponse
@@ -23,9 +23,9 @@ from .serializers import CNCreateSerializer, CNEditSerializer, CreateItemSeriali
                         LoginSerializer, UserSerializer, InvoiceCreate, PayProformaSerializer, \
                         PurchaseCreateSerializer, PurchaseEditSerializer, PurchaseOrderSerailizer, \
                         PayPurchaseSerializer, ProfileSerializer, PasswordChangeSerializer, PreferenceSerializer,\
-                        pdf_item_serializer, get_sku
+                        UploadPDFTemplate, PDFTemplateSerializer, pdf_item_serializer, get_sku
 
-from .models import JWT, CreditNote, Customer, DeliveryNote, Estimate, Invoice, Item, MyUsers, \
+from .models import JWT, CreditNote, Customer, DeliveryNote, Estimate, Invoice, Item, MyUsers, PDFTemplate, \
                     ProformaInvoice, PurchaseOrder, Quote, Receipt
 
 from app.pdf.main import get_report
@@ -477,7 +477,9 @@ def create_invoice(request):
                 file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
 
                 buffer.seek(0)
-                return FileResponse(buffer, as_attachment=True, filename=file_name)
+                # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                context["filename"] = file_name
+                context["pdf_file"] = base64.b64encode(buffer.read())
             
             elif form.validated_data['send_email']:
                 # for sending email when creating a new document
@@ -562,7 +564,9 @@ def edit_invoice(request, id):
                     file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "invoice", request, form.validated_data['terms'])
 
                     buffer.seek(0)
-                    return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    context["filename"] = file_name
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
                 if form.validated_data['send_email']:
                     # for sending email when creating a new document
@@ -709,7 +713,9 @@ def create_proforma(request):
                 file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "proforma invoice", request, form.validated_data['terms'])
 
                 buffer.seek(0)
-                return FileResponse(buffer, as_attachment=True, filename=file_name)
+                # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                context["filename"] = file_name
+                context["pdf_file"] = base64.b64encode(buffer.read())
 
 
             elif form.validated_data['send_email']:
@@ -793,7 +799,9 @@ def edit_proforma(request, id):
                     file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "proforma invoice", request, form.validated_data['terms'])
 
                     buffer.seek(0)
-                    return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    context["filename"] = file_name
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
 
                 elif form.validated_data['send_email']:
@@ -940,7 +948,9 @@ def create_purchaseorder(request):
                 file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "purchase order", request, form.validated_data['terms'])
 
                 buffer.seek(0)
-                return FileResponse(buffer, as_attachment=True, filename=file_name)
+                # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                context["filename"] = file_name
+                context["pdf_file"] = base64.b64encode(buffer.read())
 
 
             elif form.validated_data['send_email']:
@@ -1023,7 +1033,9 @@ def edit_purchaseorder(request, id):
                     file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "purchase order", request, form.validated_data['terms'])
 
                     buffer.seek(0)
-                    return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    context["filename"] = file_name
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
 
                 elif form.validated_data['send_email']:
@@ -1181,7 +1193,9 @@ def create_estimate(request):
                 file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "estimate", request, form.validated_data['terms'])
 
                 buffer.seek(0)
-                return FileResponse(buffer, as_attachment=True, filename=file_name)
+                # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                context["filename"] = file_name
+                context["pdf_file"] = base64.b64encode(buffer.read())
 
             elif form.validated_data['send_email']:
                 # for sending email when creating a new document
@@ -1408,7 +1422,9 @@ def edit_estimate(request, id):
                     file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "estimate", request, form.validated_data['terms'])
 
                     buffer.seek(0)
-                    return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    context["filename"] = file_name
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
                 elif form.validated_data['send_email']:
                     # for sending email when creating a new document
@@ -1738,7 +1754,9 @@ def create_quote(request):
                 file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "quote", request, form.validated_data['terms'])
 
                 buffer.seek(0)
-                return FileResponse(buffer, as_attachment=True, filename=file_name)
+                # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                context["filename"] = file_name
+                context["pdf_file"] = base64.b64encode(buffer.read())
 
             elif form.validated_data['send_email']:
                 # for sending email when creating a new document
@@ -1821,7 +1839,9 @@ def edit_quote(request, id):
                     file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "quote", request, form.validated_data['terms'])
 
                     buffer.seek(0)
-                    return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    context["filename"] = file_name
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
 
                 elif form.validated_data['send_email']:
@@ -1973,7 +1993,9 @@ def create_receipt(request):
                 file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "receipt", request, form.validated_data['terms'])
 
                 buffer.seek(0)
-                return FileResponse(buffer, as_attachment=True, filename=file_name)
+                # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                context["filename"] = file_name
+                context["pdf_file"] = base64.b64encode(buffer.read())
 
 
             elif form.validated_data['send_email']:
@@ -2057,7 +2079,9 @@ def edit_receipt(request, id):
                     file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "receipt", request, form.validated_data['terms'])
 
                     buffer.seek(0)
-                    return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    context["filename"] = file_name
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
 
                 elif form.validated_data['send_email']:
@@ -2212,7 +2236,9 @@ def create_credit(request):
                 file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "credit note", request, form.validated_data['terms'])
 
                 buffer.seek(0)
-                return FileResponse(buffer, as_attachment=True, filename=file_name)
+                # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                context["filename"] = file_name
+                context["pdf_file"] = base64.b64encode(buffer.read())
 
 
             elif form.validated_data['send_email']:
@@ -2296,7 +2322,9 @@ def edit_credit(request, id):
                     file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "credit note", request, form.validated_data['terms'])
 
                     buffer.seek(0)
-                    return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    context["filename"] = file_name
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
                 elif form.validated_data['send_email']:
                     # for sending email when creating a new document
@@ -2446,7 +2474,9 @@ def create_delivery(request):
                 file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "delivery note", request, form.validated_data['terms'])
 
                 buffer.seek(0)
-                return FileResponse(buffer, as_attachment=True, filename=file_name)
+                # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                context["filename"] = file_name
+                context["pdf_file"] = base64.b64encode(buffer.read())
 
 
             elif form.validated_data['send_email']:
@@ -2530,7 +2560,9 @@ def edit_delivery(request, id):
                     file_name = get_report(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "delivery note", request, form.validated_data['terms'])
 
                     buffer.seek(0)
-                    return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    # return FileResponse(buffer, as_attachment=True, filename=file_name)
+                    context["filename"] = file_name
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
                 elif form.validated_data['send_email']:
                     # for sending email when creating a new document
@@ -21399,5 +21431,49 @@ def dashboard(request):
         
 
 
+
+    return Response(context, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+################################################# PDF endpoints #####################################
+@api_view(["GET", "POST"])
+@parser_classes([FormParser, MultiPartParser])
+def upload_screenshot(request):
+    if request.method == "GET":
+        context = {"page": "pdf screenshot upload page", "required": ["name", "phto_path"]}
+        return Response(context, status=status.HTTP_200_OK)
+
+    else:
+        context = {}
+        form = UploadPDFTemplate(data=request.data)
+
+        if form.is_valid():
+            _ = form.save()
+            context["message"] = "PDF uploaded successfully"
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["error"] = form.errors
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+@api_view(["GET"])
+def get_pdf_details(request):
+    pdfs = PDFTemplate.objects.all()
+
+    pdfs_ser = PDFTemplateSerializer(pdfs, many=True)
+
+    context = {"message": pdfs_ser.data}
 
     return Response(context, status=status.HTTP_200_OK)

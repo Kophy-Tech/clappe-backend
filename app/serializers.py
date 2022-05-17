@@ -5,10 +5,10 @@ from drf_tweaks.serializers import ModelSerializer
 
 from .models import CreditNote, Customer, DeliveryNote, Item, MyUsers, Invoice, PayCreditNote, PayDeliveryNote,\
                     PayQuote, PayReceipt, ProformaInvoice, Estimate, PurchaseOrder, PayInvoice, PayEstimate, \
-                    PayProforma, PayPurchaseOrder, Quote, Receipt
+                    PayProforma, PayPurchaseOrder, Quote, Receipt, PDFTemplate
 
 from .forms import set_tasks, set_recurring_task
-from .utils import delete_tasks, get_sku, validate_add_charges, validate_discount_amount,validate_item_list,\
+from .utils import delete_tasks, get_sku, upload_pdf_template, validate_add_charges, validate_discount_amount,validate_item_list,\
                     validate_recurring, validate_tax, password_validator, process_picture, get_number
 
 
@@ -981,6 +981,7 @@ class EstimateCreateSerializer(ModelSerializer):
         new_estimate.terms = self.validated_data.get("terms", "")
         
         item_list = self.validated_data['item_list']
+        print(item_list)
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -989,8 +990,8 @@ class EstimateCreateSerializer(ModelSerializer):
 
 
         new_estimate.item_total = self.validated_data["item_total"]
-        new_estimate.tax = self.validated_data.get("tax", 0)
-        new_estimate.add_charges = self.validated_data.get("add_charges", 0)
+        new_estimate.tax = self.validated_data.get("tax", 0.0)
+        new_estimate.add_charges = self.validated_data.get("add_charges", 0.0)
         new_estimate.grand_total = self.validated_data["grand_total"]
 
         
@@ -2066,3 +2067,33 @@ class PreferenceSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+
+
+
+
+
+
+
+############################################# pdf endpoint ###############################################################
+
+class UploadPDFTemplate(serializers.Serializer):
+    name = serializers.CharField()
+    photo_path = serializers.ImageField()
+
+
+    
+    def save(self):
+        new_pdf = PDFTemplate()
+        new_pdf.name = self.validated_data['name']
+        new_pdf.photo_path = upload_pdf_template(self.validated_data["photo_path"], self.validated_data['name'])
+        new_pdf.save()
+
+        return new_pdf
+
+
+
+class PDFTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PDFTemplate
+        fields = ['name', 'photo_path']
+    

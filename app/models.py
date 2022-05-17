@@ -1,5 +1,6 @@
 from django.utils import timezone
 from django.db import models
+from django.utils.safestring import mark_safe
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import ArrayField
 from cloudinary.models import CloudinaryField
@@ -600,3 +601,22 @@ class JWT(models.Model):
 
     def __str__(self):
         return self.user.email
+
+
+
+
+class PDFTemplate(models.Model):
+    name = models.CharField("Name", max_length=1024, unique=True)
+    photo_path = CloudinaryField("PDF Photo", null=True, blank=True)
+
+    def image_preview(self):
+        if self.photo_path:
+            return mark_safe('<img src="{}" width="150" height="150" />'.format(self.photo_path.url))
+        else:
+            return '(No image)'
+
+    image_preview.short_description = "Image Preview"
+
+
+    def __str__(self):
+        return self.name
