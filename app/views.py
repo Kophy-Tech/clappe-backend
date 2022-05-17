@@ -1167,6 +1167,8 @@ def create_estimate(request):
         form = EstimateCreateSerializer(data=request.data)
         context = {}
 
+        print(request.data)
+
         if form.is_valid():
             new_estimate = form.save(request)
             context['message'] = "Estimate created successfully"
