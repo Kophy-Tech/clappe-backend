@@ -69,7 +69,7 @@ def add_another_page(pdf, item_list, currency, document, document_type):
     # another page
     pdf.showPage()
     pdf.translate(cm, cm)
-    pdf.setPageSize((A4[0]+15, A4[1]))
+    pdf.setPageSize((A4[0], A4[1]))
     pdf.setLineWidth(0.1)
 
 
@@ -247,17 +247,17 @@ def get_report_10(buffer, document, currency, document_type, request):
 
     pdf.setFont('Helvetica-Bold', 20)
     pdf.setFillColor(colors.ReportLabFidBlue)
-    # pdf.setStrokeColor(colors.white)
+    
     pdf.rect(0, 0, 550, 25, stroke=0, fill=1)
     pdf.setFillColor(colors.white)
-    pdf = draw_wrapped_line(pdf, document["customer"]["business_name"].title(), 100, 10, 20, 10)
+    pdf = draw_wrapped_line(pdf, request.user.business_name.title(), 100, 10, 20, 10)
     pdf.drawRightString(width - 55, 20, f"{document_type.upper()}")
     pdf.setFillColor(colors.black)
-    # pdf.setStrokeColor(colors.black)
+    
     pdf.setFont('Helvetica', 10)
-    pdf = draw_wrapped_line(pdf, document["customer"]["address"].capitalize(), 100, 10, 40, 10)
-    pdf = draw_wrapped_line(pdf, document["customer"]["email"], 100, 10, 55, 10)
-    pdf = draw_wrapped_line(pdf, document["customer"]["phone_number"], 100, 10, 70, 10)
+    pdf = draw_wrapped_line(pdf, request.user.address.capitalize(), 100, 10, 40, 10)
+    pdf = draw_wrapped_line(pdf, request.user.email, 100, 10, 55, 10)
+    pdf = draw_wrapped_line(pdf, request.user.phone_number, 100, 10, 70, 10)
 
 
     
@@ -357,8 +357,7 @@ def get_report_10(buffer, document, currency, document_type, request):
         pdf.line(540, 230, 540, start_y)
         pdf.line(10, start_y, 540, start_y)
 
-        if item_len > 23:
-            pdf, start_y = add_another_page(pdf, item_list[23:], currency, document, document_type)
+        pdf, start_y = add_another_page(pdf, item_list[23:], currency, document, document_type)
 
 
     

@@ -200,7 +200,6 @@ def get_report_18(buffer, document, currency, document_type, request):
     pdf.setTitle(document_type.title())
 
     fill_color = colors.Color(16/255, 154/255, 179/255)
-    # 16, 154, 179
 
 
     pdf.setLineWidth(1.5)
@@ -246,20 +245,14 @@ def get_report_18(buffer, document, currency, document_type, request):
     pdf.drawRightString(width-55, 150, f"{document_type.upper()} TOTAL")
     pdf.setFillColor(colors.black)
     pdf.setFont('Helvetica', 10)
-    pdf = draw_wrapped_line(pdf, document["customer"]["business_name"].title(), 20, 10, 170, 10)
-    pdf = draw_wrapped_line(pdf, document["customer"]["address"].capitalize(), 100, 10, 180, 10)
-    pdf = draw_wrapped_line(pdf, document["customer"]["phone_number"], 100, 10, 190, 10)
+    pdf = draw_wrapped_line(pdf, request.user.business_name.title(), 20, 10, 170, 10)
+    pdf = draw_wrapped_line(pdf, request.user.address.capitalize(), 100, 10, 180, 10)
+    pdf = draw_wrapped_line(pdf, request.user.phone_number, 100, 10, 190, 10)
     pdf = draw_wrapped_line(pdf, document["bill_to"], 25, 140, 170, 10)
     pdf = draw_wrapped_line(pdf, document["ship_to"], 25, 280, 170, 10)
     pdf.setFont('Helvetica', 20)
     pdf.setFillColor(fill_color)
     pdf.drawRightString(width-55, 180, f"{currency} {document['grand_total']}")
-
-
-
-
-
-    
 
 
     pdf.setFont('Helvetica', 10)
@@ -309,8 +302,7 @@ def get_report_18(buffer, document, currency, document_type, request):
             start_y += 20
             i += 1
 
-        if item_len > 23:
-            pdf, start_y = add_another_page(pdf, item_list[23:], currency, document, document_type)
+        pdf, start_y = add_another_page(pdf, item_list[23:], currency, document, document_type)
 
 
     

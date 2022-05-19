@@ -365,6 +365,9 @@ class InvoiceCreate(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
         
         return data
 
@@ -474,6 +477,9 @@ class InvoiceEditSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
         return data
 
 
@@ -604,6 +610,9 @@ class ProformaCreateSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
         return data
 
 
@@ -697,6 +706,9 @@ class ProformaEditSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
         return data
 
 
@@ -814,6 +826,9 @@ class PurchaseCreateSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
 
 
     def save(self, request):
@@ -910,6 +925,9 @@ class PurchaseEditSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
 
 
 
@@ -1022,6 +1040,9 @@ class EstimateCreateSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
 
     def save(self, request):
         new_estimate = Estimate()
@@ -1126,6 +1147,9 @@ class EstimateEditSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
 
 
     def update(self, instance, validated_data):
@@ -1244,6 +1268,9 @@ class QuoteCreateSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
 
 
     def save(self, request):
@@ -1343,6 +1370,9 @@ class QuoteEditSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
 
 
     def update(self, instance, validated_data):
@@ -1463,6 +1493,9 @@ class CNCreateSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
 
 
     def save(self, request):
@@ -1558,6 +1591,9 @@ class CNEditSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
 
 
     def update(self, instance, validated_data):
@@ -1681,6 +1717,9 @@ class REceiptCreateSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
 
 
 
@@ -1786,6 +1825,9 @@ class ReceiptEditSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
 
 
 
@@ -1909,6 +1951,9 @@ class DNCreateSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
 
 
 
@@ -2010,6 +2055,9 @@ class DNEditSerializer(ModelSerializer):
         if download or send_email:
             if not pdf_number:
                 raise serializers.ValidationError("If you want to download or send email, you have to choose a pdf template")
+            else:
+                if len(pdf_number) < 8:
+                    raise serializers.ValidationError("Pass a valid pdf number")
 
 
 

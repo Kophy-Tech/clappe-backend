@@ -70,20 +70,18 @@ def add_another_page(pdf, item_list, currency, document, document_type):
     pdf.showPage()
     pdf.translate(cm, cm)
     pdf.setPageSize((A4[0], A4[1]))
-    pdf.setLineWidth(0.1)
+    pdf.setLineWidth(0.5)
 
 
-    pdf.setLineWidth(3)
-    pdf.line(10, 5, 540, 5)
+    pdf.setFont('Helvetica-Bold', 10)
 
-    pdf.drawString(35, 25, "QTY")
-    pdf.drawString(80, 25, "DESCRIPTION")
-    pdf.drawString(350, 25, "UNIT PRICE")
-    pdf.drawString(470, 25, "AMOUNT")
+    pdf.drawString(35, 25, "Qty")
+    pdf.drawString(150, 25, "Description")
+    pdf.drawRightString(420, 25, "Unit Price")
+    pdf.drawRightString(520, 25, "Amount")
 
-    pdf.line(10, 35, 540, 35)
+    pdf.setFillColor(colors.black)
 
-    pdf.setLineWidth(0.1)
     pdf.setFont('Helvetica', 10)
     pdf.drawString(250, 800, f"Page {page_number}")
 
@@ -96,10 +94,12 @@ def add_another_page(pdf, item_list, currency, document, document_type):
         for item in item_list:
             pdf.drawString(40, start_y+10, str(item["quantity"]))
             pdf.drawString(80, start_y+10, str(item["name"]))
-            pdf.drawRightString(430, start_y+10, str(item["sales_price"]))
-            pdf.drawRightString(535, start_y+10, str(item["amount"]))
+            pdf.drawRightString(420, start_y+10, str(item["sales_price"]))
+            pdf.drawRightString(520, start_y+10, str(item["amount"]))
                 
             start_y += 20
+
+
 
         pdf = total_box(pdf, start_y, currency, document_type, document)
 
@@ -111,11 +111,12 @@ def add_another_page(pdf, item_list, currency, document, document_type):
 
             pdf.drawString(40, start_y+10, str(item["quantity"]))
             pdf.drawString(80, start_y+10, str(item["name"]))
-            pdf.drawRightString(430, start_y+10, str(item["sales_price"]))
-            pdf.drawRightString(535, start_y+10, str(item["amount"]))
+            pdf.drawRightString(420, start_y+10, str(item["sales_price"]))
+            pdf.drawRightString(520, start_y+10, str(item["amount"]))
                 
             start_y += 20
             i += 1
+
         
         pdf, start_y = add_another_page(pdf, item_list[36:], currency, document, document_type)
 
@@ -128,6 +129,18 @@ def add_another_page(pdf, item_list, currency, document, document_type):
 
 
 def total_box(pdf, start_y, currency, document_type, document):
+    pdf.drawImage("app/pdf/logo_38_down.png", -35, 615, width=610, height=200)
+    documents = {'invoice': "invoice_number",
+                "proforma invoice": "invoice_number",
+                "purchase order": "po_number",
+                "estimate": "estimate_number",
+                "quote": "quote_number",
+                "receipt": "receipt_number",
+                "credit note": "cn_number",
+                "delivery note": "dn_number"
+                }
+
+    doc_number_key = documents[document_type]
     if document_type == "invoice":
         # it will have sub total
         pdf.drawRightString(440, start_y+20, "Subtotal")
@@ -141,14 +154,14 @@ def total_box(pdf, start_y, currency, document_type, document):
         pdf.drawRightString(535, start_y+85, f"{document['discount_amount']}")
 
         pdf.setFillColor(colors.black)
+        pdf.setFont('Helvetica-Bold', 20)
+        pdf.drawRightString(440, start_y+120, "Total")
         pdf.setFont('Helvetica-Bold', 15)
-        pdf.drawRightString(440, start_y+120, f"{document_type.upper()} TOTAL")
         pdf.drawRightString(535, start_y+120, f"{currency} {document['grand_total']}")
         
 
 
     else:
-        # pdf.rect(450, start_y, 90, 75)
         # tax, additional charges, discount_amount
         pdf.drawRightString(440, start_y+20, "Tax")
         pdf.drawRightString(535, start_y+20, f"{document['tax']}")
@@ -157,17 +170,19 @@ def total_box(pdf, start_y, currency, document_type, document):
         pdf.drawRightString(440, start_y+65, "Discount Amount")
         pdf.drawRightString(535, start_y+65, f"{document['discount_amount']}")
 
+
         pdf.setFillColor(colors.black)
+        pdf.setFont('Helvetica-Bold', 20)
+        pdf.drawRightString(440, start_y+100, "Total")
         pdf.setFont('Helvetica-Bold', 15)
-        pdf.drawRightString(440, start_y+100, f"{document_type.upper()} TOTAL")
         pdf.drawRightString(535, start_y+100, f"{currency} {document['grand_total']}")
 
-    pdf.setLineWidth(3)
-    pdf.line(10, 735, 540, 735)
-    pdf.setFont('Helvetica-Bold', 10)
-    pdf.drawString(10, 750, "Terms & Conditions")
+    pdf.setFillColor(colors.white)
     pdf.setFont('Helvetica', 10)
-    pdf = draw_wrapped_line(pdf, document["terms"].title(), 100, 10, 765, 15)
+    pdf.drawString(10, 700, document["terms"].capitalize())
+    pdf.drawRightString(540, 790, document[doc_number_key])
+
+    
             
     return pdf
 
@@ -186,16 +201,7 @@ def total_box(pdf, start_y, currency, document_type, document):
 
 
 
-
-
-
-
-
-
-
-
-
-def get_report_15(buffer, document, currency, document_type, request):
+def get_report_38(buffer, document, currency, document_type, request):
 
     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
@@ -206,40 +212,41 @@ def get_report_15(buffer, document, currency, document_type, request):
     pdf.translate(cm, cm)
     pdf.setPageSize((A4[0], A4[1]))
 
-    width = pdf._pagesize[0]
+    
     pdf.setTitle(document_type.title())
 
 
-    pdf.setLineWidth(0.1)
+    pdf.setLineWidth(0.5)
 
-    if request.user.logo_path:
-        pdf = draw_image(pdf, request.user.logo_path, request.user.email, 540, 100, "logo")
+    pdf.drawImage("app/pdf/logo_38_up.png", -30, -30, width=600, height=270)
             
 
 
-    pdf.setFont('Helvetica-Bold', 30)
-    pdf = draw_wrapped_line(pdf, request.user.business_name.title(), 100, 10, 20, 10)
+    pdf.setFont('Helvetica-Bold', 20)
+    pdf.setFillColor(colors.white)
+    pdf = draw_wrapped_line(pdf, request.user.business_name.title(), 100, 300, 20, 10)
     pdf.setFont('Helvetica', 10)
-    pdf = draw_wrapped_line(pdf, request.user.address.capitalize(), 100, 10, 50, 10)
-    pdf = draw_wrapped_line(pdf, request.user.email, 100, 10, 65, 10)
-    pdf = draw_wrapped_line(pdf, request.user.phone_number, 100, 10, 80, 10)
-
-
-
-    pdf.setLineWidth(1)
-    pdf.line(10, 135, 540, 135)
+    pdf = draw_wrapped_line(pdf, request.user.address.capitalize(), 100, 300, 40, 10)
+    pdf = draw_wrapped_line(pdf, request.user.email, 100, 300, 55, 10)
+    pdf = draw_wrapped_line(pdf, request.user.phone_number, 100, 300, 70, 10)
+    
     pdf.setFont('Helvetica-Bold', 10)
-    pdf.drawString(10, 150, "Bill To")
-    pdf.drawString(190, 150, "Ship To")
+    pdf.setFillColor(colors.black)
+    pdf.drawString(10, 200, "BILL TO")
+    pdf.drawString(130, 200, "SHIP TO")
+    pdf.setFillColor(colors.black)
     pdf.setFont('Helvetica', 10)
-    pdf = draw_wrapped_line(pdf, document["bill_to"], 40, 10, 170, 10)
-    pdf = draw_wrapped_line(pdf, document["ship_to"], 40, 190, 170, 10)
-
+    pdf = draw_wrapped_line(pdf, document["bill_to"], 20, 10, 220, 10)
+    pdf = draw_wrapped_line(pdf, document["ship_to"], 20, 130, 220, 10)
 
     pdf.setFont('Helvetica-Bold', 10)
-    pdf.drawRightString(470, 150, f"{document_type.title()} #")
-    pdf.drawRightString(470, 170, f"{document_type.title()} Date")
-    pdf.drawRightString(470, 190, "Due Date")
+    pdf.setFillColor(colors.white)
+    
+    pdf.drawString(10, 30, f"{document_type.title()} Date")
+    pdf.setFillColor(colors.black)
+    pdf.drawString(250, 200, "DUE DATE")
+    pdf.setFillColor(colors.black)
+    pdf.setFont('Helvetica', 10)
 
     documents = {'invoice': "invoice_number",
                 "proforma invoice": "invoice_number",
@@ -256,25 +263,22 @@ def get_report_15(buffer, document, currency, document_type, request):
 
     pdf.setFont('Helvetica', 10)
 
-    pdf.drawRightString(width - 55, 150, f"{document[doc_number_key]}")
-    pdf.drawRightString(width - 55, 170, f"{document[doc_date_key]}")
-    pdf.drawRightString(width - 55, 190, f"{document['due_date']}")
+    pdf.setFillColor(colors.white)
+    pdf.drawString(10, 45, f"{document[doc_date_key]}")
+    pdf.setFillColor(colors.black)
+    pdf.drawString(250, 220, f"{document['due_date']}")
 
 
     pdf.setFont('Helvetica-Bold', 10)
     
-    pdf.setLineWidth(3)
-    pdf.line(10, 210, 540, 210)
 
-    pdf.drawString(35, 230, "QTY")
-    pdf.drawString(80, 230, "DESCRIPTION")
-    pdf.drawString(350, 230, "UNIT PRICE")
-    pdf.drawString(470, 230, "AMOUNT")
+    pdf.drawString(35, 300, "QTY")
+    pdf.drawString(150, 300, "DESCRIPTION")
+    pdf.drawRightString(420, 300, "UNIT PRICE")
+    pdf.drawRightString(520, 300, "AMOUNT")
 
-    pdf.line(10, 240, 540, 240)
 
-    pdf.setLineWidth(0.1)
-
+    pdf.setFillColor(colors.black)
     pdf.setFont('Helvetica', 10)
 
     pdf.drawString(250, 800, f"Page {page_number}")
@@ -282,17 +286,18 @@ def get_report_15(buffer, document, currency, document_type, request):
     item_list = document["item_list"]
     item_len = len(item_list)
 
-    start_y = 265
+    start_y = 320
 
-    if item_len <= 20:
+    if item_len <= 10:
         # it will spill to another page
         for item in item_list:
             pdf.drawString(40, start_y, str(item["quantity"]))
             pdf.drawString(80, start_y, str(item["name"]))
-            pdf.drawRightString(430, start_y, str(item["sales_price"]))
-            pdf.drawRightString(535, start_y, str(item["amount"]))
+            pdf.drawRightString(420, start_y, str(item["sales_price"]))
+            pdf.drawRightString(520, start_y, str(item["amount"]))
                 
             start_y += 20
+
 
         pdf = total_box(pdf, start_y, currency, document_type, document)
 
@@ -304,8 +309,8 @@ def get_report_15(buffer, document, currency, document_type, request):
 
             pdf.drawString(40, start_y, str(item["quantity"]))
             pdf.drawString(80, start_y, str(item["name"]))
-            pdf.drawRightString(430, start_y, str(item["sales_price"]))
-            pdf.drawRightString(535, start_y, str(item["amount"]))
+            pdf.drawRightString(420, start_y, str(item["sales_price"]))
+            pdf.drawRightString(520, start_y, str(item["amount"]))
                 
             start_y += 20
             i += 1

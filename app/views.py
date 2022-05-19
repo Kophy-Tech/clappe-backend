@@ -457,6 +457,9 @@ def create_invoice(request):
 
     if request.method == "POST":
 
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
+
 
         form = InvoiceCreate(data=request.data)
         context = {}
@@ -546,6 +549,8 @@ def edit_invoice(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         # try:
             invoice = Invoice.objects.get(id=id)
             form = InvoiceEditSerializer(instance=invoice, data=request.data)
@@ -697,6 +702,8 @@ def all_proforma(request):
 def create_proforma(request):
 
     if request.method == "POST":
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         form = ProformaCreateSerializer(data=request.data)
         context = {}
 
@@ -781,6 +788,8 @@ def edit_proforma(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         try:
             proforma = ProformaInvoice.objects.get(id=id)
             form = ProformaEditSerializer(instance=proforma, data=request.data)
@@ -932,6 +941,8 @@ def all_purchaseorder(request):
 def create_purchaseorder(request):
 
     if request.method == "POST":
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         form = PurchaseCreateSerializer(data=request.data)
         context = {}
 
@@ -1015,6 +1026,8 @@ def edit_purchaseorder(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         try:
             purchase = PurchaseOrder.objects.get(id=id)
             form = PurchaseEditSerializer(instance=purchase, data=request.data)
@@ -1176,10 +1189,10 @@ def all_estimate(request):
 def create_estimate(request):
 
     if request.method == "POST":
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         form = EstimateCreateSerializer(data=request.data)
         context = {}
-
-        print(request.data)
 
         if form.is_valid():
             new_estimate = form.save(request)
@@ -1405,6 +1418,8 @@ def edit_estimate(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         try:
             estimate = Estimate.objects.get(id=id)
             form = EstimateEditSerializer(instance=estimate, data=request.data)
@@ -1600,6 +1615,8 @@ def all_items(request):
 def create_item(request):
 
     if request.method == "POST":
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         data = request.data
         data['user_id'] = request.user.id
         form = CreateItemSerializer(data=data)
@@ -1652,6 +1669,8 @@ def edit_item(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         try:
             item = Item.objects.get(id=id)
             form = CreateItemSerializer(instance=item, data=request.data)
@@ -1738,6 +1757,8 @@ def all_quote(request):
 def create_quote(request):
 
     if request.method == "POST":
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         form = QuoteCreateSerializer(data=request.data)
         context = {}
 
@@ -1821,6 +1842,8 @@ def edit_quote(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         try:
             quote = Quote.objects.get(id=id)
             form = QuoteEditSerializer(instance=quote, data=request.data)
@@ -1977,6 +2000,8 @@ def all_receipt(request):
 def create_receipt(request):
 
     if request.method == "POST":
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         form = REceiptCreateSerializer(data=request.data)
         context = {}
 
@@ -2061,6 +2086,8 @@ def edit_receipt(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         try:
             receipt = Receipt.objects.get(id=id)
             form = ReceiptEditSerializer(instance=receipt, data=request.data)
@@ -2220,6 +2247,8 @@ def all_credit(request):
 def create_credit(request):
 
     if request.method == "POST":
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         form = CNCreateSerializer(data=request.data)
         context = {}
 
@@ -2304,6 +2333,8 @@ def edit_credit(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         try:
             credit = CreditNote.objects.get(id=id)
             form = CNEditSerializer(instance=credit, data=request.data)
@@ -2458,6 +2489,8 @@ def all_delivery(request):
 def create_delivery(request):
 
     if request.method == "POST":
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         form = DNCreateSerializer(data=request.data)
         context = {}
 
@@ -2542,6 +2575,8 @@ def edit_delivery(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
+        if not request.user.business_name:
+            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         try:
             delivery = DeliveryNote.objects.get(id=id)
             form = DNEditSerializer(instance=delivery, data=request.data)

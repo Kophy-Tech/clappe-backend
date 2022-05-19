@@ -10,6 +10,7 @@ page_number = 1
 
 
 
+
 def draw_image(pdf, image_url, email, x, y, image_type):
     r = requests.get(image_url)
     if r.status_code == 200:
@@ -28,8 +29,6 @@ def draw_image(pdf, image_url, email, x, y, image_type):
         os.remove(f"{email}_{image_type}.png")
 
     return pdf
-
-
 
 
 
@@ -69,7 +68,7 @@ def add_another_page(pdf, item_list, currency, document, document_type):
     # another page
     pdf.showPage()
     pdf.translate(cm, cm)
-    pdf.setPageSize((A4[0]+15, A4[1]))
+    pdf.setPageSize((A4[0], A4[1]))
     pdf.setLineWidth(1.5)
     pdf.setStrokeColor(colors.red)
 
@@ -246,11 +245,11 @@ def get_report_40(buffer, document, currency, document_type, request):
     pdf.drawString(10, 110, "FROM")
     pdf.setFont('Times-Bold', 10)
     pdf.setFillColor(colors.black)
-    pdf = draw_wrapped_line(pdf, document["customer"]["business_name"].title(), 100, 10, 130, 10)
+    pdf = draw_wrapped_line(pdf, request.user.business_name.title(), 100, 10, 130, 10)
     pdf.setFont('Times-Roman', 10)
-    pdf = draw_wrapped_line(pdf, document["customer"]["address"].capitalize(), 100, 10, 145, 10)
-    pdf = draw_wrapped_line(pdf, document["customer"]["email"], 100, 10, 160, 10)
-    pdf = draw_wrapped_line(pdf, document["customer"]["phone_number"], 100, 10, 175, 10)
+    pdf = draw_wrapped_line(pdf, request.user.address.capitalize(), 100, 10, 145, 10)
+    pdf = draw_wrapped_line(pdf, request.user.email, 100, 10, 160, 10)
+    pdf = draw_wrapped_line(pdf, request.user.phone_number, 100, 10, 175, 10)
 
 
     
@@ -357,7 +356,6 @@ def get_report_40(buffer, document, currency, document_type, request):
         pdf.line(540, 300, 540, start_y)
         pdf.line(10, start_y, 540, start_y)
 
-        # if item_len >= 23:
         pdf, start_y = add_another_page(pdf, item_list[18:], currency, document, document_type)
 
 
