@@ -551,7 +551,7 @@ def edit_invoice(request, id):
     elif request.method == 'PUT':
         if not request.user.business_name:
             return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
-            
+
         try:
             invoice = Invoice.objects.get(id=id)
             form = InvoiceEditSerializer(instance=invoice, data=request.data)
@@ -3499,7 +3499,9 @@ def invoice_report(request):
     # 2.4
     elif measure == "invoice total per-date search":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -3827,7 +3829,9 @@ def invoice_report(request):
     # 2.5
     elif measure == "email per-date search":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             total_data = {}
@@ -4061,7 +4065,9 @@ def invoice_report(request):
     # 2.6
     elif measure == "detail invoice search":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             
@@ -4510,7 +4516,9 @@ def invoice_report(request):
     elif measure == "overdue per-date search":
 
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -4743,7 +4751,9 @@ def invoice_report(request):
     # 2.8
     elif measure == "invoice overdue list":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -5181,7 +5191,9 @@ def invoice_report(request):
     # 2.9
     elif measure == "invoice pending list":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -5603,7 +5615,9 @@ def invoice_report(request):
     # 2.10
     elif measure == "invoice paid list":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -6035,7 +6049,9 @@ def invoice_report(request):
     # 2.11
     elif measure == "unpaid invoice list":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -6467,7 +6483,9 @@ def invoice_report(request):
     # 2.12
     elif measure == "sales tax list":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -6854,7 +6872,9 @@ def invoice_report(request):
     # 2.13
     elif measure == "total sales tax search":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -7312,7 +7332,9 @@ def invoice_report(request):
     # 2.14
     elif measure == "recurring transactions list":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -7835,7 +7857,9 @@ def proforma_report(request):
     # 3.4
     elif measure == "proforma invoice total search":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -8153,7 +8177,9 @@ def proforma_report(request):
     # 3.5
     elif measure == "proforma invoice email search":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -8385,7 +8411,9 @@ def proforma_report(request):
     # 3.6
     elif measure == "detail performa invoice email search":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -8805,7 +8833,9 @@ def proforma_report(request):
     elif measure == "proforma invoice overdue":
 
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -9033,7 +9063,9 @@ def proforma_report(request):
     # 3.8
     elif measure == "list of proforma invoice overdue":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -9471,7 +9503,9 @@ def proforma_report(request):
     # 3.9
     elif measure == "list of proforma invoice pending":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -10005,7 +10039,9 @@ def purchase_report(request):
     # 4.4
     elif measure == "purchase order total":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -10323,7 +10359,9 @@ def purchase_report(request):
     # 4.5
     elif measure == "purchase order email":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -10558,7 +10596,9 @@ def purchase_report(request):
     # 4.6
     elif measure == "detail purchase order email":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -10979,7 +11019,9 @@ def purchase_report(request):
     elif measure == "purchase order overdue":
 
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -11218,7 +11260,9 @@ def purchase_report(request):
     # 4.8
     elif measure == "list of purchase order overdue":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -11654,7 +11698,9 @@ def purchase_report(request):
     # 4.9
     elif measure == "list of purchase order pending":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -12188,7 +12234,9 @@ def estimate_report(request):
     # 5.4
     elif measure == "estimate total per date":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -12505,7 +12553,9 @@ def estimate_report(request):
     # 5.5
     elif measure == "estimate email":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -12740,7 +12790,9 @@ def estimate_report(request):
     # 5.6
     elif measure == "detail estimate email":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -13162,7 +13214,9 @@ def estimate_report(request):
     elif measure == "estimate overdue":
 
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -13397,7 +13451,9 @@ def estimate_report(request):
     # 5.8
     elif measure == "list of estimate overdue":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -13827,7 +13883,9 @@ def estimate_report(request):
     # 5.9
     elif measure == "list of estimate pending":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -14371,7 +14429,9 @@ def quote_report(request):
     # 6.4
     elif measure == "quote total per date":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -14691,7 +14751,9 @@ def quote_report(request):
     # 6.5
     elif measure == "quote email per date":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -14925,7 +14987,9 @@ def quote_report(request):
     # 6.6
     elif measure == "detail quote email":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -15343,7 +15407,9 @@ def quote_report(request):
     elif measure == "quote overdue per date":
 
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -15577,7 +15643,9 @@ def quote_report(request):
     # 6.8
     elif measure == "list of quote overdue":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -16009,7 +16077,9 @@ def quote_report(request):
     # 6.9
     elif measure == "list of quote pending":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -16539,7 +16609,9 @@ def receipt_report(request):
     # 7.4
     elif measure == "receipt total per date":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -16860,7 +16932,9 @@ def receipt_report(request):
     # 7.5
     elif measure == "receipt email per date":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -17093,7 +17167,9 @@ def receipt_report(request):
     # 7.6
     elif measure == "detail receipt email":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -17608,7 +17684,9 @@ def credit_report(request):
     # 8.4
     elif measure == "credit note total per date":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -17929,7 +18007,9 @@ def credit_report(request):
     # 8.5
     elif measure == "credit note email per date":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -18162,7 +18242,9 @@ def credit_report(request):
     # 8.6
     elif measure == "detail credit note email":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -18578,7 +18660,9 @@ def credit_report(request):
     elif measure == "credit note pending":
 
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -18811,7 +18895,9 @@ def credit_report(request):
     # 8.8
     elif measure == "list of credit note pending":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -19313,7 +19399,9 @@ def delivery_report(request):
     # 9.3
     elif measure == "delivery note email":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -19547,7 +19635,9 @@ def delivery_report(request):
     # 9.4
     elif measure == "detail delivery note email":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -19950,7 +20040,9 @@ def delivery_report(request):
     elif measure == "delivery note overdue":
 
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -20182,7 +20274,9 @@ def delivery_report(request):
     # 9.6
     elif measure == "list of delivery note overdue":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -20596,7 +20690,9 @@ def delivery_report(request):
     # 9.7
     elif measure == "list of delivery note pending":
         context = {}
-        how = request.query_params.get("how")
+        how = request.query_params.get("how", None)
+        if how is None:
+            return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
