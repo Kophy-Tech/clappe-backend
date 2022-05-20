@@ -551,7 +551,8 @@ def edit_invoice(request, id):
     elif request.method == 'PUT':
         if not request.user.business_name:
             return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
-        # try:
+            
+        try:
             invoice = Invoice.objects.get(id=id)
             form = InvoiceEditSerializer(instance=invoice, data=request.data)
             context = {}
@@ -600,6 +601,10 @@ def edit_invoice(request, id):
 
                 return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
+        except Exception as e:
+            print(e)
+            context = {'message' :"Invoice not found"}
+            return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == "DELETE":
         try:
