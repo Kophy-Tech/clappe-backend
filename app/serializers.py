@@ -598,7 +598,8 @@ class ProformaCreateSerializer(ModelSerializer):
         model = ProformaInvoice
         fields = [
                 "customer_id", "recurring", "invoice_date", "po_number", "due_date", "notes", "item_list", "item_total", "tax", \
-                "add_charges", "grand_total", "send_email", "download", "terms", "pdf_number"]
+                "add_charges", "grand_total", "send_email", "download", "terms", "pdf_number", "bill_to", "billing_address", \
+                "ship_to", "shipping_address"]
 
     def validate(self, data):
         if not data.get("invoice_date"):
@@ -613,6 +614,7 @@ class ProformaCreateSerializer(ModelSerializer):
             else:
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
+
         return data
 
 
@@ -626,6 +628,11 @@ class ProformaCreateSerializer(ModelSerializer):
         new_proforma.due_date = self.validated_data["due_date"]
         new_proforma.notes = self.validated_data.get("notes", "")
         new_proforma.terms = self.validated_data.get("terms", "")
+
+        new_proforma.bill_to = self.validated_data.get("bill_to", "")
+        new_proforma.billing_address = self.validated_data.get("billing_address", "")
+        new_proforma.ship_to = self.validated_data.get("ship_to", "")
+        new_proforma.shipping_address = self.validated_data.get("shipping_address", "")
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -672,7 +679,8 @@ class ProformerInvoiceSerailizer(DynamicFieldsModelSerializer):
         fields = [
                 "id", "customer", 
                     "invoice_number", "invoice_date", "po_number", "due_date", "notes", "item_list", "quantity_list",
-                    "item_total", "tax", "add_charges", "grand_total", "status", "terms", "recurring", "recurring_data"]
+                    "item_total", "tax", "add_charges", "grand_total", "status", "terms", "recurring", "recurring_data",
+                    "bill_to", "billing_address", "ship_to", "shipping_address"]
 
 
 
@@ -692,8 +700,9 @@ class ProformaEditSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = ProformaInvoice
-        fields = ["customer_id", "invoice_date", "po_number", "due_date", "notes", "item_list", "item_total", "tax", "add_charges", \
-                    "grand_total", "status", "send_email", "download", "terms", "recurring", "pdf_number"]
+        fields = ["customer_id", "invoice_date", "po_number", "due_date", "notes", "item_list", "item_total", "tax", "add_charges",
+                    "grand_total", "status", "send_email", "download", "terms", "recurring", "pdf_number", "bill_to", "billing_address", 
+                    "ship_to", "shipping_address"]
 
 
     def validate(self, data):
@@ -709,6 +718,7 @@ class ProformaEditSerializer(ModelSerializer):
             else:
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
+        
         return data
 
 
@@ -719,6 +729,11 @@ class ProformaEditSerializer(ModelSerializer):
         instance.due_date = validated_data.get("due_date", instance.due_date)
         instance.notes = validated_data.get("notes", instance.notes)
         instance.terms = validated_data.get("terms", instance.terms)
+
+        instance.bill_to = validated_data.get("bill_to", instance.bill_to)
+        instance.billing_address = validated_data.get("billing_address", instance.billing_address)
+        instance.ship_to = validated_data.get("ship_to", instance.ship_to)
+        instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -815,7 +830,7 @@ class PurchaseCreateSerializer(ModelSerializer):
     class Meta:
         model = PurchaseOrder
         fields = [
-                "customer_id", "po_date", "ship_to", "notes", "shipping_address", "item_list", "due_date",
+                "customer_id", "po_date", "ship_to", "notes", "shipping_address", "bill_to", "billing_address", "item_list", "due_date",
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms", "recurring", "pdf_number"]
 
 
@@ -830,6 +845,8 @@ class PurchaseCreateSerializer(ModelSerializer):
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
 
+        return data
+
 
     def save(self, request):
         new_purchaseorder = PurchaseOrder()
@@ -841,6 +858,8 @@ class PurchaseCreateSerializer(ModelSerializer):
         new_purchaseorder.notes = self.validated_data.get("notes", "")
         new_purchaseorder.shipping_address = self.validated_data.get("shipping_address", "")
         new_purchaseorder.terms = self.validated_data.get("terms", "")
+        new_purchaseorder.bill_to = self.validated_data.get("bill_to", "")
+        new_purchaseorder.billing_address = self.validated_data.get("billing_address", "")
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -888,7 +907,8 @@ class PurchaseOrderSerailizer(DynamicFieldsModelSerializer):
         model = PurchaseOrder
         fields = [
                 "id", "customer", 
-                    "po_number", "po_date", "due_date", "ship_to", "notes", "shipping_address",  "item_list", "quantity_list",
+                    "po_number", "po_date", "due_date", "ship_to", "notes", "shipping_address", "bill_to", "billing_address",
+                    "item_list", "quantity_list",
                     "item_total", "tax", "add_charges", "grand_total",  "status", "terms", "recurring", "recurring_data"]
 
 
@@ -914,7 +934,8 @@ class PurchaseEditSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = PurchaseOrder
-        fields = ["customer_id", "po_date", "due_date", "ship_to", "notes", "shipping_address", "item_list", 
+        fields = ["customer_id", "po_date", "due_date", "ship_to", "notes", "shipping_address", "bill_to", "billing_address",
+                     "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms",
                     "recurring", "pdf_number"]
     
@@ -928,6 +949,7 @@ class PurchaseEditSerializer(ModelSerializer):
             else:
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
+        return data
 
 
 
@@ -938,6 +960,8 @@ class PurchaseEditSerializer(ModelSerializer):
         instance.terms = validated_data.get("terms", instance.terms)
         instance.ship_to = validated_data.get("ship_to", instance.ship_to)
         instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
+        instance.bill_to = validated_data.get("bill_to", instance.bill_to)
+        instance.billing_address = validated_data.get("billing_address", instance.billing_address)
         
         item_list = self.validated_data['item_list']
         ids = [int(i['id']) for i in item_list]
@@ -1043,6 +1067,8 @@ class EstimateCreateSerializer(ModelSerializer):
             else:
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
+
+        return data
 
     def save(self, request):
         new_estimate = Estimate()
@@ -1150,6 +1176,7 @@ class EstimateEditSerializer(ModelSerializer):
             else:
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
+        return data
 
 
     def update(self, instance, validated_data):
@@ -1271,6 +1298,7 @@ class QuoteCreateSerializer(ModelSerializer):
             else:
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
+        return data
 
 
     def save(self, request):
@@ -1373,6 +1401,7 @@ class QuoteEditSerializer(ModelSerializer):
             else:
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
+        return data
 
 
     def update(self, instance, validated_data):
@@ -1482,7 +1511,8 @@ class CNCreateSerializer(ModelSerializer):
     class Meta:
         model = CreditNote
         fields = [ "customer_id", "recurring", "pdf_number",
-                    "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
+                    "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address",
+                    "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]       
 
     
@@ -1496,6 +1526,7 @@ class CNCreateSerializer(ModelSerializer):
             else:
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
+        return data
 
 
     def save(self, request):
@@ -1507,6 +1538,8 @@ class CNCreateSerializer(ModelSerializer):
         new_credit.due_date = self.validated_data["due_date"]
         new_credit.ship_to = self.validated_data.get("ship_to", "")
         new_credit.shipping_address = self.validated_data.get("shipping_address", "")
+        new_credit.bill_to = self.validated_data.get("bill_to", "")
+        new_credit.billing_address = self.validated_data.get("billing_address", "")
         new_credit.notes = self.validated_data.get("notes", "")
         new_credit.terms = self.validated_data.get("terms", "")
         
@@ -1556,7 +1589,8 @@ class CreditNoteSerailizer(DynamicFieldsModelSerializer):
         fields = [
                 "id", "customer", 
                     "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes",  "item_list", "quantity_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status", "terms", "recurring", "recurring_data"]
+                    "item_total", "tax", "add_charges", "grand_total", "status", "terms", "recurring", "recurring_data", 
+                    "bill_to", "billing_address"]
 
 
 
@@ -1579,7 +1613,7 @@ class CNEditSerializer(ModelSerializer):
     class Meta:
         model = CreditNote
         fields = [
-                "customer_id", "recurring", "pdf_number"
+                "customer_id", "recurring", "pdf_number", "bill_to", "billing_address",
                     "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
 
@@ -1594,6 +1628,7 @@ class CNEditSerializer(ModelSerializer):
             else:
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
+        return data
 
 
     def update(self, instance, validated_data):
@@ -1603,6 +1638,8 @@ class CNEditSerializer(ModelSerializer):
         instance.due_date = validated_data.get("due_date", instance.due_date)
         instance.ship_to = validated_data.get("ship_to", instance.ship_to)
         instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
+        instance.bill_to = validated_data.get("bill_to", instance.bill_to)
+        instance.billing_address = validated_data.get("billing_address", instance.billing_address)
         instance.notes = validated_data.get("notes", instance.notes)
         instance.terms = validated_data.get("terms", instance.terms)
         
@@ -1721,6 +1758,8 @@ class REceiptCreateSerializer(ModelSerializer):
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
 
+        return data
+
 
 
 
@@ -1828,6 +1867,8 @@ class ReceiptEditSerializer(ModelSerializer):
             else:
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
+        
+        return data
 
 
 
@@ -1940,7 +1981,7 @@ class DNCreateSerializer(ModelSerializer):
     class Meta:
         model = DeliveryNote
         fields = [ "customer_id", "recurring", "pdf_number",
-                    "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
+                    "dn_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
 
 
@@ -1955,6 +1996,8 @@ class DNCreateSerializer(ModelSerializer):
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
 
+        return data
+
 
 
 
@@ -1967,6 +2010,8 @@ class DNCreateSerializer(ModelSerializer):
         new_delivery.due_date = self.validated_data["due_date"]
         new_delivery.ship_to = self.validated_data.get("ship_to", "")
         new_delivery.shipping_address = self.validated_data.get("shipping_address", "")
+        new_delivery.bill_to = self.validated_data.get("bill_to", "")
+        new_delivery.billing_address = self.validated_data.get("billing_address", "")
         new_delivery.notes = self.validated_data.get("notes", "")
         new_delivery.terms = self.validated_data.get("terms", "")
         
@@ -2014,7 +2059,7 @@ class DNSerailizer(DynamicFieldsModelSerializer):
     class Meta:
         model = DeliveryNote
         fields = [
-                "id", "customer", "reucrring", "recurring_data",
+                "id", "customer", "reucrring", "recurring_data", "bill_to", "billing_address",
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]      
 
@@ -2045,7 +2090,7 @@ class DNEditSerializer(ModelSerializer):
         fields = [
                 "customer_id", "recurring", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                 "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", 
-                "download", "terms", "pdf_number"]
+                "download", "terms", "pdf_number", "bill_to", "billing_address"]
 
 
     def validate(self, data):
@@ -2059,6 +2104,8 @@ class DNEditSerializer(ModelSerializer):
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
 
+        return data
+
 
 
 
@@ -2069,6 +2116,8 @@ class DNEditSerializer(ModelSerializer):
         instance.due_date = validated_data.get("due_date", instance.due_date)
         instance.ship_to = validated_data.get("ship_to", instance.ship_to)
         instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
+        instance.bill_to = validated_data.get("bill_to", instance.bill_to)
+        instance.billing_address = validated_data.get("billing_address", instance.billing_address)
         instance.notes = validated_data.get("notes", instance.notes)
         instance.terms = validated_data.get("terms", instance.terms)
         

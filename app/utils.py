@@ -149,6 +149,8 @@ def password_validator(value):
     if len(value) < 8:
         raise serializers.ValidationError("Password must have at least 8 characters.")
 
+    return value
+
 
 
 
