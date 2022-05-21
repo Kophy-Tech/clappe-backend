@@ -36,7 +36,7 @@ from .forms import EstimateExpiration
 
 
 
-PDF_HEADER = "data:file/pdf;base64,"
+PDF_HEADER = "data:application/pdf;base64,"
 
 
 
@@ -483,7 +483,7 @@ def create_invoice(request):
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
                 context["filename"] = file_name
-                context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                context["pdf_file"] = base64.b64encode(buffer.read())
             
             elif form.validated_data['send_email']:
                 # for sending email when creating a new document
@@ -573,7 +573,7 @@ def edit_invoice(request, id):
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
                     context["filename"] = file_name
-                    context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
                 if form.validated_data['send_email']:
                     # for sending email when creating a new document
@@ -728,7 +728,7 @@ def create_proforma(request):
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
                 context["filename"] = file_name
-                context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                context["pdf_file"] = base64.b64encode(buffer.read())
 
 
             elif form.validated_data['send_email']:
@@ -816,7 +816,7 @@ def edit_proforma(request, id):
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
                     context["filename"] = file_name
-                    context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
 
                 elif form.validated_data['send_email']:
@@ -967,7 +967,7 @@ def create_purchaseorder(request):
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
                 context["filename"] = file_name
-                context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                context["pdf_file"] = base64.b64encode(buffer.read())
 
 
             elif form.validated_data['send_email']:
@@ -1054,7 +1054,7 @@ def edit_purchaseorder(request, id):
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
                     context["filename"] = file_name
-                    context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
 
                 elif form.validated_data['send_email']:
@@ -1214,7 +1214,7 @@ def create_estimate(request):
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
                 context["filename"] = file_name
-                context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                context["pdf_file"] = base64.b64encode(buffer.read())
 
             elif form.validated_data['send_email']:
                 # for sending email when creating a new document
@@ -1445,7 +1445,7 @@ def edit_estimate(request, id):
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
                     context["filename"] = file_name
-                    context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
                 elif form.validated_data['send_email']:
                     # for sending email when creating a new document
@@ -1783,7 +1783,7 @@ def create_quote(request):
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
                 context["filename"] = file_name
-                context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                context["pdf_file"] = base64.b64encode(buffer.read())
 
             elif form.validated_data['send_email']:
                 # for sending email when creating a new document
@@ -1870,7 +1870,7 @@ def edit_quote(request, id):
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
                     context["filename"] = file_name
-                    context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
 
                 elif form.validated_data['send_email']:
@@ -2026,7 +2026,7 @@ def create_receipt(request):
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
                 context["filename"] = file_name
-                context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                context["pdf_file"] = base64.b64encode(buffer.read())
 
 
             elif form.validated_data['send_email']:
@@ -2114,7 +2114,7 @@ def edit_receipt(request, id):
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
                     context["filename"] = file_name
-                    context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
 
                 elif form.validated_data['send_email']:
@@ -2273,7 +2273,7 @@ def create_credit(request):
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
                 context["filename"] = file_name
-                context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                context["pdf_file"] = base64.b64encode(buffer.read())
 
 
             elif form.validated_data['send_email']:
@@ -2361,7 +2361,7 @@ def edit_credit(request, id):
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
                     context["filename"] = file_name
-                    context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
                 elif form.validated_data['send_email']:
                     # for sending email when creating a new document
@@ -2515,7 +2515,7 @@ def create_delivery(request):
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
                 context["filename"] = file_name
-                context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                context["pdf_file"] = base64.b64encode(buffer.read())
 
 
             elif form.validated_data['send_email']:
@@ -2603,7 +2603,7 @@ def edit_delivery(request, id):
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
                     context["filename"] = file_name
-                    context["pdf_file"] = PDF_HEADER + base64.b64encode(buffer.read())
+                    context["pdf_file"] = base64.b64encode(buffer.read())
 
                 elif form.validated_data['send_email']:
                     # for sending email when creating a new document
