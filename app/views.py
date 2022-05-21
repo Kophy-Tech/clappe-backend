@@ -458,8 +458,9 @@ def create_invoice(request):
 
     if request.method == "POST":
 
-        if not request.user.business_name:
-            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.business_name or not request.user.address or not request.user.phone_number:
+            return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
+            
 
 
         form = InvoiceCreate(data=request.data)
@@ -550,8 +551,8 @@ def edit_invoice(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
-        if not request.user.business_name:
-            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.business_name or not request.user.address or not request.user.phone_number:
+            return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
 
         try:
             invoice = Invoice.objects.get(id=id)
@@ -708,8 +709,8 @@ def all_proforma(request):
 def create_proforma(request):
 
     if request.method == "POST":
-        if not request.user.business_name:
-            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.business_name or not request.user.address or not request.user.phone_number:
+            return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         form = ProformaCreateSerializer(data=request.data)
         context = {}
 
@@ -794,8 +795,8 @@ def edit_proforma(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
-        if not request.user.business_name:
-            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.business_name or not request.user.address or not request.user.phone_number:
+            return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         try:
             proforma = ProformaInvoice.objects.get(id=id)
             form = ProformaEditSerializer(instance=proforma, data=request.data)
@@ -947,8 +948,8 @@ def all_purchaseorder(request):
 def create_purchaseorder(request):
 
     if request.method == "POST":
-        if not request.user.business_name:
-            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.business_name or not request.user.address or not request.user.phone_number:
+            return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         form = PurchaseCreateSerializer(data=request.data)
         context = {}
 
@@ -1032,8 +1033,8 @@ def edit_purchaseorder(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
-        if not request.user.business_name:
-            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.business_name or not request.user.address or not request.user.phone_number:
+            return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         try:
             purchase = PurchaseOrder.objects.get(id=id)
             form = PurchaseEditSerializer(instance=purchase, data=request.data)
@@ -1195,8 +1196,8 @@ def all_estimate(request):
 def create_estimate(request):
 
     if request.method == "POST":
-        if not request.user.business_name:
-            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.business_name or not request.user.address or not request.user.phone_number:
+            return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         form = EstimateCreateSerializer(data=request.data)
         context = {}
 
@@ -1424,8 +1425,8 @@ def edit_estimate(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
-        if not request.user.business_name:
-            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.business_name or not request.user.address or not request.user.phone_number:
+            return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         try:
             estimate = Estimate.objects.get(id=id)
             form = EstimateEditSerializer(instance=estimate, data=request.data)
@@ -1621,8 +1622,8 @@ def all_items(request):
 def create_item(request):
 
     if request.method == "POST":
-        if not request.user.business_name:
-            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.business_name or not request.user.address or not request.user.phone_number:
+            return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         data = request.data
         data['user_id'] = request.user.id
         form = CreateItemSerializer(data=data)
@@ -1675,8 +1676,8 @@ def edit_item(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
-        if not request.user.business_name:
-            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.business_name or not request.user.address or not request.user.phone_number:
+            return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         try:
             item = Item.objects.get(id=id)
             form = CreateItemSerializer(instance=item, data=request.data)
@@ -1763,8 +1764,8 @@ def all_quote(request):
 def create_quote(request):
 
     if request.method == "POST":
-        if not request.user.business_name:
-            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.business_name or not request.user.address or not request.user.phone_number:
+            return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         form = QuoteCreateSerializer(data=request.data)
         context = {}
 
@@ -1848,8 +1849,8 @@ def edit_quote(request, id):
             return Response(context, status=status.HTTP_404_NOT_FOUND)
     
     elif request.method == 'PUT':
-        if not request.user.business_name:
-            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.business_name or not request.user.address or not request.user.phone_number:
+            return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         try:
             quote = Quote.objects.get(id=id)
             form = QuoteEditSerializer(instance=quote, data=request.data)
@@ -2006,8 +2007,8 @@ def all_receipt(request):
 def create_receipt(request):
 
     if request.method == "POST":
-        if not request.user.business_name:
-            return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.business_name or not request.user.address or not request.user.phone_number:
+            return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         form = REceiptCreateSerializer(data=request.data)
         context = {}
 
