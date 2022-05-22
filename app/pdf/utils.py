@@ -1,4 +1,3 @@
-
 from app.pdf.report_2 import get_report_2
 from app.pdf.report_10 import get_report_10
 from app.pdf.report_26 import get_report_26
@@ -28,6 +27,10 @@ from app.pdf.report_19 import get_report_19
 from app.pdf.report_38 import get_report_38
 from app.pdf.report_35 import get_report_35
 from app.pdf.report_23 import get_report_23
+from app.pdf.report_25 import get_report_25
+from app.pdf.report_7 import get_report_7
+from app.pdf.report_12 import get_report_12
+from app.pdf.report_39 import get_report_39
 
 
 
@@ -60,5 +63,9 @@ PDF_FUNCTION_DICT = {
     "number_40": get_report_40,
     "number_34": get_report_34,
     "number_18": get_report_18,
-    "number_44": get_report_44
+    "number_44": get_report_44,
+    "number_25": get_report_25,
+    "number_7": get_report_7,
+    "number_12": get_report_12,
+    "number_39": get_report_39,
 }

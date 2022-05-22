@@ -253,7 +253,6 @@ def get_report_41(buffer, document, currency, document_type, request):
     pdf = draw_wrapped_line(pdf, request.user.business_name.title(), 100, 10, 20, 10)
     pdf.drawRightString(width - 55, 20, f"{document_type.upper()}")
     pdf.setFillColor(colors.black)
-    
     pdf.setFont('Helvetica', 10)
     pdf = draw_wrapped_line(pdf, request.user.address.capitalize(), 100, 10, 40, 10)
     pdf = draw_wrapped_line(pdf, request.user.email, 100, 10, 55, 10)
