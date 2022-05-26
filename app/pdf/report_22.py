@@ -70,25 +70,32 @@ def add_another_page(pdf, item_list, currency, document, document_type):
     pdf.showPage()
     pdf.translate(cm, cm)
     pdf.setPageSize((A4[0], A4[1]))
-    pdf.setLineWidth(0.1)
+
+    width = pdf._pagesize[0]
+    height = pdf._pagesize[1]
 
 
-    fill_colour = colors.Color(0, 0, 0, 0.04)
-    pdf.setFillColor(fill_colour)
-    pdf.rect(10, 10, 530, 25, fill=1)
-    pdf.setFillColor(colors.black)
+    fill_color = colors.Color(127/255, 190/255, 219/255)
 
+    for i in range(0,int(height), 40):
+        pdf.drawImage("app/pdf/logo_22_row.png", -30, i, width=width, height=10)
+
+    pdf.setLineWidth(3)
+    pdf.line(10, 5, width-55, 5)
+    pdf.setFillColor(fill_color)
     pdf.drawString(35, 25, "QTY")
     pdf.drawString(150, 25, "DESCRIPTION")
     pdf.drawString(350, 25, "UNIT PRICE")
     pdf.drawString(470, 25, "AMOUNT")
+    pdf.line(10, 35, width-55, 35)
+    pdf.setFillColor(colors.black)
 
     pdf.setFont('Helvetica', 10)
     pdf.drawString(250, 800, f"Page {page_number}")
 
     item_len = len(item_list)
 
-    start_y = 40
+    start_y = 50
 
     if item_len <= 20:
         
@@ -97,15 +104,13 @@ def add_another_page(pdf, item_list, currency, document, document_type):
             pdf.drawString(80, start_y+10, str(item["name"]))
             pdf.drawRightString(430, start_y+10, str(item["sales_price"]))
             pdf.drawRightString(535, start_y+10, str(item["amount"]))
-                
-            start_y += 20
+            
+            pdf.line(10, start_y+20, width-55, start_y+20)
+            start_y += 35
 
-        pdf.line(10, 10, 10, start_y)
-        pdf.line(70, 10, 70, start_y)
-        pdf.line(320, 10, 320, start_y)
-        pdf.line(450, 10, 450, start_y)
-        pdf.line(540, 10, 540, start_y)
-        pdf.line(10, start_y, 540, start_y)
+        pdf.line(70, 5, 70, start_y-15)
+        pdf.line(320, 5, 320, start_y-15)
+        pdf.line(450, 5, 450, start_y-15)
 
 
 
@@ -114,26 +119,24 @@ def add_another_page(pdf, item_list, currency, document, document_type):
     else:
         i = 0
         for item in item_list:
-            if i == 36:
+            if i == 21:
                 break
 
             pdf.drawString(40, start_y+10, str(item["quantity"]))
             pdf.drawString(80, start_y+10, str(item["name"]))
             pdf.drawRightString(430, start_y+10, str(item["sales_price"]))
             pdf.drawRightString(535, start_y+10, str(item["amount"]))
-                
-            start_y += 20
+            
+            pdf.line(10, start_y+20, width-55, start_y+20)
+            start_y += 35
             i += 1
         
-        pdf.line(10, 10, 10, start_y)
-        pdf.line(70, 10, 70, start_y)
-        pdf.line(320, 10, 320, start_y)
-        pdf.line(450, 10, 450, start_y)
-        pdf.line(540, 10, 540, start_y)
-        pdf.line(10, start_y, 540, start_y)
+        pdf.line(70, 5, 70, start_y-15)
+        pdf.line(320, 5, 320, start_y-15)
+        pdf.line(450, 5, 450, start_y-15)
 
         
-        pdf, start_y = add_another_page(pdf, item_list[36:], currency, document, document_type)
+        pdf, start_y = add_another_page(pdf, item_list[21:], currency, document, document_type)
 
 
     return pdf, start_y
@@ -144,56 +147,47 @@ def add_another_page(pdf, item_list, currency, document, document_type):
 
 
 def total_box(pdf, start_y, currency, document_type, document):
-    fill_colour = colors.Color(0, 0, 0, 0.04)
+    fill_color = colors.Color(127/255, 190/255, 219/255)
     if document_type == "invoice":
-        pdf.rect(450, start_y, 90, 95)
         # it will have sub total
         pdf.drawRightString(440, start_y+20, "Subtotal")
         pdf.drawRightString(535, start_y+20, f"{document['sub_total']}")
-        pdf.line(450, start_y+25, 540, start_y+25)
         # tax, additional charges, discount_amount
         pdf.drawRightString(440, start_y+40, "Tax")
         pdf.drawRightString(535, start_y+40, f"{document['tax']}")
-        pdf.line(450, start_y+50, 540, start_y+50)
         pdf.drawRightString(440, start_y+60, "Additional Charges")
         pdf.drawRightString(535, start_y+60, f"{document['add_charges']}")
-        pdf.line(450, start_y+70, 540, start_y+70)
         pdf.drawRightString(440, start_y+85, "Discount Amount")
         pdf.drawRightString(535, start_y+85, f"{document['discount_amount']}")
 
-        pdf.setFillColor(fill_colour)
-        pdf.rect(450, start_y+95, 90, 35, fill=1)
         pdf.setFillColor(colors.black)
         pdf.setFont('Helvetica-Bold', 20)
-        pdf.drawRightString(440, start_y+120, "Total")
+        pdf.drawImage("app/pdf/logo_22_total.png", 250, start_y+100, width=300, height=150)
         pdf.setFont('Helvetica-Bold', 15)
-        pdf.drawRightString(535, start_y+120, f"{currency} {document['grand_total']}")
+        pdf.drawRightString(510, start_y+140, f"{currency} {document['grand_total']}")
         
 
 
     else:
-        pdf.rect(450, start_y, 90, 75)
         # tax, additional charges, discount_amount
         pdf.drawRightString(440, start_y+20, "Tax")
         pdf.drawRightString(535, start_y+20, f"{document['tax']}")
-        pdf.line(450, start_y+25, 540, start_y+25)
         pdf.drawRightString(440, start_y+40, "Additional Charges")
         pdf.drawRightString(535, start_y+40, f"{document['add_charges']}")
-        pdf.line(450, start_y+50, 540, start_y+50)
         pdf.drawRightString(440, start_y+65, "Discount Amount")
         pdf.drawRightString(535, start_y+65, f"{document['discount_amount']}")
 
-        pdf.setFillColor(fill_colour)
-        pdf.rect(450, start_y+75, 90, 35, fill=1)
         pdf.setFillColor(colors.black)
         pdf.setFont('Helvetica-Bold', 20)
-        pdf.drawRightString(440, start_y+100, "Total")
+        pdf.drawImage("app/pdf/logo_22_total.png", 250, start_y+80, width=300, height=150)
         pdf.setFont('Helvetica-Bold', 15)
-        pdf.drawRightString(535, start_y+100, f"{currency} {document['grand_total']}")
+        pdf.drawRightString(515, start_y+120, f"{currency} {document['grand_total']}")
 
 
     pdf.setFont('Helvetica-Bold', 10)
+    pdf.setFillColor(fill_color)
     pdf.drawString(10, 750, "Terms & Conditions")
+    pdf.setFillColor(colors.black)
     pdf.setFont('Helvetica', 10)
     pdf = draw_wrapped_line(pdf, document["terms"].title(), 100, 10, 765, 15)
             
@@ -223,7 +217,7 @@ def total_box(pdf, start_y, currency, document_type, document):
 
 
 
-def get_report_41(buffer, document, currency, document_type, request):
+def get_report_22(buffer, document, currency, document_type, request):
 
     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
@@ -235,44 +229,49 @@ def get_report_41(buffer, document, currency, document_type, request):
     pdf.setPageSize((A4[0], A4[1]))
 
     width = pdf._pagesize[0]
+    height = pdf._pagesize[1]
     pdf.setTitle(document_type.title())
 
+    
 
-    pdf.setLineWidth(0.1)
+    fill_color = colors.Color(127/255, 190/255, 219/255)
 
-    if request.user.logo_path:
-        pdf = draw_image(pdf, request.user.logo_path, request.user.email, 540, 140, "logo")
+    for i in range(0,int(height), 40):
+        pdf.drawImage("app/pdf/logo_22_row.png", -30, i, width=width, height=10)
+
+    
+    pdf.drawImage("app/pdf/logo_22_up.png", 280, 0, width=270, height=70)
+    pdf.setFontSize(17)
+    pdf.drawRightString(430, 40, f"{document_type.split(' ')[0].upper()} No.")
             
 
 
     pdf.setFont('Helvetica-Bold', 20)
-    fill_color = colors.Color(150/255, 3/255, 3/255)
-    pdf.setFillColor(fill_color)
-    pdf.rect(0, 0, 550, 25, stroke=0, fill=1)
-    pdf.setFillColor(colors.white)
     pdf = draw_wrapped_line(pdf, request.user.business_name.title(), 100, 10, 20, 10)
-    pdf.drawRightString(width - 55, 20, f"{document_type.upper()}")
-    pdf.setFillColor(colors.black)
-    # pdf.setStrokeColor(colors.black)
     pdf.setFont('Helvetica', 10)
     pdf = draw_wrapped_line(pdf, request.user.address.capitalize(), 100, 10, 40, 10)
     pdf = draw_wrapped_line(pdf, request.user.email, 100, 10, 55, 10)
     pdf = draw_wrapped_line(pdf, request.user.phone_number, 100, 10, 70, 10)
 
 
+
+
+
     
     pdf.setFont('Helvetica-Bold', 10)
-    pdf.drawString(10, 170, "Bill To")
-    pdf.drawString(190, 170, "Ship To")
+    pdf.setFillColor(fill_color)
+    pdf.drawString(10, 120, "BILL TO")
+    pdf.drawString(190, 120, "SHIP TO")
+    pdf.setFillColor(colors.black)
     pdf.setFont('Helvetica', 10)
-    pdf = draw_wrapped_line(pdf, document["bill_to"], 40, 10, 185, 10)
-    pdf = draw_wrapped_line(pdf, document["ship_to"], 40, 190, 185, 10)
+    pdf = draw_wrapped_line(pdf, document["bill_to"], 40, 10, 135, 10)
+    pdf = draw_wrapped_line(pdf, document["ship_to"], 40, 190, 135, 10)
 
-
-
-    pdf.drawRightString(470, 170, f"{document_type.title()} #")
-    pdf.drawRightString(470, 190, f"{document_type.title()} Date")
-    pdf.drawRightString(470, 210, "Due Date")
+    pdf.setFont('Helvetica-Bold', 10)
+    pdf.setFillColor(fill_color)
+    pdf.drawRightString(460, 120, f"{document_type.split(' ')[0].upper()} DATE")
+    pdf.drawRightString(460, 140, "DUE DATE")
+    pdf.setFillColor(colors.black)
 
     documents = {'invoice': "invoice_number",
                 "proforma invoice": "invoice_number",
@@ -287,24 +286,24 @@ def get_report_41(buffer, document, currency, document_type, request):
     doc_number_key = documents[document_type]
     doc_date_key = doc_number_key.replace('number', 'date')
 
+    pdf.setFont('Helvetica', 20)
+    pdf.drawString(440, 40, f"{document[doc_number_key]}")
     pdf.setFont('Helvetica', 10)
-
-    pdf.drawRightString(width - 55, 170, f"{document[doc_number_key]}")
-    pdf.drawRightString(width - 55, 190, f"{document[doc_date_key]}")
-    pdf.drawRightString(width - 55, 210, f"{document['due_date']}")
+    pdf.drawRightString(width - 55, 120, f"{document[doc_date_key]}")
+    pdf.drawRightString(width - 55, 140, f"{document['due_date']}")
 
 
-    pdf.setFont('Helvetica-Bold', 10)
-    
-    fill_colour = colors.Color(0, 0, 0, 0.04)
-    pdf.setFillColor(fill_colour)
-    pdf.rect(10, 230, 530, 25, fill=1)
+    pdf.setFont('Helvetica-Bold', 13)
+
+    pdf.setLineWidth(3)
+    pdf.line(10, 180, width-55, 180)
+    pdf.setFillColor(fill_color)
+    pdf.drawString(35, 200, "QTY")
+    pdf.drawString(150, 200, "DESCRIPTION")
+    pdf.drawString(350, 200, "UNIT PRICE")
+    pdf.drawString(470, 200, "AMOUNT")
+    pdf.line(10, 210, width-55, 210)
     pdf.setFillColor(colors.black)
-
-    pdf.drawString(35, 245, "QTY")
-    pdf.drawString(150, 245, "DESCRIPTION")
-    pdf.drawString(350, 245, "UNIT PRICE")
-    pdf.drawString(470, 245, "AMOUNT")
 
     pdf.setFont('Helvetica', 10)
 
@@ -313,9 +312,9 @@ def get_report_41(buffer, document, currency, document_type, request):
     item_list = document["item_list"]
     item_len = len(item_list)
 
-    start_y = 275
+    start_y = 230
 
-    if item_len <= 20:
+    if item_len <= 10:
         # it will spill to another page
         for item in item_list:
             pdf.drawString(40, start_y, str(item["quantity"]))
@@ -323,41 +322,35 @@ def get_report_41(buffer, document, currency, document_type, request):
             pdf.drawRightString(430, start_y, str(item["sales_price"]))
             pdf.drawRightString(535, start_y, str(item["amount"]))
                 
-            start_y += 20
+            pdf.line(10, start_y+15, width-55, start_y+15)
+            start_y += 35
 
-        pdf.line(10, 230, 10, start_y)
-        pdf.line(70, 230, 70, start_y)
-        pdf.line(320, 230, 320, start_y)
-        pdf.line(450, 230, 450, start_y)
-        pdf.line(540, 230, 540, start_y)
-        pdf.line(10, start_y, 540, start_y)
-
-
+        pdf.line(70, 180, 70, start_y-20)
+        pdf.line(320, 180, 320, start_y-20)
+        pdf.line(450, 180, 450, start_y-20)
 
         pdf = total_box(pdf, start_y, currency, document_type, document)
 
     else:
         i = 0
         for item in item_list:
-            if i == 23:
+            if i == 16:
                 break
 
             pdf.drawString(40, start_y, str(item["quantity"]))
             pdf.drawString(80, start_y, str(item["name"]))
             pdf.drawRightString(430, start_y, str(item["sales_price"]))
             pdf.drawRightString(535, start_y, str(item["amount"]))
-                
-            start_y += 20
+            
+            pdf.line(10, start_y+15, width-55, start_y+15)
+            start_y += 35
             i += 1
         
-        pdf.line(10, 230, 10, start_y)
-        pdf.line(70, 230, 70, start_y)
-        pdf.line(320, 230, 320, start_y)
-        pdf.line(450, 230, 450, start_y)
-        pdf.line(540, 230, 540, start_y)
-        pdf.line(10, start_y, 540, start_y)
+        pdf.line(70, 180, 70, start_y-20)
+        pdf.line(320, 180, 320, start_y-20)
+        pdf.line(450, 180, 450, start_y-20)
 
-        pdf, start_y = add_another_page(pdf, item_list[23:], currency, document, document_type)
+        pdf, start_y = add_another_page(pdf, item_list[16:], currency, document, document_type)
 
 
     
