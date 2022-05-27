@@ -338,7 +338,7 @@ class InvoiceCreate(ModelSerializer):
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
     discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_discount_amount])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
@@ -464,7 +464,7 @@ class InvoiceEditSerializer(ModelSerializer):
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
     discount_amount = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_discount_amount])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
     required_error = "{fieldname} is required."
@@ -604,7 +604,7 @@ class ProformaCreateSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
 
@@ -717,7 +717,7 @@ class ProformaEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
     required_error = "{fieldname} is required."
@@ -853,7 +853,7 @@ class PurchaseCreateSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
 
@@ -965,7 +965,7 @@ class PurchaseEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
 
@@ -1092,7 +1092,7 @@ class EstimateCreateSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
 
@@ -1210,7 +1210,7 @@ class EstimateEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
 
@@ -1339,7 +1339,7 @@ class QuoteCreateSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
 
@@ -1450,7 +1450,7 @@ class QuoteEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
 
@@ -1582,7 +1582,7 @@ class CNCreateSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
 
@@ -1692,7 +1692,7 @@ class CNEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
 
@@ -1829,7 +1829,7 @@ class REceiptCreateSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
 
@@ -1946,7 +1946,7 @@ class ReceiptEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
 
@@ -2084,7 +2084,7 @@ class DNCreateSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
 
@@ -2199,7 +2199,7 @@ class DNEditSerializer(ModelSerializer):
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
-    recurring = serializers.DictField(required=True, validators = [validate_recurring], allow_empty=True)
+    recurring = serializers.DictField(validators = [validate_recurring], allow_empty=True, default={})
     pdf_number = serializers.CharField(required=False)
 
 
