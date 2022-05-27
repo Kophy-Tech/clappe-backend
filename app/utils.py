@@ -16,7 +16,9 @@ today_date = datetime.now()
 
 CURRENCY_MAPPING = {
     "Dollar": "$",
+    "Dollars": "$",
     "Pound": "£",
+    "Pounds": "£",
     "Rupees": "₹",
     "Naira": "₦",
 
