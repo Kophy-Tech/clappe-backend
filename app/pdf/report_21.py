@@ -143,7 +143,7 @@ def total_box(pdf, start_y, currency, document_type, document):
         pdf.drawRightString(535, start_y+60, f"{document['add_charges']}")
 
         pdf.drawRightString(440, start_y+85, "Discount Amount")
-        pdf.drawRightString(535, start_y+85, f"{document['discount_amount']}")
+        pdf.drawRightString(535, start_y+85, f"{document.get('discount_amount', '0')}")
 
         pdf.setFillColor(fill_colour)
         pdf.setFillColor(colors.black)
@@ -160,7 +160,7 @@ def total_box(pdf, start_y, currency, document_type, document):
         pdf.drawRightString(535, start_y+40, f"{document['add_charges']}")
 
         pdf.drawRightString(440, start_y+65, "Discount Amount")
-        pdf.drawRightString(535, start_y+65, f"{document['discount_amount']}")
+        pdf.drawRightString(535, start_y+65, f"{document.get('discount_amount', '0')}")
 
         pdf.setFillColor(fill_colour)
         pdf.setFillColor(colors.black)

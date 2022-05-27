@@ -461,8 +461,6 @@ def create_invoice(request):
         if not request.user.business_name or not request.user.address or not request.user.phone_number:
             return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
             
-
-
         form = InvoiceCreate(data=request.data)
         context = {}
 
@@ -962,10 +960,12 @@ def create_purchaseorder(request):
             if form.validated_data['download']:
                 buffer = io.BytesIO()
                 invoice_ser = PurchaseOrderSerailizer(new_po).data
+                print(invoice_ser)
                 invoice_ser['item_list'] = pdf_item_serializer(new_po.item_list, new_po.quantity_list)
                 file_name = get_pdf_file(buffer, invoice_ser, CURRENCY_MAPPING[request.user.currency], "purchase order", request, form.validated_data['pdf_number'])
 
                 buffer.seek(0)
+                print(file_name)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
                 context["filename"] = file_name
                 context["pdf_file"] = base64.b64encode(buffer.read())

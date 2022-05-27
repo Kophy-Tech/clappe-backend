@@ -81,7 +81,6 @@ PDF_FUNCTION_DICT = {
     "number_14": get_report_14,
     "number_29": get_report_29,
     "number_36": get_report_36,
-
     "number_42": get_report_42,
     "number_24": get_report_24,
     "number_9": get_report_9,

@@ -44,7 +44,7 @@ class MyUsers(AbstractUser):
 
 
     def __str__(self):
-        return self.first_name + ' ' + self.last_name + '-' 
+        return self.email
 
 
 
@@ -136,7 +136,7 @@ class ProformaInvoice(models.Model):
     recurring_data = models.JSONField(default=dict)
     invoice_number = models.CharField("Invoice number", blank=True, null=True, max_length=2048)
     invoice_date = models.DateField("Invoice Date", blank=False, null=False)
-    po_number = models.CharField("PO number", blank=False, null=False, max_length=2048)
+    po_number = models.CharField("PO number", blank=True, null=True, max_length=2048)
     due_date = models.DateField("Due Date", blank=False, null=False)
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
     attachment_path = models.CharField("Attachment Path", max_length=2048, blank=True, null=True)
@@ -179,7 +179,7 @@ class PurchaseOrder(models.Model):
 
     po_number = models.CharField("PO number", blank=True, null=True, max_length=2048)
     po_date = models.DateField("Purchase Order Date", blank=False, null=False)
-    due_date = models.DateField("Due Date", blank=False, null=False, default=timezone.now)
+    due_date = models.DateField("Due Date", blank=True, null=True, default=timezone.now)
     ship_to = models.CharField("Ship to", max_length=500, null=True, blank=True, default="")
     shipping_address = models.CharField("Shipping Address", max_length=500, null=True, blank=True, default="")
     bill_to = models.CharField("Bill To", max_length=2048, blank=True, null=True, default="")

@@ -123,7 +123,7 @@ def total_box(pdf, start_y, currency, document_type, document):
         pdf.drawRightString(535, start_y+20, f"{document['sub_total']}")
         pdf.drawRightString(535, start_y+40, f"{document['tax']}")
         pdf.drawRightString(535, start_y+60, f"{document['add_charges']}")
-        pdf.drawRightString(535, start_y+85, f"{document['discount_amount']}")
+        pdf.drawRightString(535, start_y+85, f"{document.get('discount_amount', '0')}")
 
         pdf.setFont('Helvetica', 15)
         pdf.drawRightString(535, start_y+120, f"{currency} {document['grand_total']}")
@@ -143,7 +143,7 @@ def total_box(pdf, start_y, currency, document_type, document):
         pdf.setFillColor(colors.black)
         pdf.drawRightString(535, start_y+20, f"{document['tax']}")
         pdf.drawRightString(535, start_y+40, f"{document['add_charges']}")
-        pdf.drawRightString(535, start_y+65, f"{document['discount_amount']}")
+        pdf.drawRightString(535, start_y+65, f"{document.get('discount_amount', '0')}")
 
         pdf.setFont('Helvetica', 15)
         pdf.drawRightString(535, start_y+100, f"{currency} {document['grand_total']}")

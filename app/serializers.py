@@ -1432,7 +1432,7 @@ class QuoteSerailizer(DynamicFieldsModelSerializer):
     class Meta:
         model = Quote
         fields = [
-                "id", "customer", "recurring", "recurring_data",
+                "id", "customer", "recurring", "recurring_data", "due_date",
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
 
@@ -2179,7 +2179,7 @@ class DNSerailizer(DynamicFieldsModelSerializer):
     class Meta:
         model = DeliveryNote
         fields = [
-                "id", "customer", "reucrring", "recurring_data", "bill_to", "billing_address",
+                "id", "customer", "recurring", "recurring_data", "bill_to", "billing_address",
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]      
 
