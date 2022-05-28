@@ -532,6 +532,8 @@ def edit_invoice(request, id):
                 serialized_invoice = InvoiceSerializer(invoice)
                 context['message'] = serialized_invoice.data
                 context["message"].pop("quantity_list")
+                context["message"]["recurring"] = context["message"]["recurring_data"]
+                context["message"].pop("recurring_data")
                 context['message']['item_list'] = custom_item_serializer(invoice.item_list, invoice.quantity_list)
 
                 return Response(context, status=status.HTTP_200_OK)
@@ -778,6 +780,8 @@ def edit_proforma(request, id):
                 serialized_proforma = ProformerInvoiceSerailizer(proforma)
                 context['message'] = serialized_proforma.data
                 context["message"].pop("quantity_list")
+                context["message"]["recurring"] = context["message"]["recurring_data"]
+                context["message"].pop("recurring_data")
                 context['message']['item_list'] = custom_item_serializer(proforma.item_list, proforma.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1019,6 +1023,8 @@ def edit_purchaseorder(request, id):
                 serialized_purchase = PurchaseOrderSerailizer(purchase)
                 context['message'] = serialized_purchase.data
                 context["message"].pop("quantity_list")
+                context["message"]["recurring"] = context["message"]["recurring_data"]
+                context["message"].pop("recurring_data")
                 context['message']['item_list'] = custom_item_serializer(purchase.item_list, purchase.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1412,6 +1418,8 @@ def edit_estimate(request, id):
                 serialized_estimate = EstimateSerailizer(estimate)
                 context['message'] = serialized_estimate.data
                 context["message"].pop("quantity_list")
+                context["message"]["recurring"] = context["message"]["recurring_data"]
+                context["message"].pop("recurring_data")
                 context['message']['item_list'] = custom_item_serializer(estimate.item_list, estimate.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -1837,6 +1845,8 @@ def edit_quote(request, id):
                 serialized_quote = QuoteSerailizer(quote)
                 context['message'] = serialized_quote.data
                 context["message"].pop("quantity_list")
+                context["message"]["recurring"] = context["message"]["recurring_data"]
+                context["message"].pop("recurring_data")
                 context['message']['item_list'] = custom_item_serializer(quote.item_list, quote.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -2082,6 +2092,8 @@ def edit_receipt(request, id):
                 serialized_receipt = ReceiptSerailizer(receipt)
                 context['message'] = serialized_receipt.data
                 context["message"].pop("quantity_list")
+                context["message"]["recurring"] = context["message"]["recurring_data"]
+                context["message"].pop("recurring_data")
                 context['message']['item_list'] = custom_item_serializer(receipt.item_list, receipt.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -2330,6 +2342,8 @@ def edit_credit(request, id):
                 serialized_credit = CreditNoteSerailizer(credit)
                 context['message'] = serialized_credit.data
                 context["message"].pop("quantity_list")
+                context["message"]["recurring"] = context["message"]["recurring_data"]
+                context["message"].pop("recurring_data")
                 context['message']['item_list'] = custom_item_serializer(credit.item_list, credit.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -2573,6 +2587,8 @@ def edit_delivery(request, id):
                 serialized_delivery = DNSerailizer(delivery)
                 context['message'] = serialized_delivery.data
                 context["message"].pop("quantity_list")
+                context["message"]["recurring"] = context["message"]["recurring_data"]
+                context["message"].pop("recurring_data")
                 context['message']['item_list'] = custom_item_serializer(delivery.item_list, delivery.quantity_list)
                 return Response(context, status=status.HTTP_200_OK)
 
