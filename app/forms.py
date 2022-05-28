@@ -82,7 +82,7 @@ class ScheduleForm(forms.Form):
 
         _, month, day = self.cleaned_data['date'].split("-")
         name = self.cleaned_data['name']
-        try:
+        if PeriodicTask.objects.filter(name=name).exists():
             my_task = PeriodicTask.objects.get(name=name)
 
             my_task.crontab.minute = 30
@@ -92,12 +92,10 @@ class ScheduleForm(forms.Form):
             my_task.crontab.save()
             my_task.save()
 
-            return my_task
+            # return my_task
         
-        except Exception as e:
-            print(e)
+        else:
             print(f"no {name}")
-            return None
 
      
 
@@ -175,22 +173,26 @@ class RecurringForm(forms.Form):
 
         _, day, month = start_date.split("-")
 
-        my_task = PeriodicTask.objects.get(name=name)
+        if PeriodicTask.objects.filter(name=name).exists():
+            my_task = PeriodicTask.objects.get(name=name)
 
-        my_task.start_time = datetime.strptime(start_date, "%Y-%m-%d") + relativedelta(hours=8, minutes=30)
-        my_task.expires = datetime.strptime(end_date, "%Y-%m-%d") + relativedelta(hours=8, minutes=30)
+            my_task.start_time = datetime.strptime(start_date, "%Y-%m-%d") + relativedelta(hours=8, minutes=30)
+            my_task.expires = datetime.strptime(end_date, "%Y-%m-%d") + relativedelta(hours=8, minutes=30)
 
-        my_task.save()
+            my_task.save()
 
-        my_task.crontab.day_of_month = day
-        my_task.crontab.month_of_year = month
+            my_task.crontab.day_of_month = day
+            my_task.crontab.month_of_year = month
 
-        my_task.save()
+            my_task.save()
+        
+            print(f"Updated recurring task for {email} ({document_type.capitalize()} - {document_id})")
+
+            return my_task
+        else:
+            print(f"no {name}")
 
 
-        print(f"Updated recurring task for {email} ({document_type.capitalize()} - {document_id})")
-
-        return my_task
 
 
     def delete(self):
@@ -243,7 +245,7 @@ class EstimateExpiration(forms.Form):
     
     def update(self):
         date_time = self.cleaned_data['date_time']
-        document_id = self.cleaned_data['documnet_id']
+        document_id = self.cleaned_data['document_id']
         email = self.cleaned_data['email']
 
         task_date = datetime.strptime(date_time, "%Y-%m-%d %H:%M")
@@ -263,7 +265,7 @@ class EstimateExpiration(forms.Form):
 
     
     def delete(self):
-        document_id = self.cleaned_data['documnet_id']
+        document_id = self.cleaned_data['document_id']
         email = self.cleaned_data['email']
 
         name = f"Estimate approval for {email} - ({document_id})"
@@ -326,12 +328,12 @@ def set_tasks(document, doc_type, save=True):
             _ = to_unpaid_schedule.save()
     
 
-    
+
     else:
         print("inside forms.oy, updating the tasks.")
         email_notif_schedule = ScheduleForm(email_notif_details)
         if email_notif_schedule.is_valid():
-            _ = email_notif_schedule.update()
+            email_notif_schedule.update()
         else:
             print('invalid email notif')
             print(email_notif_schedule.errors)
@@ -339,14 +341,15 @@ def set_tasks(document, doc_type, save=True):
 
         to_pending_schedule = ScheduleForm(to_pending_details)
         if to_pending_schedule.is_valid():
-            _ = to_pending_schedule.update()
+            to_pending_schedule.update()
         else:
             print("invalid pending schedule")
             print(to_pending_schedule.errors)
 
+
         to_unpaid_schedule = ScheduleForm(to_unpaid_details)
         if to_unpaid_schedule.is_valid():
-            _ = to_unpaid_schedule.update()
+            to_unpaid_schedule.update()
         else:
             print("invalid unpaid schedule")
             print(to_unpaid_schedule.errors)

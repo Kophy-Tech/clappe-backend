@@ -1037,6 +1037,7 @@ class PurchaseEditSerializer(ModelSerializer):
         instance.save()
 
         if len(recurring_data) > 0:
+            print("trying to get recurring")
             set_recurring_task(instance, "purchase order", "update")
 
         return instance
