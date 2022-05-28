@@ -12,11 +12,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name='myusers',
-            name='username',
-            field=models.CharField(blank=True, max_length=1024, null=True, unique=True, verbose_name='Username'),
-        ),
-        migrations.AlterField(
             model_name='purchaseorder',
             name='due_date',
             field=models.DateField(blank=True, default=django.utils.timezone.now, null=True, verbose_name='Due Date'),
