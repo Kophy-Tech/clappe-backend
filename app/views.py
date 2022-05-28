@@ -21274,306 +21274,233 @@ def item_report(request):
 @permission_classes((IsAuthenticated, ))
 def dashboard(request):
 
-    # how = request.query_params.get("how", None)
-
     context = {}
 
-    # stats
-
     # invoice
-    context["new_invoice"] = Invoice.objects.filter(status="New")\
+    invoice_data = {}
+    invoice_data["id"] = 1
+    invoice_data["title"] = "Invoice"
+    invoice_data["actions"] = ["New", "Unpaid", "Paid", "Emailed", "Overdue"]
+    new_invoice = Invoice.objects.filter(status="New")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["unpaid_invoice"] = Invoice.objects.filter(status="Unpaid")\
+    unpaid_invoice = Invoice.objects.filter(status="Unpaid")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["paid_invoice"] = Invoice.objects.filter(status="Paid")\
+    paid_invoice = Invoice.objects.filter(status="Paid")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["emailed_invoice"] = Invoice.objects.filter(emailed=True)\
+    emailed_invoice = Invoice.objects.filter(emailed=True)\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["overdue_invoice"] = Invoice.objects.filter(status="Overdue")\
+    overdue_invoice = Invoice.objects.filter(status="Overdue")\
                                             .filter(vendor=request.user.id)\
                                             .count()
+    invoice_data["data"] = [new_invoice, unpaid_invoice, paid_invoice, emailed_invoice, overdue_invoice]
 
 
     # proforma
-    context["new_proforma"] = ProformaInvoice.objects.filter(status="New")\
+    proforma_data = {}
+    proforma_data["id"] = 2
+    proforma_data["title"] = "Proforma Invoice"
+    proforma_data["actions"] = ["New", "Unpaid", "Paid", "Emailed", "Overdue"]
+    new_proforma = ProformaInvoice.objects.filter(status="New")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["unpaid_proforma"] = ProformaInvoice.objects.filter(status="Unpaid")\
+    unpaid_proforma = ProformaInvoice.objects.filter(status="Unpaid")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["paid_proforma"] = ProformaInvoice.objects.filter(status="Paid")\
+    paid_proforma = ProformaInvoice.objects.filter(status="Paid")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["emailed_proforma"] = ProformaInvoice.objects.filter(emailed=True)\
+    emailed_proforma = ProformaInvoice.objects.filter(emailed=True)\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["overdue_proforma"] = ProformaInvoice.objects.filter(status="Overdue")\
+    overdue_proforma = ProformaInvoice.objects.filter(status="Overdue")\
                                             .filter(vendor=request.user.id)\
                                             .count()
+
+    proforma_data["data"] = [new_proforma, unpaid_proforma, paid_proforma, emailed_proforma, overdue_proforma]
 
 
     # purchase
-    context["new_purchase"] = PurchaseOrder.objects.filter(status="New")\
+    purchase_data = {}
+    purchase_data["id"] = 3
+    purchase_data["title"] = "Purchase Order"
+    purchase_data["actions"] = ["New", "Unpaid", "Paid", "Emailed", "Overdue"]
+    new_purchase = PurchaseOrder.objects.filter(status="New")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["unpaid_purchase"] = PurchaseOrder.objects.filter(status="Unpaid")\
+    unpaid_purchase = PurchaseOrder.objects.filter(status="Unpaid")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["paid_purchase"] = PurchaseOrder.objects.filter(status="Paid")\
+    paid_purchase = PurchaseOrder.objects.filter(status="Paid")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["emailed_purchase"] = PurchaseOrder.objects.filter(emailed=True)\
+    emailed_purchase = PurchaseOrder.objects.filter(emailed=True)\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["overdue_purchase"] = PurchaseOrder.objects.filter(status="Overdue")\
+    overdue_purchase = PurchaseOrder.objects.filter(status="Overdue")\
                                             .filter(vendor=request.user.id)\
                                             .count()
 
+    purchase_data["data"] = [new_purchase, unpaid_purchase, paid_purchase, emailed_purchase, overdue_purchase]
 
     # estimate
-    context["new_estimate"] = Estimate.objects.filter(status="New")\
+    estimate_data = {}
+    estimate_data["id"] = 4
+    estimate_data["title"] = "Estimate"
+    estimate_data["actions"] = ["New", "Pending", "Accepted", "Rejected", "Emailed"]
+    new_estimate = Estimate.objects.filter(status="New")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["unpaid_estimate"] = Estimate.objects.filter(status="Unpaid")\
+    pending_estimate = Estimate.objects.filter(status="Pending")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["paid_estimate"] = Estimate.objects.filter(status="Paid")\
+    accepted_estimate = Estimate.objects.filter(status="Accepted")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["emailed_estimate"] = Estimate.objects.filter(emailed=True)\
+    rejected_estimate = Estimate.objects.filter(status="Rejected")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["overdue_estimate"] = Estimate.objects.filter(status="Overdue")\
+    emailed_estimate = Estimate.objects.filter(emailed=True)\
                                             .filter(vendor=request.user.id)\
                                             .count()
 
+    estimate_data["data"] = [new_estimate, pending_estimate, accepted_estimate, rejected_estimate, emailed_estimate ]
+    
 
     # quote
-    context["new_quote"] = Quote.objects.filter(status="New")\
+    quote_data = {}
+    quote_data["id"] = 5
+    quote_data["title"] = "Quote"
+    quote_data["actions"] = ["New", "Unpaid", "Paid", "Emailed", "Overdue"]
+    new_quote = Quote.objects.filter(status="New")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["unpaid_quote"] = Quote.objects.filter(status="Unpaid")\
+    unpaid_quote = Quote.objects.filter(status="Unpaid")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["paid_quote"] = Quote.objects.filter(status="Paid")\
+    paid_quote = Quote.objects.filter(status="Paid")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["emailed_quote"] = Quote.objects.filter(emailed=True)\
+    emailed_quote = Quote.objects.filter(emailed=True)\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["overdue_quote"] = Quote.objects.filter(status="Overdue")\
+    overdue_quote = Quote.objects.filter(status="Overdue")\
                                             .filter(vendor=request.user.id)\
                                             .count()
+
+    quote_data["data"] = [new_quote, unpaid_quote, paid_quote, emailed_quote, overdue_quote]
+
 
 
     # receipt
-    context["new_receipt"] = Receipt.objects.filter(status="New")\
+    receipt_data = {}
+    receipt_data["id"] = 6
+    receipt_data["title"] = "Receipt"
+    receipt_data["actions"] = ["New", "Unpaid", "Paid", "Emailed", "Overdue"]
+    new_receipt = Receipt.objects.filter(status="New")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["unpaid_receipt"] = Receipt.objects.filter(status="Unpaid")\
+    unpaid_receipt = Receipt.objects.filter(status="Unpaid")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["paid_receipt"] = Receipt.objects.filter(status="Paid")\
+    paid_receipt = Receipt.objects.filter(status="Paid")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["emailed_receipt"] = Receipt.objects.filter(emailed=True)\
+    emailed_receipt = Receipt.objects.filter(emailed=True)\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["overdue_receipt"] = Receipt.objects.filter(status="Overdue")\
+    overdue_receipt = Receipt.objects.filter(status="Overdue")\
                                             .filter(vendor=request.user.id)\
                                             .count()
+
+    receipt_data["data"] = [new_receipt, unpaid_receipt, paid_receipt, emailed_receipt, overdue_receipt]
 
 
     # credit
-    context["new_credit"] = CreditNote.objects.filter(status="New")\
+    credit_data = {}
+    credit_data["id"] = 7
+    credit_data["title"] = "Credit Note"
+    credit_data["actions"] = ["New", "Unpaid", "Paid", "Emailed", "Overdue"]
+    new_credit = CreditNote.objects.filter(status="New")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["unpaid_credit"] = CreditNote.objects.filter(status="Unpaid")\
+    unpaid_credit = CreditNote.objects.filter(status="Unpaid")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["paid_credit"] = CreditNote.objects.filter(status="Paid")\
+    paid_credit = CreditNote.objects.filter(status="Paid")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["emailed_credit"] = CreditNote.objects.filter(emailed=True)\
+    emailed_credit = CreditNote.objects.filter(emailed=True)\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["overdue_credit"] = CreditNote.objects.filter(status="Overdue")\
+    overdue_credit = CreditNote.objects.filter(status="Overdue")\
                                             .filter(vendor=request.user.id)\
                                             .count()
+
+    credit_data["data"] = [new_credit, unpaid_credit, paid_credit, emailed_credit, overdue_credit]
+    
 
 
     # delivery
-    context["new_delivery"] = DeliveryNote.objects.filter(status="New")\
+    delivery_data = {}
+    delivery_data["id"] = 8
+    delivery_data["title"] = "Delivery Note"
+    delivery_data["actions"] = ["New", "Unpaid", "Paid", "Emailed", "Overdue"]
+    new_delivery = DeliveryNote.objects.filter(status="New")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["unpaid_delivery"] = DeliveryNote.objects.filter(status="Unpaid")\
+    unpaid_delivery = DeliveryNote.objects.filter(status="Unpaid")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["paid_delivery"] = DeliveryNote.objects.filter(status="Paid")\
+    paid_delivery = DeliveryNote.objects.filter(status="Paid")\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["emailed_delivery"] = DeliveryNote.objects.filter(emailed=True)\
+    emailed_delivery = DeliveryNote.objects.filter(emailed=True)\
                                             .filter(vendor=request.user.id)\
                                             .count()
-    context["overdue_delivery"] = DeliveryNote.objects.filter(status="Overdue")\
+    overdue_delivery = DeliveryNote.objects.filter(status="Overdue")\
                                             .filter(vendor=request.user.id)\
                                             .count()
+
+    delivery_data["data"] = [new_delivery, unpaid_delivery, paid_delivery, emailed_delivery, overdue_delivery]
 
 
 
 
-    # graph
-    how = request.query_params.get("how", None)    
+    # item
+    item_data = {}
+    item_data["id"] = 9
+    item_data["title"] = "Item"
+    item_data["actions"] = ["New", "In Stock", "Out of Stock"]
+
+    new_item = Item.objects.filter(status="New").filter(vendor=request.user.id).count()
+    in_stock_item = Item.objects.filter(status="In Stock").filter(vendor=request.user.id).count()
+    out_of_stock_item = Item.objects.filter(status="Out of Stock").filter(vendor=request.user.id).count()
+
+    item_data["data"] = [new_item, in_stock_item, out_of_stock_item]
+
+
+
+    # customer
+    customer_data = {}
+    customer_data["id"] = 10
+    customer_data["title"] = "Customer"
+    customer_data["actions"] = ["New", "Active", "Total", "Pending"]
+
+    new_customer = Customer.objects.filter(vendor=request.user.id).filter(status="New").count()
+    active_customer = Customer.objects.filter(vendor=request.user.id).filter(status="Active").count()
+    total_customer = Customer.objects.filter(vendor=request.user.id).count()
+    pending_customer = Customer.objects.filter(vendor=request.user.id).filter(status="Pending").count()
+
+    customer_data["data"] = [new_customer, active_customer, total_customer, pending_customer]
     
-    if how == "week":
-        context["week"] = {}
-        today_date = datetime.now()
-        start_month = datetime.strptime(f"{today_date.year}-{today_date.month}-1", "%Y-%m-%d")
-        for week in range(0, 5):
-            week_count = 0
-            start_week = start_month + timedelta(weeks=week)
-            end_week = start_month + timedelta(weeks=week+1)
 
-            week_count += Invoice.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__gte=start_week)\
-                                            .filter(date_created__lt=end_week)\
-                                            .count()
-                                            
-            week_count += ProformaInvoice.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__gte=start_week)\
-                                            .filter(date_created__lt=end_week)\
-                                            .count()
-                                            
-            week_count += PurchaseOrder.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__gte=start_week)\
-                                            .filter(date_created__lt=end_week)\
-                                            .count()
-                                            
-            week_count += Estimate.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__gte=start_week)\
-                                            .filter(date_created__lt=end_week)\
-                                            .count()
-                                            
-            week_count += Quote.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__gte=start_week)\
-                                            .filter(date_created__lt=end_week)\
-                                            .count()
-                                            
-            week_count += Receipt.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__gte=start_week)\
-                                            .filter(date_created__lt=end_week)\
-                                            .count()
-                                            
-            week_count += CreditNote.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__gte=start_week)\
-                                            .filter(date_created__lt=end_week)\
-                                            .count()
-                                            
-            week_count += DeliveryNote.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__gte=start_week)\
-                                            .filter(date_created__lt=end_week)\
-                                            .count()
-                                            
-
-            context["month"][f"week {week+1}"] = week_count
-
-    
-    elif how == "month":
-        context["month"] = {}
-        year = datetime.now().year
-        for month in range(1, 13):
-            month_count = 0
-            month_count += Invoice.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .filter(date_created__month=month)\
-                                            .count()
-
-            month_count += ProformaInvoice.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .filter(date_created__month=month)\
-                                            .count()
-
-            month_count += PurchaseOrder.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .filter(date_created__month=month)\
-                                            .count()
-
-            month_count += Estimate.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .filter(date_created__month=month)\
-                                            .count()
-
-            month_count += Quote.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .filter(date_created__month=month)\
-                                            .count()
-
-            month_count += Receipt.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .filter(date_created__month=month)\
-                                            .count()
-
-            month_count += CreditNote.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .filter(date_created__month=month)\
-                                            .count()
-
-            month_count += DeliveryNote.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .filter(date_created__month=month)\
-                                            .count()
-
-
-            context["month"][month] = month_count
-                                        
-
-    elif how == "year":
-        context["year"] = {}
-        current_year = datetime.now().year
-        for year in range(2022, current_year+1):
-            year_count = 0
-            year_count += Invoice.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .count()
-
-            year_count += ProformaInvoice.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .count()
-
-            year_count += PurchaseOrder.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .count()
-
-            year_count += Estimate.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .count()
-
-            year_count += Quote.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .count()
-
-            year_count += Receipt.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .count()
-
-            year_count += CreditNote.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .count()
-
-            year_count += DeliveryNote.objects.filter(vendor=request.user.id)\
-                                            .filter(date_created__year=year)\
-                                            .count()
-
-
-            context["year"][year] = year_count
-        
-        
-
-
+    context = {}
+    context["message"] = [invoice_data, proforma_data, purchase_data, estimate_data, quote_data, receipt_data, credit_data, 
+                            delivery_data, item_data, customer_data]
 
     return Response(context, status=status.HTTP_200_OK)
 

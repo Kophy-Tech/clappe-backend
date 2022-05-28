@@ -592,6 +592,7 @@ class Item(models.Model):
     date_created = models.DateTimeField("Date created", auto_now_add=True)
     date_modified = models.DateTimeField("Date modified", auto_now=True)
     sku = models.CharField("SKU", max_length=15, blank=True, null=True, unique=True)
+    status = models.CharField("Status", max_length=64, blank=True, null=True, default="New")
 
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
 
