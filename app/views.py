@@ -3,7 +3,7 @@ from dateutil.relativedelta import relativedelta
 import os, io, base64
 from collections import namedtuple
 from django.contrib.auth import authenticate
-from django.http import FileResponse, HttpResponse
+from django.http import HttpResponse
 
 from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -32,7 +32,7 @@ from .models import JWT, CreditNote, Customer, DeliveryNote, Estimate, Invoice, 
 from app.my_email import send_my_email
 from .authentication import get_access_token, MyAuthentication
 from app.utils import encode_estimate, decode_estimate, custom_item_serializer, CURRENCY_MAPPING, get_pdf_file
-from .forms import EstimateExpiration
+from .forms import EstimateExpiration, delete_tasks
 
 
 
@@ -435,7 +435,7 @@ def all_invoice(request):
 
     if len(my_invoice) > 0:
         invoices = InvoiceSerializer(my_invoice, many=True)
-        # context["message"] = invoices.data
+        
         total_invoices = []
         for invoice in invoices.data:
             invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
@@ -468,9 +468,6 @@ def create_invoice(request):
             new_invoice = form.save(request)
             context['message'] = "Invoice created successfully"
             context['invoice'] = {"id": new_invoice.id, **form.data}
-            # context['invoice']['item_list'] = [{"id": a, "quantity": b} for a,b in zip(new_invoice.iten_list, new_invoice.quantity_list)]
-            # context['invoice']['item_list'] = custom_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
-
 
             
             if form.validated_data['download']:
@@ -609,6 +606,7 @@ def edit_invoice(request, id):
     elif request.method == "DELETE":
         try:
             invoice = Invoice.objects.get(id=id)
+            delete_tasks(invoice, "invoice")
             invoice.delete()
             context = {"message": "Invoice deleted"}
 
@@ -853,6 +851,7 @@ def edit_proforma(request, id):
     elif request.method == "DELETE":
         try:
             proforma = ProformaInvoice.objects.get(id=id)
+            delete_tasks(proforma, "proforma invoice")
             proforma.delete()
             context = {"message": "Proforma invoice deleted"}
 
@@ -1092,6 +1091,7 @@ def edit_purchaseorder(request, id):
     elif request.method == "DELETE":
         try:
             purchase = PurchaseOrder.objects.get(id=id)
+            delete_tasks(purchase, "purchase order")
             purchase.delete()
             context = {"message": "Purchase order deleted"}
 
@@ -1525,6 +1525,7 @@ def edit_estimate(request, id):
     elif request.method == "DELETE":
         try:
             estimate = Estimate.objects.get(id=id)
+            delete_tasks(estimate, "estimate")
             estimate.delete()
             context = {"message": "Estimate deleted"}
 
@@ -1908,6 +1909,7 @@ def edit_quote(request, id):
     elif request.method == "DELETE":
         try:
             quote = Quote.objects.get(id=id)
+            delete_tasks(quote, "quote")
             quote.delete()
             context = {"message": "Quote deleted"}
 
@@ -2152,6 +2154,7 @@ def edit_receipt(request, id):
     elif request.method == "DELETE":
         try:
             receipt = Receipt.objects.get(id=id)
+            delete_tasks(receipt, "receipt")
             receipt.delete()
             context = {"message": "Receipt deleted"}
 
@@ -2398,6 +2401,7 @@ def edit_credit(request, id):
     elif request.method == "DELETE":
         try:
             credit = CreditNote.objects.get(id=id)
+            delete_tasks(credit, "credit note")
             credit.delete()
             context = {"message": "Credit note deleted"}
 
@@ -2640,6 +2644,7 @@ def edit_delivery(request, id):
     elif request.method == "DELETE":
         try:
             delivery = DeliveryNote.objects.get(id=id)
+            delete_tasks(delivery, "delivery note")
             delivery.delete()
             context = {"message": "Delivery note deleted"}
 

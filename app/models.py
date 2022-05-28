@@ -12,7 +12,7 @@ from cloudinary.models import CloudinaryField
 
 
 class MyUsers(AbstractUser):
-    username = models.CharField("Username", max_length=1024, null=True, unique=False, blank=True)
+    username = models.CharField("Username", max_length=1024, null=True, unique=True, blank=True)
     photo_path = CloudinaryField("Profile Photo", null=True, blank=True)
     logo_path = CloudinaryField("Logo Image", null=True,blank=True)
     signature = CloudinaryField("Signature", null=True, blank=True)

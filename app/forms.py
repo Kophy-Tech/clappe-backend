@@ -81,21 +81,23 @@ class ScheduleForm(forms.Form):
         # when editing a document
 
         _, month, day = self.cleaned_data['date'].split("-")
-        # document_type = self.cleaned_data['document_type']
-        # document_id = self.cleaned_data['document_id']
-        # email = self.cleaned_data['email']
         name = self.cleaned_data['name']
+        try:
+            my_task = PeriodicTask.objects.get(name=name)
 
-        my_task = PeriodicTask.objects.get(name=name)
+            my_task.crontab.minute = 30
+            my_task.crontab.hour = 8
+            my_task.crontab.day_of_month = day
+            my_task.crontab.month_of_year = month
+            my_task.crontab.save()
+            my_task.save()
 
-        my_task.crontab.minute = 30
-        my_task.crontab.hour = 8
-        my_task.crontab.day_of_month = day
-        my_task.crontab.month_of_year = month
-
-        my_task.save()
-
-        return my_task
+            return my_task
+        
+        except Exception as e:
+            print(e)
+            print(f"no {name}")
+            return None
 
      
 
@@ -180,8 +182,6 @@ class RecurringForm(forms.Form):
 
         my_task.save()
 
-        # my_task.crontab.minute = 30
-        # my_task.crontab.hour = 8
         my_task.crontab.day_of_month = day
         my_task.crontab.month_of_year = month
 
@@ -326,23 +326,51 @@ def set_tasks(document, doc_type, save=True):
             _ = to_unpaid_schedule.save()
     
     else:
+        print("inside forms.oy, updating the tasks.")
         email_notif_schedule = ScheduleForm(email_notif_details)
         if email_notif_schedule.is_valid():
             _ = email_notif_schedule.update()
+        else:
+            print('invalid email notif')
+            print(email_notif_schedule.errors)
 
 
         to_pending_schedule = ScheduleForm(to_pending_details)
         if to_pending_schedule.is_valid():
             _ = to_pending_schedule.update()
+        else:
+            print("invalid pending schedule")
+            print(to_pending_schedule.errors)
 
         to_unpaid_schedule = ScheduleForm(to_unpaid_details)
         if to_unpaid_schedule.is_valid():
             _ = to_unpaid_schedule.update()
+        else:
+            print("invalid unpaid schedule")
+            print(to_unpaid_schedule.errors)
+        
 
+def delete_tasks(document, doc_type):
+    email_notif_name = get_task_name(document.customer.email, doc_type, document.id, "email notif")
+    pending_name = get_task_name(document.customer.email, doc_type, document.id, "to pending")
+    unpaid_name = get_task_name(document.customer.email, doc_type, document.id, "to unpaid")
+    recurring_name = get_task_name(document.customer.email, doc_type, document.id, "recurring")
+    
+    email_notif_task = PeriodicTask.objects.get(name=email_notif_name)
+    pending_task = PeriodicTask.objects.get(name=pending_name)
+    unpaid_task = PeriodicTask.objects.get(name=unpaid_name)
+    if PeriodicTask.objects.filter(name=recurring_name).exists():
+        recurring_task = PeriodicTask.objects.get(name=recurring_name)
+        recurring_task.crontab.delete()
+
+    email_notif_task.crontab.delete()
+    pending_task.crontab.delete()
+    unpaid_task.crontab.delete()
 
 
 def set_recurring_task(document, document_type, action):
     recurring_details  = document.recurring_data
+
     if isinstance(recurring_details, str):
         recurring_details = json.loads(recurring_details)
 
@@ -364,6 +392,7 @@ def set_recurring_task(document, document_type, action):
         
         elif action == "update":
             _ = recurring_task.update()
-        
-        elif action == "delete":
-            recurring_task.delete()
+
+
+
+

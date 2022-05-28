@@ -129,7 +129,7 @@ class CustomerCreateSerializer(ModelSerializer):
         new_customer.phone_number = self.validated_data["phone_number"]
         new_customer.taxable = self.validated_data["taxable"]
         new_customer.invoice_pref = self.validated_data["invoice_pref"]
-        # new_customer.logo_path = self.validated_data["logo_path"]
+        
         new_customer.ship_to = self.validated_data["ship_to"]
         new_customer.shipping_address = self.validated_data["shipping_address"]
         new_customer.billing_address = self.validated_data["billing_address"]
@@ -157,9 +157,7 @@ class CustomerCreateSerializer(ModelSerializer):
         instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
         instance.billing_address = validated_data.get("billing_address", instance.billing_address)
         instance.notes = validated_data.get("notes", instance.notes)
-        # instance.status = validated_data.get("status", instance.status)
-        # instance.invoice_number = validated_data.get("invoice_number", instance.invoice_number)
-        # instance.amount = validated_data.get("amount", instance.amount)
+
 
         instance.save()
 
@@ -333,7 +331,7 @@ def pdf_item_serializer(items, quantities):
 
 
 class InvoiceCreate(ModelSerializer):
-    # invoice_date = serializers.DateField(required=True)
+    
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
     add_charges = serializers.CharField(required=False, allow_blank=True, allow_null=True,validators=[validate_add_charges])
@@ -346,7 +344,7 @@ class InvoiceCreate(ModelSerializer):
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
-    # invalid_error = "{fieldname} is not valid"
+    
     class Meta:
         model = Invoice
         fields = [
@@ -407,7 +405,7 @@ class InvoiceCreate(ModelSerializer):
         if add_charges == '':
             add_charges = 0
         new_invoice.add_charges = add_charges
-        # new_invoice.add_charges = self.validated_data.get("add_charges", 0)
+        
         new_invoice.sub_total = self.validated_data["sub_total"]
         new_invoice.discount_type = self.validated_data["discount_type"]
         new_invoice.discount_amount = self.validated_data.get("discount_amount", 0)
@@ -520,12 +518,12 @@ class InvoiceEditSerializer(ModelSerializer):
         if tax == '':
             tax = instance.tax
         instance.tax = tax
-        # instance.tax = validated_data.get("tax", instance.tax)
+        
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = instance.add_charges
         instance.add_charges = add_charges
-        # instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+        
         instance.sub_total = validated_data.get("sub_total", instance.sub_total)
         instance.discount_type = validated_data.get("discount_type", instance.discount_type)
         instance.discount_amount = validated_data.get("discount_amount", instance.discount_amount)
@@ -663,12 +661,12 @@ class ProformaCreateSerializer(ModelSerializer):
         if tax == '':
             tax = 0
         new_proforma.tax = tax
-        # new_proforma.tax = self.validated_data.get("tax", 0)
+        
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = 0
         new_proforma.add_charges = add_charges
-        # new_proforma.add_charges = self.validated_data.get("add_charges", 0)
+        
         new_proforma.grand_total = self.validated_data["grand_total"]
         
         new_proforma.status = "New"
@@ -772,12 +770,12 @@ class ProformaEditSerializer(ModelSerializer):
         if tax == '':
             tax = instance.tax
         instance.tax = tax
-        # instance.tax = validated_data.get("tax", instance.tax)
+        
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = instance.add_charges
         instance.add_charges = add_charges
-        # instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+        
         instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
         instance.save()
@@ -906,12 +904,12 @@ class PurchaseCreateSerializer(ModelSerializer):
         if tax == '':
             tax = 0
         new_purchaseorder.tax = tax
-        # new_purchaseorder.tax = self.validated_data.get("tax", 0)
+    
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = 0
         new_purchaseorder.add_charges = add_charges
-        # new_purchaseorder.add_charges = self.validated_data.get("add_charges", 0)
+    
         new_purchaseorder.grand_total = self.validated_data["grand_total"]
         
         
@@ -1016,12 +1014,12 @@ class PurchaseEditSerializer(ModelSerializer):
         if tax == '':
             tax = instance.tax
         instance.tax = tax
-        # instance.tax = validated_data.get("tax", instance.tax)
+        
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = instance.add_charges
         instance.add_charges = add_charges
-        # instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+        
         instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
         instance.save()
@@ -1146,12 +1144,12 @@ class EstimateCreateSerializer(ModelSerializer):
         if tax == '':
             tax = 0
         new_estimate.tax = tax
-        # new_estimate.tax = self.validated_data.get("tax", 0.0)
+
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = 0
         new_estimate.add_charges = add_charges
-        # new_estimate.add_charges = self.validated_data.get("add_charges", 0.0)
+
         new_estimate.grand_total = self.validated_data["grand_total"]
 
         
@@ -1260,12 +1258,12 @@ class EstimateEditSerializer(ModelSerializer):
         if tax == '':
             tax = instance.tax
         instance.tax = tax
-        # instance.tax = validated_data.get("tax", instance.tax)
+
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = instance.add_charges
         instance.add_charges = add_charges
-        # instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+
         instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
         instance.status = "Pending"
@@ -1392,12 +1390,12 @@ class QuoteCreateSerializer(ModelSerializer):
         if tax == '':
             tax = 0
         new_quote.tax = tax
-        # new_quote.tax = self.validated_data.get("tax", 0)
+
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = 0
         new_quote.add_charges = add_charges
-        # new_quote.add_charges = self.validated_data.get("add_charges", 0)
+
         new_quote.grand_total = self.validated_data["grand_total"]
 
         
@@ -1501,12 +1499,12 @@ class QuoteEditSerializer(ModelSerializer):
         if tax == '':
             tax = instance.tax
         instance.tax = tax
-        # instance.tax = validated_data.get("tax", instance.tax)
+        
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = instance.add_charges
         instance.add_charges = add_charges
-        # instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+        
         instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
         instance.save()
@@ -1636,12 +1634,12 @@ class CNCreateSerializer(ModelSerializer):
         if tax == '':
             tax = 0
         new_credit.tax = tax
-        # new_credit.tax = self.validated_data.get("tax", 0)
+
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = 0
         new_credit.add_charges = add_charges
-        # new_credit.add_charges = self.validated_data.get("add_charges", 0)
+
         new_credit.grand_total = self.validated_data["grand_total"]
 
         
@@ -1744,12 +1742,12 @@ class CNEditSerializer(ModelSerializer):
         if tax == '':
             tax = instance.tax
         instance.tax = tax
-        # instance.tax = validated_data.get("tax", instance.tax)
+
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = instance.add_charges
         instance.add_charges = add_charges
-        # instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+
         instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
         instance.save()
@@ -1886,12 +1884,12 @@ class REceiptCreateSerializer(ModelSerializer):
         if tax == '':
             tax = 0
         new_receipt.tax = tax
-        # new_receipt.tax = self.validated_data.get("tax", 0)
+
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = 0
         new_receipt.add_charges = add_charges
-        # new_receipt.add_charges = self.validated_data.get("add_charges", 0)
+
         new_receipt.grand_total = self.validated_data["grand_total"]
 
         
@@ -2001,12 +1999,12 @@ class ReceiptEditSerializer(ModelSerializer):
         if tax == '':
             tax = instance.tax
         instance.tax = tax
-        # instance.tax = validated_data.get("tax", instance.tax)
+
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = instance.add_charges
         instance.add_charges = add_charges
-        # instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+
         instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
         instance.save()
@@ -2140,12 +2138,12 @@ class DNCreateSerializer(ModelSerializer):
         if tax == '':
             tax = 0
         new_delivery.tax = tax
-        # new_delivery.tax = self.validated_data.get("tax", 0)
+
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = 0
         new_delivery.add_charges = add_charges
-        # new_delivery.add_charges = self.validated_data.get("add_charges", 0)
+
         new_delivery.grand_total = self.validated_data["grand_total"]
 
         
@@ -2254,12 +2252,12 @@ class DNEditSerializer(ModelSerializer):
         if tax == '':
             tax = instance.tax
         instance.tax = tax
-        # instance.tax = validated_data.get("tax", instance.tax)
+        
         add_charges = self.validated_data.get("add_charges", 0)
         if add_charges == '':
             add_charges = instance.add_charges
         instance.add_charges = add_charges
-        # instance.add_charges = validated_data.get("add_charges", instance.add_charges)
+        
         instance.grand_total = validated_data.get("grand_total", instance.grand_total)
 
         instance.save()

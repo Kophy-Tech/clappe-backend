@@ -10,8 +10,7 @@ from .serializers import InvoiceSerializer, ProformerInvoiceSerailizer, Purchase
                         pdf_item_serializer
 
 from .my_email import send_my_email
-from .utils import CURRENCY_MAPPING, add_date
-from app.pdf.main import get_report
+from .utils import CURRENCY_MAPPING, add_date, get_pdf_file
 from app.my_email import send_my_email
 
 from datetime import datetime
@@ -137,44 +136,37 @@ def send_due_mail_task(document_id: int, document_type: str):
 
 
 # sauce code: 219358
-        
-        
-    
 
 
-
-# don't remember what this is for
+# task for sending monthly report to users
 @shared_task
 def send_monthly_mail_task(document_id: int, document_type: str):
 
     document = get_doc(document_id, document_type)
-    # document.status = "Overdue"
-    # document.save()
-    
     document.status = "Overdue"
     document.save()
+    document_ser = get_ser_doc(document, document_type)
 
-    file_name = document_type.capitalize() + " Document.pdf"
+    Request = namedtuple("Request", "user")
+    request = Request(document.vendor)
 
-    get_report(file_name) #this method will create the pdf and save it.
+    filename = document_type.capitalize() + " Document.pdf"
+    document_ser['item_list'] = pdf_item_serializer(document.item_list, document.quantity_list)
+    _ = get_pdf_file(filename, document_ser, CURRENCY_MAPPING[request.user.currency], document_type, request, "number_1")
+    
     
     body = f"""
-        Attached to this email is your monthly {document_type.capitalize()} report from https://clappe.com.
+        Attached to this email is your monthly report from https://clappe.com.
         
         Thanks.
         """
 
     try:
-        send_my_email(document.email, body, file_name, "Your Monthly Report")
-        final = f"Successfully sent {file_name} to {document.email}"
-        os.remove(file_name)
+        send_my_email(document.email, body, filename, "Your Monthly Report")
+        os.remove(filename)
         
     except Exception as e:
         print(e)
-
-
-
-
 
 
 
@@ -228,11 +220,10 @@ def send_recurring_doc(document_id: int, document_type: str, task_id: int):
     # get report and send email
     now = today_date.strftime("%Y-%m-%d %H-%M-%S")
     filename = f"Recurring {document_type.title()} for {request.user.email} - {now}.pdf"
-    # invoice_ser = InvoiceSerializer(new_invoice).data
+    
     document_ser['item_list'] = pdf_item_serializer(document.item_list, document.quantity_list)
-    file_name = get_report(filename, document_ser, CURRENCY_MAPPING[request.user.currency], document_type, request, document_ser['terms'])
-    # body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
-    # subject = "Transaction Receipt"
+    _ = get_pdf_file(filename, document_ser, CURRENCY_MAPPING[request.user.currency], document_type, request, "number_1")
+    
     subject = recurring_data['subject']
     body = recurring_data['text']
 
@@ -262,8 +253,6 @@ def send_recurring_doc(document_id: int, document_type: str, task_id: int):
             if new_date > stop_date:
                 new_date = stop_date
 
-        # my_task.crontab.minute = 30
-        # my_task.crontab.hour = 8
         my_task.crontab.day_of_month = new_date.day
         my_task.crontab.month_of_year = new_date.month
 
@@ -284,3 +273,7 @@ def estimate_expire(document_id):
 
     estimate.status = "Expired"
     estimate.save()
+
+
+
+

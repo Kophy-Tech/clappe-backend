@@ -64,13 +64,6 @@ class MyAuthentication(BaseAuthentication):
     def verify_token(token):
         try:
             decoded = jwt.decode(token, settings.SECRET_KEY, algorithms='HS256')
+            return decoded
         except Exception:
             return None
-
-        exp = decoded['exp']
-
-        # if datetime.now().timestamp() > exp:
-        #     return None
-        
-        
-        return decoded
