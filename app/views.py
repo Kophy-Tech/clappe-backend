@@ -440,6 +440,8 @@ def all_invoice(request):
         for invoice in invoices.data:
             invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
             invoice.pop("quantity_list")
+            invoice["recurring"] = invoice["recurring_data"]
+            invoice.pop("recurring_data")
             total_invoices.append(invoice)
 
         context = {"message": total_invoices}
@@ -448,6 +450,9 @@ def all_invoice(request):
     else:
         context['message'] = "You don't have any Invoice"
         return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+
 
 
 
@@ -690,6 +695,8 @@ def all_proforma(request):
         for invoice in invoices.data:
             invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
             invoice.pop("quantity_list")
+            invoice["recurring"] = invoice["recurring_data"]
+            invoice.pop("recurring_data")
             total_invoices.append(invoice)
 
         context = {"message": total_invoices}
@@ -931,6 +938,8 @@ def all_purchaseorder(request):
         for invoice in pos.data:
             invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
             invoice.pop("quantity_list")
+            invoice["recurring"] = invoice["recurring_data"]
+            invoice.pop("recurring_data")
             total_invoices.append(invoice)
 
         context = {"message": total_invoices}
@@ -1184,6 +1193,8 @@ def all_estimate(request):
         for invoice in estimates.data:
             invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
             invoice.pop("quantity_list")
+            invoice["recurring"] = invoice["recurring_data"]
+            invoice.pop("recurring_data")
             total_invoices.append(invoice)
 
         context = {"message": total_invoices}
@@ -1755,6 +1766,8 @@ def all_quote(request):
         for invoice in quotes.data:
             invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
             invoice.pop("quantity_list")
+            invoice["recurring"] = invoice["recurring_data"]
+            invoice.pop("recurring_data")
             total_invoices.append(invoice)
 
         context = {"message": total_invoices}
@@ -2001,6 +2014,8 @@ def all_receipt(request):
         for invoice in receipts.data:
             invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
             invoice.pop("quantity_list")
+            invoice["recurring"] = invoice["recurring_data"]
+            invoice.pop("recurring_data")
             total_invoices.append(invoice)
 
         context = {"message": total_invoices}
@@ -2251,6 +2266,8 @@ def all_credit(request):
         for invoice in credits.data:
             invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
             invoice.pop("quantity_list")
+            invoice["recurring"] = invoice["recurring_data"]
+            invoice.pop("recurring_data")
             total_invoices.append(invoice)
 
         context = {"message": total_invoices}
@@ -2496,6 +2513,8 @@ def all_delivery(request):
         for invoice in deliverys.data:
             invoice['item_list'] = custom_item_serializer(invoice['item_list'], invoice['quantity_list'])
             invoice.pop("quantity_list")
+            invoice["recurring"] = invoice["recurring_data"]
+            invoice.pop("recurring_data")
             total_invoices.append(invoice)
 
         context = {"message": total_invoices}

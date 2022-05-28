@@ -325,6 +325,8 @@ def set_tasks(document, doc_type, save=True):
         if to_unpaid_schedule.is_valid():
             _ = to_unpaid_schedule.save()
     
+
+    
     else:
         print("inside forms.oy, updating the tasks.")
         email_notif_schedule = ScheduleForm(email_notif_details)
@@ -349,6 +351,10 @@ def set_tasks(document, doc_type, save=True):
             print("invalid unpaid schedule")
             print(to_unpaid_schedule.errors)
         
+
+
+
+
 
 def delete_tasks(document, doc_type):
     email_notif_name = get_task_name(document.customer.email, doc_type, document.id, "email notif")
