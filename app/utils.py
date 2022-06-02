@@ -1,5 +1,5 @@
 from django.conf import settings
-import jwt, string, re, cloudinary
+import jwt, string, re, cloudinary, pycountry
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from random import choices
@@ -13,16 +13,6 @@ from app.pdf.utils import PDF_FUNCTION_DICT
 
 today_date = datetime.now()
 
-
-CURRENCY_MAPPING = {
-    "Dollar": "$",
-    "Dollars": "$",
-    "Pound": "£",
-    "Pounds": "£",
-    "Rupees": "₹",
-    "Naira": "₦",
-
-}
 
 
 def get_sku():
@@ -141,7 +131,7 @@ def validate_tax(value):
         try:
             return float(value)
         except Exception as e:
-            raise serializers.ValidationError("A valid number is required for tax")
+            raise serializers.ValidationError("A valid decimal number is required for tax")
     else:
         return 0
 
@@ -289,18 +279,21 @@ def get_number(request, num_type):
 def process_picture(media, models, type="profile"):
     if type == 'profile':
         file_url = cloudinary.uploader.upload(media, folder="profile_photos", 
-                                          public_id = f"{models.email}_picture", 
-                                          use_filename=True, unique_filename=False)['url']
+                                        #   public_id = f"{models.email}_picture", 
+                                          use_filename=False, unique_filename=True,
+                                          filename_override=True)['url']
     
     elif type=="logo":
         file_url = cloudinary.uploader.upload(media, folder="logos", 
-                                            public_id = f"{models.email}_logo",
-                                            use_filename=True, unique_filename=False)['url']
+                                            # public_id = f"{models.email}_logo",
+                                            use_filename=False, unique_filename=True,
+                                            filename_override=True)['url']
 
     else:
         file_url = cloudinary.uploader.upload(media, folder="signatures", 
-                                            public_id = f"{models.email}_signature",
-                                            use_filename=True, unique_filename=False)['url']
+                                            # public_id = f"{models.email}_signature",
+                                            use_filename=False, unique_filename=True,
+                                            filename_override=True)['url']
 
     print(file_url)
     return file_url
@@ -319,9 +312,10 @@ def upload_pdf_template(media, name):
 
 def get_pdf_file(filename, document, currency, document_type, request, pdf_template):
     template = PDF_FUNCTION_DICT.get(pdf_template, None)
+    cur = pycountry.currencies.get(name=currency).alpha_3
 
     if template:
-        file_name = template(filename, document, currency, document_type, request)
+        file_name = template(filename, document, cur, document_type, request)
         return file_name
 
     else:

@@ -29,7 +29,7 @@ class MyUsers(AbstractUser):
     lang_pref = models.CharField("Language Preference", max_length=50, null=True, blank=True, default="English")
     region = models.CharField("Region", max_length=100, null=True, blank=True, default="US")
     email_report = models.CharField("Email Reports", max_length=100, blank=True, null=True, default="Monthly")
-    currency = models.CharField("Currency", max_length=24, null=True, blank=True, default="Dollar")
+    currency = models.CharField("Currency", max_length=24, null=True, blank=True, default="NGN")
     paypal = models.CharField("PayPal", max_length=100, null=True, blank=True)
     bank_transfer = models.CharField("Bank Transfer", max_length=100, null=True, blank=True)
     e_transfer = models.CharField("E-Transfer", max_length=100, null=True, blank=True)
@@ -57,13 +57,18 @@ class Customer(models.Model):
     address = models.CharField("Address", max_length=500, null=False, blank=False)
     email = models.EmailField("Email", max_length=50, null=True, blank=True)
     phone_number = models.CharField("Phone Number", max_length=15, null=False, blank=False)
+    phone_number_type = models.CharField("Phone Number Type", max_length=64, null=True, blank=True, default="Mobile")
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
-    logo_path = CloudinaryField("Logo photo", null=True, blank=True)
+    logo = CloudinaryField("Logo photo", null=True, blank=True)
+    pdf_template = models.CharField("PDF Template Number", null=True, blank=True, max_length=64, default="Clapbill 1")
     ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
     shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
     billing_address = models.CharField("Billing Address", max_length=500, null=False, blank=False)
+    bill_to = models.CharField("Bill to", max_length=500, null=True, blank=True, default=None)
+    
     notes = models.CharField("Notes", max_length=1024, null=True, blank=True)
+    terms = models.CharField("Terms", max_length=1024, null=True, blank=True, default=None)
     status = models.CharField("Status", max_length=20, null=True, blank=True, default="New")
 
     vendor = models.ForeignKey(MyUsers, on_delete=models.CASCADE)
@@ -626,6 +631,9 @@ class PDFTemplate(models.Model):
             return mark_safe('<img src="{}" width="150" height="150" />'.format(self.photo_path.url))
         else:
             return '(No image)'
+
+    class Meta:
+        ordering = ['name']
 
     image_preview.short_description = "Image Preview"
 

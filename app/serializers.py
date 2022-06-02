@@ -10,7 +10,7 @@ from .models import CreditNote, Customer, DeliveryNote, Item, MyUsers, Invoice, 
 from .forms import set_tasks, set_recurring_task
 from .utils import delete_tasks, get_sku, upload_pdf_template, validate_add_charges, validate_discount_amount,validate_item_list,\
                     validate_recurring, validate_tax, password_validator, process_picture, get_number
-
+import pycountry
 
 
 
@@ -109,14 +109,26 @@ class DynamicFieldsModelSerializer(serializers.ModelSerializer):
 ############################################### customer #############################################################################
 
 
-class CustomerCreateSerializer(ModelSerializer):
-    required_error = "{fieldname} is required."
-    blank_error = "{fieldname} can not be blank."
-    class Meta:
-        model = Customer
-        fields = ["first_name", "last_name", "business_name", "address", "email", "phone_number", "taxable", 
-                    "invoice_pref", "ship_to", "shipping_address", "billing_address", "notes",]
+class CustomerSerializer(serializers.Serializer):
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+    business_name = serializers.CharField(required=True)
+    address = serializers.CharField(required=True)
+    email = serializers.CharField(required=True)
+    phone_number = serializers.CharField(required=True)
+    phone_number_type = serializers.CharField(required=True)
+    taxable = serializers.BooleanField(required=True)
+    invoice_pref = serializers.CharField(required=False)
+    pdf_template = serializers.CharField(required=False)
 
+    ship_to = serializers.CharField(required=False)
+    shipping_address = serializers.CharField(required=False)
+    bill_to = serializers.CharField(required=False)
+    billing_address = serializers.CharField(required=False)
+    notes = serializers.CharField(required=False)
+    terms = serializers.CharField(required=False)
+
+    logo = serializers.ImageField(required=False)
 
 
     def save(self, request):
@@ -127,17 +139,26 @@ class CustomerCreateSerializer(ModelSerializer):
         new_customer.address = self.validated_data["address"]
         new_customer.email = self.validated_data["email"]
         new_customer.phone_number = self.validated_data["phone_number"]
+        new_customer.phone_number_type = self.validated_data["phone_number_type"]
         new_customer.taxable = self.validated_data["taxable"]
         new_customer.invoice_pref = self.validated_data["invoice_pref"]
+        new_customer.pdf_template = self.validated_data["pdf_template"]
         
         new_customer.ship_to = self.validated_data["ship_to"]
         new_customer.shipping_address = self.validated_data["shipping_address"]
         new_customer.billing_address = self.validated_data["billing_address"]
+        new_customer.bill_to = self.validated_data["bill_to"]
         new_customer.notes = self.validated_data.get("notes", "")
-        
+        new_customer.terms = self.validated_data.get("terms", "")
+
         new_customer.vendor = request.user
 
+        # upload logo
+        if "logo" in self.validated_data:
+            new_customer.logo = process_picture(self.validated_data['logo'], new_customer, "logo")
+
         new_customer.save()
+        
 
         return new_customer
 
@@ -150,64 +171,27 @@ class CustomerCreateSerializer(ModelSerializer):
         instance.address = validated_data.get("address", instance.address)
         instance.email = validated_data.get("email", instance.email)
         instance.phone_number = validated_data.get("phone_number", instance.phone_number)
+        instance.phone_number_type = validated_data.get("phone_number_type", instance.phone_number_type)
         instance.taxable = validated_data.get("taxable", instance.taxable)
         instance.invoice_pref = validated_data.get("invoice_pref", instance.invoice_pref)
+        instance.pdf_template = validated_data.get("pdf_template", instance.pdf_template)
         
         instance.ship_to = validated_data.get("ship_to", instance.ship_to)
         instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
         instance.billing_address = validated_data.get("billing_address", instance.billing_address)
+        instance.bill_to = validated_data.get("bill_to", instance.bill_to)
         instance.notes = validated_data.get("notes", instance.notes)
+        instance.terms = validated_data.get("terms", instance.terms)
 
+
+        # upload logo
+        if "logo" in validated_data:
+            instance.logo = process_picture(validated_data['logo'], instance, "logo")
 
         instance.save()
 
         return instance
 
-
-
-
-
-class CustomerEditSerializer(ModelSerializer):
-    required_error = "{fieldname} is required."
-    blank_error = "{fieldname} can not be blank."
-    class Meta:
-        model = Customer
-        fields = ["address", "billing_address", "business_name", "email", "first_name", "invoice_pref", "last_name",
-                "notes", "phone_number", "ship_to", "shipping_address", "taxable"]
-
-
-
-    def update(self, instance, validated_data):
-        instance.first_name = validated_data.get("first_name", instance.first_name)
-        instance.last_name = validated_data.get("last_name", instance.last_name)
-        instance.business_name = validated_data.get("business_name", instance.business_name)
-        instance.address = validated_data.get("address", instance.address)
-        instance.email = validated_data.get("email", instance.email)
-        instance.phone_number = validated_data.get("phone_number", instance.phone_number)
-        instance.taxable = validated_data.get("taxable", instance.taxable)
-        instance.invoice_pref = validated_data.get("invoice_pref", instance.invoice_pref)
-        
-        instance.ship_to = validated_data.get("ship_to", instance.ship_to)
-        instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
-        instance.billing_address = validated_data.get("billing_address", instance.billing_address)
-        instance.notes = validated_data.get("notes", instance.notes)
-
-        instance.save()
-
-        return instance
-
-
-
-
-
-
-
-class CustomerSerializer(DynamicFieldsModelSerializer):
-
-    class Meta:
-        model = Customer
-        fields = ["id", "first_name", "last_name", "business_name", "address", "email", "phone_number", "taxable", 
-                    "invoice_pref", "ship_to", "shipping_address", "billing_address", "notes", "status"]
 
 
 
@@ -266,11 +250,11 @@ class CreateItemSerializer(ModelSerializer):
     def validate_sales_tax(self, value):
         if len(value) > 0:
             try:
-                return int(value)
+                return float(value)
             except Exception as e:
-                raise serializers.ValidationError("A valid number is required for sales tax")
+                raise serializers.ValidationError("A valid decimal number is required for sales tax")
         else:
-            return 0
+            return 0.0
 
     
     def save(self, request):
@@ -2426,11 +2410,17 @@ class PreferenceSerializer(serializers.ModelSerializer):
         instance.lang_pref = self.validated_data.get("lang_pref", instance.lang_pref)
         instance.region = self.validated_data.get("region", instance.region)
         instance.email_report = self.validated_data.get("email_report", instance.email_report)
-        instance.currency = self.validated_data.get("currency", instance.currency)
         instance.paypal = self.validated_data.get("paypal", instance.paypal)
         instance.bank_transfer = self.validated_data.get("bank_transfer", instance.bank_transfer)
         instance.e_transfer = self.validated_data.get("e_transfer", instance.e_transfer)
         instance.other_payment = self.validated_data.get("other_payment", instance.other_payment)
+
+        cur = self.validated_data.get("currency", None)
+        if cur:
+            my_cur = pycountry.currencies.get(name=cur).alpha_3
+            instance.currency = my_cur
+
+
 
         instance.save()
 

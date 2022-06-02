@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import all_estimate, all_invoice, all_items, all_purchaseorder, create_estimate, create_invoice, \
                     create_item, create_purchaseorder, credit_report, customer_report, delivery_report, \
-                    edit_estimate, edit_invoice, edit_item, edit_purchaseorder, estimate_report, home, \
+                    edit_estimate, edit_invoice, edit_item, edit_purchaseorder, estimate_report, get_region, home, \
                     invoice_report, item_report, pay_estimate, pay_invoice, pay_purchaseorder, proforma_report, \
                     purchase_report, quote_report, receipt_report, signup, login, logout, customer, edit_customer, \
                     my_customer, user_profile, create_proforma, edit_proforma, pay_proforma, all_proforma, \
@@ -104,6 +104,7 @@ urlpatterns = [
 
     # other urls
     path("get_number", get_number, name="get_number"),
+    path("regions", get_region, name="get_region"),
 
 
     # reports
