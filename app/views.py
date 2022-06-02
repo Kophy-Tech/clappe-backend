@@ -21601,7 +21601,7 @@ def get_region(request):
         country.append(i.name)
     
     for j in list(pycountry.currencies):
-        currencies.append(j.name)
+        currencies.append(j.alpha_3)
 
     country.sort()
     currencies.sort()
