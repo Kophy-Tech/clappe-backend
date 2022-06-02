@@ -374,6 +374,7 @@ def customer(request):
 @api_view(["GET", "PUT", "DELETE"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def edit_customer(request, id):
     context = {}
 
