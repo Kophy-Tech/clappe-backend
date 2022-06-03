@@ -196,6 +196,16 @@ class CustomerSerializer(serializers.Serializer):
 
 
 
+class CustomerDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = ["id", "first_name", "last_name", "business_name", "address", "email", "phone_number", "phone_number_type", 
+                    "taxable", "invoice_pref", "logo", "pdf_template", "ship_to", "shipping_address", "billing_address", 
+                    "bill_to", "notes", "terms", "status", "date_created" ]
+
+
+
+
 
 
 
@@ -424,7 +434,7 @@ class InvoiceCreate(ModelSerializer):
 
 
 class InvoiceSerializer(DynamicFieldsModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    customer = CustomerDetailsSerializer(read_only=True)
     class Meta:
         model = Invoice
         fields = [ "id", "customer","invoice_number",
@@ -679,7 +689,7 @@ class ProformaCreateSerializer(ModelSerializer):
 
 
 class ProformerInvoiceSerailizer(DynamicFieldsModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    customer = CustomerDetailsSerializer(read_only=True)
     class Meta:
         model = ProformaInvoice
         fields = [
@@ -924,7 +934,7 @@ class PurchaseCreateSerializer(ModelSerializer):
 
 
 class PurchaseOrderSerailizer(DynamicFieldsModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    customer = CustomerDetailsSerializer(read_only=True)
     class Meta:
         model = PurchaseOrder
         fields = [
@@ -1167,7 +1177,7 @@ class EstimateCreateSerializer(ModelSerializer):
 
 
 class EstimateSerailizer(DynamicFieldsModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    customer = CustomerDetailsSerializer(read_only=True)
     class Meta:
         model = Estimate
         fields = [
@@ -1411,7 +1421,7 @@ class QuoteCreateSerializer(ModelSerializer):
 
 
 class QuoteSerailizer(DynamicFieldsModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    customer = CustomerDetailsSerializer(read_only=True)
     class Meta:
         model = Quote
         fields = [
@@ -1654,7 +1664,7 @@ class CNCreateSerializer(ModelSerializer):
 
 
 class CreditNoteSerailizer(DynamicFieldsModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    customer = CustomerDetailsSerializer(read_only=True)
     class Meta:
         model = CreditNote
         fields = [
@@ -1904,7 +1914,7 @@ class REceiptCreateSerializer(ModelSerializer):
 
 
 class ReceiptSerailizer(DynamicFieldsModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    customer = CustomerDetailsSerializer(read_only=True)
     class Meta:
         model = Receipt
         fields = [
@@ -2158,7 +2168,7 @@ class DNCreateSerializer(ModelSerializer):
 
 
 class DNSerailizer(DynamicFieldsModelSerializer):
-    customer = CustomerSerializer(read_only=True)
+    customer = CustomerDetailsSerializer(read_only=True)
     class Meta:
         model = DeliveryNote
         fields = [

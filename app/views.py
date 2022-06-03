@@ -12,7 +12,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django_celery_beat.models import PeriodicTask
 
-from .serializers import CNCreateSerializer, CNEditSerializer, CreateItemSerializer, CreditNoteSerailizer,\
+from .serializers import CNCreateSerializer, CNEditSerializer, CreateItemSerializer, CreditNoteSerailizer, CustomerDetailsSerializer,\
                         CustomerSerializer, DNCreateSerializer,\
                         DNEditSerializer, DNSerailizer,EstimateCreateSerializer, EstimateEditSerializer, \
                         EstimateSerailizer, InvoiceEditSerializer, InvoiceSerializer, ItemSerializer,\
@@ -316,7 +316,7 @@ def my_customer(request):
     
     all_customers = Customer.objects.filter(vendor=request.user)
     if len(all_customers) > 0:
-        serialized_customers = CustomerSerializer(all_customers, many=True)
+        serialized_customers = CustomerDetailsSerializer(all_customers, many=True)
         context = {"customers": serialized_customers.data}
         return Response(context, status=status.HTTP_200_OK)
     else:
@@ -381,7 +381,7 @@ def edit_customer(request, id):
     if request.method == "GET":
         try:
             customer = Customer.objects.get(id=id)
-            serialized_customer = CustomerSerializer(instance=customer)
+            serialized_customer = CustomerDetailsSerializer(instance=customer)
             context['customer'] = serialized_customer.data
             return Response(context, status=status.HTTP_200_OK)
         except Exception as e:
