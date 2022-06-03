@@ -1,5 +1,6 @@
 from django.conf import settings
 import jwt, string, re, cloudinary, pycountry
+from currency_symbols import CurrencySymbols
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from random import choices
@@ -281,19 +282,19 @@ def process_picture(media, models, type="profile"):
         file_url = cloudinary.uploader.upload(media, folder="profile_photos", 
                                         #   public_id = f"{models.email}_picture", 
                                           use_filename=False, unique_filename=True,
-                                          filename_override=True)['url']
+                                          filename_override=True)['secure_url']
     
     elif type=="logo":
         file_url = cloudinary.uploader.upload(media, folder="logos", 
                                             # public_id = f"{models.email}_logo",
                                             use_filename=False, unique_filename=True,
-                                            filename_override=True)['url']
+                                            filename_override=True)['secure_url']
 
     else:
         file_url = cloudinary.uploader.upload(media, folder="signatures", 
                                             # public_id = f"{models.email}_signature",
                                             use_filename=False, unique_filename=True,
-                                            filename_override=True)['url']
+                                            filename_override=True)['secure_url']
 
     print(file_url)
     return file_url
@@ -312,7 +313,10 @@ def upload_pdf_template(media, name):
 
 def get_pdf_file(filename, document, currency, document_type, request, pdf_template):
     template = PDF_FUNCTION_DICT.get(pdf_template, None)
-    cur = pycountry.currencies.get(name=currency).alpha_3
+    # cur = pycountry.currencies.get(name=currency).alpha_3
+    cur = CurrencySymbols.get_symbol(currency)
+    if not cur:
+        cur = currency
 
     if template:
         file_name = template(filename, document, cur, document_type, request)
