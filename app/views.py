@@ -470,6 +470,7 @@ def create_invoice(request):
             
         form = InvoiceCreate(data=request.data)
         context = {}
+        print(request.data)
 
         if form.is_valid():
             new_invoice = form.save(request)
@@ -720,6 +721,7 @@ def create_proforma(request):
             return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         form = ProformaCreateSerializer(data=request.data)
         context = {}
+        print(request.data)
 
         if form.is_valid():
             new_invoice = form.save(request)
@@ -964,6 +966,7 @@ def create_purchaseorder(request):
             return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         form = PurchaseCreateSerializer(data=request.data)
         context = {}
+        print(request.data)
 
         if form.is_valid():
             new_po = form.save(request)
@@ -1219,6 +1222,7 @@ def create_estimate(request):
             return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         form = EstimateCreateSerializer(data=request.data)
         context = {}
+        print(request.data)
 
         if form.is_valid():
             new_estimate = form.save(request)
@@ -1792,6 +1796,7 @@ def create_quote(request):
             return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         form = QuoteCreateSerializer(data=request.data)
         context = {}
+        print(request.data)
 
         if form.is_valid():
             new_quote = form.save(request)
@@ -2040,6 +2045,7 @@ def create_receipt(request):
             return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
         form = REceiptCreateSerializer(data=request.data)
         context = {}
+        print(request.data)
 
         if form.is_valid():
             new_receipt = form.save(request)
@@ -2292,6 +2298,7 @@ def create_credit(request):
             return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         form = CNCreateSerializer(data=request.data)
         context = {}
+        print(request.data)
 
         if form.is_valid():
             new_credit = form.save(request)
@@ -2539,6 +2546,7 @@ def create_delivery(request):
             return Response({"message": "You have to set your business name"}, status=status.HTTP_403_FORBIDDEN)
         form = DNCreateSerializer(data=request.data)
         context = {}
+        print(request.data)
 
         if form.is_valid():
             new_delivery = form.save(request)
