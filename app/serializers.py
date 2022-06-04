@@ -2427,7 +2427,7 @@ class PreferenceSerializer(serializers.ModelSerializer):
 
         cur = self.validated_data.get("currency", None)
         if cur:
-            my_cur = pycountry.currencies.get(name=cur).alpha_3
+            my_cur = pycountry.currencies.get(alpha_3=cur).alpha_3
             instance.currency = my_cur
 
 
