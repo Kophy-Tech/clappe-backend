@@ -67,7 +67,8 @@ class MyAuthentication(BaseAuthentication):
 
         except Exception:
             return None
-             
+
+        
         exp = decoded['exp']
 
         if datetime.now().timestamp() > exp:

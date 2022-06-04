@@ -179,7 +179,7 @@ def total_box(pdf, start_y, currency, document_type, document, y_start):
         pdf.line(450, y_start, 450, start_y+140)
         pdf.line(540, y_start, 540, start_y+140)
 
-        pdf.drawImage("logo_9_down.png", 170, start_y+140, width=200, height=50)
+        pdf.drawImage("app/pdf/logo_9_down.png", 170, start_y+140, width=200, height=50)
         
         pdf.line(10, start_y+140, 540, start_y+140)
 
@@ -205,7 +205,7 @@ def total_box(pdf, start_y, currency, document_type, document, y_start):
         pdf.line(450, y_start, 450, start_y+120)
         pdf.line(540, y_start, 540, start_y+120)
 
-        pdf.drawImage("logo_9_down.png", 170, start_y+120, width=200, height=50)
+        pdf.drawImage("app/pdf/logo_9_down.png", 170, start_y+120, width=200, height=50)
 
         pdf.line(10, start_y+120, 540, start_y+120)
 
@@ -255,7 +255,7 @@ def get_report_9(buffer, document, currency, document_type, request):
     body_color = colors.Color(246/255, 241/255, 211/255)
     pdf.setFillColor(body_color)
     pdf.rect(-30, -30, width=width, height=height, stroke=0, fill=1)
-    pdf.drawImage("logo_9_up.png", -30, -30, width=width, height=200)
+    pdf.drawImage("app/pdf/logo_9_up.png", -30, -30, width=width, height=200)
 
     # pdf.setFillColor(colors.white)
     # pdf.setFont('Helvetica', 30)
@@ -269,7 +269,7 @@ def get_report_9(buffer, document, currency, document_type, request):
     pdf.drawCentredString((width-50)/2, 175, request.user.email)
     pdf.drawCentredString((width-50)/2, 190, request.user.phone_number)
 
-    pdf.drawImage("logo_9_up_2.png", 150, 200 , width=250, height=50)
+    pdf.drawImage("app/pdf/logo_9_up_2.png", 150, 200 , width=250, height=50)
     
     pdf.setFont('Helvetica-Bold', 10)
     pdf.drawString(20, 250, "Bill To")
