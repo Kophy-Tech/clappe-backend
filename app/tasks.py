@@ -10,7 +10,7 @@ from .serializers import InvoiceSerializer, ProformerInvoiceSerailizer, Purchase
                         pdf_item_serializer
 
 from .my_email import send_my_email
-from .utils import CURRENCY_MAPPING, add_date, get_pdf_file
+from .utils import add_date, get_pdf_file
 from app.my_email import send_my_email
 
 from datetime import datetime
@@ -152,7 +152,7 @@ def send_monthly_mail_task(document_id: int, document_type: str):
 
     filename = document_type.capitalize() + " Document.pdf"
     document_ser['item_list'] = pdf_item_serializer(document.item_list, document.quantity_list)
-    _ = get_pdf_file(filename, document_ser, CURRENCY_MAPPING[request.user.currency], document_type, request, "number_1")
+    _ = get_pdf_file(filename, document_ser, request.user.currency, document_type, request, "number_1")
     
     
     body = f"""
@@ -222,7 +222,7 @@ def send_recurring_doc(document_id: int, document_type: str, task_id: int):
     filename = f"Recurring {document_type.title()} for {request.user.email} - {now}.pdf"
     
     document_ser['item_list'] = pdf_item_serializer(document.item_list, document.quantity_list)
-    _ = get_pdf_file(filename, document_ser, CURRENCY_MAPPING[request.user.currency], document_type, request, "number_1")
+    _ = get_pdf_file(filename, document_ser, request.user.currency, document_type, request, "number_1")
     
     subject = recurring_data['subject']
     body = recurring_data['text']
