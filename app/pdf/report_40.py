@@ -153,7 +153,7 @@ def total_box(pdf, start_y, currency, document_type, document):
         pdf.setFillColor(colors.red)
         pdf.setLineWidth(3)
         pdf.rect(10, start_y+100, 530, 40)
-        pdf.setFont('Times-Roman', 25)
+        pdf.setFont('Times-Roman', 23)
         pdf.drawString(20, start_y+125, "TOTAL")
         pdf.drawRightString(535, start_y+125, f"{currency} {document['grand_total']}")
         
@@ -171,7 +171,7 @@ def total_box(pdf, start_y, currency, document_type, document):
         pdf.setFillColor(colors.red)
         pdf.setLineWidth(3)
         pdf.rect(10, start_y+100, 530, 40)
-        pdf.setFont('Times-Roman', 25)
+        pdf.setFont('Times-Roman', 23)
         pdf.drawString(20, start_y+125, "TOTAL")
         pdf.drawRightString(535, start_y+125, f"{currency} {document['grand_total']}")
 
@@ -208,7 +208,7 @@ def total_box(pdf, start_y, currency, document_type, document):
 
 
 
-def get_report_40(buffer, document, currency, document_type, request):
+def get_report_40(buffer, document, currency, document_type, request, logo):
 
     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
@@ -224,8 +224,8 @@ def get_report_40(buffer, document, currency, document_type, request):
 
 
 
-    if request.user.logo_path:
-        pdf = draw_image(pdf, request.user.logo_path, request.user.email, 540, 100, "logo")
+    if logo:
+        pdf = draw_image(pdf, logo, request.user.email, 540, 100, "logo")
             
 
 

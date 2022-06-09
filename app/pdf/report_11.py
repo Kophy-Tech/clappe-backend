@@ -206,7 +206,7 @@ def total_box(pdf, start_y, currency, document_type, document):
 
 
 
-def get_report_11(buffer, document, currency, document_type, request):
+def get_report_11(buffer, document, currency, document_type, request, logo):
 
     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 

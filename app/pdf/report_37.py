@@ -236,7 +236,7 @@ def total_box(pdf, start_y, currency, document_type, document):
 
 
 
-def get_report_37(buffer, document, currency, document_type, request):
+def get_report_37(buffer, document, currency, document_type, request, logo):
 
     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
@@ -253,8 +253,8 @@ def get_report_37(buffer, document, currency, document_type, request):
 
     pdf.setLineWidth(0.1)
 
-    if request.user.logo_path:
-        pdf = draw_image(pdf, request.user.logo_path, request.user.email, 540, 140, "logo")
+    if logo:
+        pdf = draw_image(pdf, logo, request.user.email, 540, 140, "logo")
             
 
 

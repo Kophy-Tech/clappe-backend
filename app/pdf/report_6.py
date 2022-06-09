@@ -202,7 +202,7 @@ def total_box(pdf, start_y, currency, document_type, document):
 
 
 
-def get_report_6(buffer, document, currency, document_type, request):
+def get_report_6(buffer, document, currency, document_type, request, logo):
 
     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
@@ -223,8 +223,8 @@ def get_report_6(buffer, document, currency, document_type, request):
 
     fill_colour = colors.Color(47/255, 128/255, 195/255)
 
-    if request.user.logo_path:
-        pdf = draw_image(pdf, request.user.logo_path, request.user.email, 540, 140, "logo")
+    if logo:
+        pdf = draw_image(pdf, logo, request.user.email, 540, 140, "logo")
 
 
     pdf.setFont('Helvetica-Bold', 15)

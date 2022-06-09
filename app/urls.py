@@ -4,12 +4,12 @@ from .views import all_estimate, all_invoice, all_items, all_purchaseorder, crea
                     edit_estimate, edit_invoice, edit_item, edit_purchaseorder, estimate_report, get_region, home, \
                     invoice_report, item_report, pay_estimate, pay_invoice, pay_purchaseorder, proforma_report, \
                     purchase_report, quote_report, receipt_report, signup, login, logout, customer, edit_customer, \
-                    my_customer, user_profile, create_proforma, edit_proforma, pay_proforma, all_proforma, \
+                    my_customer, upload_logo, user_profile, create_proforma, edit_proforma, pay_proforma, all_proforma, \
                     create_quote, edit_quote, all_quote, pay_quote, all_credit, create_credit, edit_credit, \
                     pay_credit, all_receipt, create_receipt, edit_receipt, pay_receipt, create_delivery, \
                     edit_delivery, all_delivery, pay_delivery, change_profile, change_preference, change_password, \
                     get_number, dashboard, get_code, confirm_code, reset_password, get_all_report, accept_estimate, \
-                    upload_screenshot, get_pdf_details
+                    upload_screenshot, get_pdf_details, get_logo_details
 
 
 
@@ -125,4 +125,6 @@ urlpatterns = [
     # pdf
     path("pdf/upload", upload_screenshot, name="upload_screenshot"),
     path("pdf/fetch", get_pdf_details, name="get_pdf_details"),
+    path("logo/upload", upload_logo, name="upload_inbuilt_logo"),
+    path("logo/fetch", get_logo_details, name="get_logo_details"),
 ]

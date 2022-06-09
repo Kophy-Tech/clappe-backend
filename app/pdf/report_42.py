@@ -163,7 +163,7 @@ def total_box(pdf, start_y, currency, document_type, document):
         pdf.setFillColor(colors.black)
         pdf.setFont('Helvetica-Bold', 20)
         pdf.drawRightString(440, start_y+120, "Total")
-        pdf.setFont('Helvetica-Bold', 15)
+        pdf.setFont('Helvetica-Bold', 13)
         pdf.drawRightString(535, start_y+120, f"{currency} {document['grand_total']}")
         
 
@@ -181,7 +181,7 @@ def total_box(pdf, start_y, currency, document_type, document):
         pdf.setFillColor(colors.black)
         pdf.setFont('Helvetica-Bold', 20)
         pdf.drawRightString(440, start_y+100, "Total")
-        pdf.setFont('Helvetica-Bold', 15)
+        pdf.setFont('Helvetica-Bold', 13)
         pdf.drawRightString(535, start_y+100, f"{currency} {document['grand_total']}")
 
     pdf.setFillColor(colors.white)
@@ -207,7 +207,7 @@ def total_box(pdf, start_y, currency, document_type, document):
 
 
 
-def get_report_42(buffer, document, currency, document_type, request):
+def get_report_42(buffer, document, currency, document_type, request, logo):
 
     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 

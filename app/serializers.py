@@ -1,3 +1,4 @@
+import json
 from rest_framework import serializers
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.hashers import check_password
@@ -5,10 +6,10 @@ from drf_tweaks.serializers import ModelSerializer
 
 from .models import CreditNote, Customer, DeliveryNote, Item, MyUsers, Invoice, PayCreditNote, PayDeliveryNote,\
                     PayQuote, PayReceipt, ProformaInvoice, Estimate, PurchaseOrder, PayInvoice, PayEstimate, \
-                    PayProforma, PayPurchaseOrder, Quote, Receipt, PDFTemplate
+                    PayProforma, PayPurchaseOrder, Quote, Receipt, PDFTemplate, InbuiltLogo
 
 from .forms import set_tasks, set_recurring_task
-from .utils import delete_tasks, get_sku, upload_pdf_template, validate_add_charges, validate_discount_amount,validate_item_list,\
+from .utils import delete_tasks, get_sku, upload_inbuilt_logo, upload_pdf_template, validate_add_charges, validate_discount_amount,validate_item_list,\
                     validate_recurring, validate_tax, password_validator, process_picture, get_number
 import pycountry
 
@@ -205,7 +206,12 @@ class CustomerDetailsSerializer(serializers.ModelSerializer):
 
 
 
-
+class CustomerReportSerializer(DynamicFieldsModelSerializer):
+    class Meta:
+        model = Customer
+        fields = ["id", "first_name", "last_name", "business_name", "address", "email", "phone_number", "phone_number_type", 
+                    "taxable", "invoice_pref", "logo", "pdf_template", "ship_to", "shipping_address", "billing_address", 
+                    "bill_to", "notes", "terms", "status", "date_created" ]
 
 
 
@@ -335,6 +341,9 @@ class InvoiceCreate(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id= serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
@@ -344,7 +353,7 @@ class InvoiceCreate(ModelSerializer):
         fields = [
             "customer_id", "po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","item_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "send_email", "download", "terms",
-            "invoice_date", "recurring", "pdf_number"]
+            "invoice_date", "recurring", "pdf_number", "logo_name", "logo_image", "currency"]
 
 
     def validate(self, data):
@@ -360,6 +369,11 @@ class InvoiceCreate(ModelSerializer):
             else:
                 if len(pdf_number) < 8:
                     raise serializers.ValidationError("Pass a valid pdf number")
+
+        logo_name = data.get("logo_name", None)
+        if logo_name:
+            if not InbuiltLogo.objects.filter(name=logo_name).exists():
+                raise serializers.ValidationError("The logo name is incorrect")
         
         return data
 
@@ -382,7 +396,8 @@ class InvoiceCreate(ModelSerializer):
         new_invoice.terms = self.validated_data.get("terms", "")
 
 
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
+        
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -419,7 +434,7 @@ class InvoiceCreate(ModelSerializer):
         else:
             new_invoice.recurring = False
 
-        new_invoice.save()
+        # new_invoice.save()
 
         if len(recurring_data) > 0:
             set_recurring_task(new_invoice, "invoice", "save")
@@ -427,7 +442,7 @@ class InvoiceCreate(ModelSerializer):
 
 
 
-        return new_invoice
+        return new_invoice, item_list
 
 
 
@@ -451,6 +466,9 @@ class InvoiceEditSerializer(ModelSerializer):
     customer_id = serializers.IntegerField(required=True)
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -465,7 +483,7 @@ class InvoiceEditSerializer(ModelSerializer):
         model = Invoice
         fields = ["customer_id", "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to", "billing_address", "notes", "item_list",
                     "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "send_email", "download", "terms",
-                    "recurring", "pdf_number"]
+                    "recurring", "pdf_number", "logo_name", "logo_image", "currency"]
 
     def validate(self, data):
         if not data.get("invoice_date"):
@@ -499,7 +517,7 @@ class InvoiceEditSerializer(ModelSerializer):
         instance.notes = validated_data.get("notes", instance.notes)
         instance.terms = validated_data.get("terms", instance.terms)
 
-        item_list = validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -543,7 +561,7 @@ class InvoiceEditSerializer(ModelSerializer):
             set_recurring_task(instance, "invoice", "update")
 
 
-        return instance
+        return instance, item_list
 
         
 
@@ -592,6 +610,9 @@ class ProformaCreateSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -607,7 +628,7 @@ class ProformaCreateSerializer(ModelSerializer):
         fields = [
                 "customer_id", "recurring", "invoice_date", "po_number", "due_date", "notes", "item_list", "item_total", "tax", \
                 "add_charges", "grand_total", "send_email", "download", "terms", "pdf_number", "bill_to", "billing_address", \
-                "ship_to", "shipping_address"]
+                "ship_to", "shipping_address", "logo_name", "logo_image", "currency"]
 
     def validate(self, data):
         if not data.get("invoice_date"):
@@ -642,7 +663,7 @@ class ProformaCreateSerializer(ModelSerializer):
         new_proforma.ship_to = self.validated_data.get("ship_to", "")
         new_proforma.shipping_address = self.validated_data.get("shipping_address", "")
         
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -684,7 +705,9 @@ class ProformaCreateSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             set_recurring_task(new_proforma, "proforma invoice", "save")
 
-        return new_proforma
+        return new_proforma, item_list
+
+
 
 
 
@@ -705,6 +728,9 @@ class ProformaEditSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -718,7 +744,7 @@ class ProformaEditSerializer(ModelSerializer):
         model = ProformaInvoice
         fields = ["customer_id", "invoice_date", "po_number", "due_date", "notes", "item_list", "item_total", "tax", "add_charges",
                     "grand_total", "status", "send_email", "download", "terms", "recurring", "pdf_number", "bill_to", "billing_address", 
-                    "ship_to", "shipping_address"]
+                    "ship_to", "shipping_address", "logo_name", "logo_image", "currency"]
 
 
     def validate(self, data):
@@ -751,7 +777,7 @@ class ProformaEditSerializer(ModelSerializer):
         instance.ship_to = validated_data.get("ship_to", instance.ship_to)
         instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
         
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -789,7 +815,7 @@ class ProformaEditSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             set_recurring_task(instance, "proforma invoice", "update")
 
-        return instance
+        return instance, item_list
 
 
 
@@ -841,6 +867,9 @@ class PurchaseCreateSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -855,7 +884,8 @@ class PurchaseCreateSerializer(ModelSerializer):
         model = PurchaseOrder
         fields = [
                 "customer_id", "po_date", "ship_to", "notes", "shipping_address", "bill_to", "billing_address", "item_list", "due_date",
-                    "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms", "recurring", "pdf_number"]
+                "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms", "recurring", "pdf_number", 
+                "logo_name", "logo_image", "currency"]
 
 
     def validate(self, data):
@@ -885,7 +915,7 @@ class PurchaseCreateSerializer(ModelSerializer):
         new_purchaseorder.bill_to = self.validated_data.get("bill_to", "")
         new_purchaseorder.billing_address = self.validated_data.get("billing_address", "")
         
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -929,7 +959,7 @@ class PurchaseCreateSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             set_recurring_task(new_purchaseorder, "purchase order", "save")
 
-        return new_purchaseorder
+        return new_purchaseorder, item_list
 
 
 
@@ -953,6 +983,9 @@ class PurchaseEditSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -967,9 +1000,8 @@ class PurchaseEditSerializer(ModelSerializer):
     class Meta:
         model = PurchaseOrder
         fields = ["customer_id", "po_date", "due_date", "ship_to", "notes", "shipping_address", "bill_to", "billing_address",
-                     "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms",
-                    "recurring", "pdf_number"]
+                    "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms",
+                    "recurring", "pdf_number", "logo_name", "logo_image", "currency"]
     
     def validate(self, data):
         download = data['download']
@@ -995,7 +1027,7 @@ class PurchaseEditSerializer(ModelSerializer):
         instance.bill_to = validated_data.get("bill_to", instance.bill_to)
         instance.billing_address = validated_data.get("billing_address", instance.billing_address)
         
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -1034,7 +1066,7 @@ class PurchaseEditSerializer(ModelSerializer):
             print("trying to get recurring")
             set_recurring_task(instance, "purchase order", "update")
 
-        return instance
+        return instance, item_list
 
 
 
@@ -1081,6 +1113,9 @@ class EstimateCreateSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -1094,9 +1129,9 @@ class EstimateCreateSerializer(ModelSerializer):
     class Meta:
         model = Estimate
         fields = [
-                "customer_id", "due_date", "po_number", "recurring",
-                    "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address", "pdf_number",
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
+                "customer_id", "due_date", "po_number", "recurring", "estimate_date", "ship_to", "shipping_address", "bill_to", 
+                "billing_address", "pdf_number", "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", 
+                "send_email", "download", "terms", "logo_name", "logo_image", "currency"]
     
     def validate(self, data):
         download = data['download']
@@ -1125,7 +1160,7 @@ class EstimateCreateSerializer(ModelSerializer):
         new_estimate.notes = self.validated_data.get("notes", "")
         new_estimate.terms = self.validated_data.get("terms", "")
         
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         print(item_list)
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
@@ -1169,7 +1204,7 @@ class EstimateCreateSerializer(ModelSerializer):
 
         set_tasks(new_estimate, "estimate", True)
 
-        return new_estimate
+        return new_estimate, item_list
 
 
 
@@ -1199,6 +1234,9 @@ class EstimateEditSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -1213,7 +1251,7 @@ class EstimateEditSerializer(ModelSerializer):
         model = Estimate
         fields = ["customer_id", "po_number", "due_date", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms",
-                    "recurring", "pdf_number"]
+                    "recurring", "pdf_number", "logo_name", "logo_image", "currency"]
 
     def validate(self, data):
         download = data['download']
@@ -1240,7 +1278,7 @@ class EstimateEditSerializer(ModelSerializer):
         instance.notes = validated_data.get("notes", instance.notes)
         instance.terms = validated_data.get("terms", instance.terms)
         
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -1280,7 +1318,7 @@ class EstimateEditSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             set_recurring_task(instance, "estimate", "update")
 
-        return instance
+        return instance, item_list
 
 
 
@@ -1328,6 +1366,9 @@ class QuoteCreateSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -1340,9 +1381,9 @@ class QuoteCreateSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Quote
-        fields = [ "customer_id", "due_date", "recurring", "pdf_number",
-                    "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes",  "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
+        fields = [ "customer_id", "due_date", "recurring", "pdf_number", "quote_date", "po_number", "ship_to", "shipping_address", 
+                    "bill_to", "billing_address", "notes",  "item_list", "item_total", "tax", "add_charges", "grand_total", 
+                    "send_email", "download", "terms", "logo_name", "logo_image", "currency"]
 
 
     def validate(self, data):
@@ -1372,7 +1413,7 @@ class QuoteCreateSerializer(ModelSerializer):
         new_quote.notes = self.validated_data.get("notes", "")
         new_quote.terms = self.validated_data.get("terms", "")
         
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -1416,7 +1457,7 @@ class QuoteCreateSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             set_recurring_task(new_quote, "quote", "save")
 
-        return new_quote
+        return new_quote, item_list
 
 
 
@@ -1439,6 +1480,9 @@ class QuoteEditSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -1453,7 +1497,7 @@ class QuoteEditSerializer(ModelSerializer):
         model = Quote
         fields = ["customer_id", "due_date", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms",
-                    "recurring", "pdf_number"]
+                    "recurring", "pdf_number", "logo_name", "logo_image", "currency"]
 
 
     def validate(self, data):
@@ -1481,7 +1525,7 @@ class QuoteEditSerializer(ModelSerializer):
         instance.notes = validated_data.get("notes", instance.notes)
         instance.terms = validated_data.get("terms", instance.terms)
         
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -1519,7 +1563,7 @@ class QuoteEditSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             set_recurring_task(instance, "quote", "update")
 
-        return instance
+        return instance, item_list
 
 
 
@@ -1571,6 +1615,9 @@ class CNCreateSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -1583,10 +1630,9 @@ class CNCreateSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = CreditNote
-        fields = [ "customer_id", "recurring", "pdf_number",
-                    "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]       
+        fields = [ "customer_id", "recurring", "pdf_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", 
+                    "bill_to", "billing_address", "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", 
+                    "send_email", "download", "terms", "logo_name", "logo_image", "currency"]
 
     
     def validate(self, data):
@@ -1616,7 +1662,7 @@ class CNCreateSerializer(ModelSerializer):
         new_credit.notes = self.validated_data.get("notes", "")
         new_credit.terms = self.validated_data.get("terms", "")
         
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -1659,7 +1705,7 @@ class CNCreateSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             set_recurring_task(new_credit, "credit note", "save")
 
-        return new_credit
+        return new_credit, item_list
 
 
 
@@ -1681,6 +1727,9 @@ class CNEditSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -1693,10 +1742,9 @@ class CNEditSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = CreditNote
-        fields = [
-                "customer_id", "recurring", "pdf_number", "bill_to", "billing_address",
-                    "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
+        fields = ["customer_id", "recurring", "pdf_number", "bill_to", "billing_address", "cn_date", "po_number", "due_date", 
+                "ship_to", "shipping_address", "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", 
+                "send_email", "download", "terms", "logo_name", "logo_image", "currency"]
 
 
     def validate(self, data):
@@ -1724,7 +1772,7 @@ class CNEditSerializer(ModelSerializer):
         instance.notes = validated_data.get("notes", instance.notes)
         instance.terms = validated_data.get("terms", instance.terms)
         
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -1762,7 +1810,7 @@ class CNEditSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             set_recurring_task(instance, "credit note", "update")
 
-        return instance
+        return instance, item_list
 
 
 
@@ -1818,6 +1866,9 @@ class REceiptCreateSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -1830,9 +1881,9 @@ class REceiptCreateSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Receipt
-        fields = [ "customer_id", "recurring", "pdf_number",
-                    "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
+        fields = [ "customer_id", "recurring", "pdf_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", 
+                    "bill_to", "billing_address", "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", 
+                    "download", "terms", "logo_name", "logo_image", "currency"]
 
 
 
@@ -1866,7 +1917,7 @@ class REceiptCreateSerializer(ModelSerializer):
         new_receipt.notes = self.validated_data.get("notes", "")
         new_receipt.terms = self.validated_data.get("terms", "")
         
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -1909,7 +1960,7 @@ class REceiptCreateSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             set_recurring_task(new_receipt, "receipt", "save")
 
-        return new_receipt
+        return new_receipt, item_list
 
 
 
@@ -1935,6 +1986,9 @@ class ReceiptEditSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -1947,10 +2001,9 @@ class ReceiptEditSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Receipt
-        fields = [
-                "customer_id", "reucrring", "pdf_number",
-                    "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms"]
+        fields = ["customer_id", "reucrring", "pdf_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", 
+                    "bill_to", "billing_address", "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", 
+                    "send_email", "download", "terms", "logo_name", "logo_image", "currency"]
 
 
 
@@ -1981,7 +2034,7 @@ class ReceiptEditSerializer(ModelSerializer):
         instance.notes = validated_data.get("notes", instance.notes)
         instance.terms = validated_data.get("terms", instance.terms)
         
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -2019,7 +2072,7 @@ class ReceiptEditSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             set_recurring_task(instance, "receipt", "update")
 
-        return instance
+        return instance, item_list
 
 
 
@@ -2073,6 +2126,9 @@ class DNCreateSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -2085,9 +2141,9 @@ class DNCreateSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = DeliveryNote
-        fields = [ "customer_id", "recurring", "pdf_number",
-                    "dn_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address",
-                    "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", "download", "terms"]
+        fields = [ "customer_id", "recurring", "pdf_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
+                    "bill_to", "billing_address", "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "send_email", 
+                    "download", "terms", "logo_name", "logo_image", "currency"]
 
 
     def validate(self, data):
@@ -2120,7 +2176,7 @@ class DNCreateSerializer(ModelSerializer):
         new_delivery.notes = self.validated_data.get("notes", "")
         new_delivery.terms = self.validated_data.get("terms", "")
         
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -2163,7 +2219,7 @@ class DNCreateSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             set_recurring_task(new_delivery, "delivery note", "save")
 
-        return new_delivery
+        return new_delivery, item_list
 
 
 
@@ -2188,6 +2244,9 @@ class DNEditSerializer(ModelSerializer):
     send_email = serializers.BooleanField(required=True)
     download = serializers.BooleanField(required=True)
     customer_id = serializers.IntegerField(required=True)
+    logo_name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    logo_image = serializers.ImageField(required=False)
 
     item_list = serializers.ListField(required=True, validators=[validate_item_list])
     tax = serializers.CharField(required=False, allow_blank=True, allow_null=True, validators=[validate_tax])
@@ -2200,10 +2259,9 @@ class DNEditSerializer(ModelSerializer):
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = DeliveryNote
-        fields = [
-                "customer_id", "recurring", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
-                "notes", "item_list", "item_total", "tax", "add_charges", "grand_total", "status", "send_email", 
-                "download", "terms", "pdf_number", "bill_to", "billing_address"]
+        fields = ["customer_id", "recurring", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes", "item_list", 
+                "item_total", "tax", "add_charges", "grand_total", "status", "send_email", "download", "terms", "pdf_number", "bill_to", 
+                "billing_address", "logo_name", "logo_image", "currency"]
 
 
     def validate(self, data):
@@ -2234,7 +2292,7 @@ class DNEditSerializer(ModelSerializer):
         instance.notes = validated_data.get("notes", instance.notes)
         instance.terms = validated_data.get("terms", instance.terms)
         
-        item_list = self.validated_data['item_list']
+        item_list = json.loads(self.validated_data['item_list'][0])
         ids = [int(i['id']) for i in item_list]
         quantities = [int(i['quantity']) for i in item_list]
 
@@ -2272,7 +2330,7 @@ class DNEditSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             set_recurring_task(instance, "delivery note", "update")
 
-        return instance
+        return instance, item_list
 
 
 
@@ -2461,8 +2519,37 @@ class UploadPDFTemplate(serializers.Serializer):
 
 
 class PDFTemplateSerializer(serializers.ModelSerializer):
-    photo_path = serializers.ImageField(required=False)
+    photo_path = serializers.ImageField()
     class Meta:
         model = PDFTemplate
         fields = ['name', 'photo_path']
+
+
+
+
+
+class UploadInbuiltLogo(serializers.Serializer):
+    name = serializers.CharField()
+    photo_path = serializers.ImageField()
+    category = serializers.CharField()
+
+
+    
+    def save(self):
+        new_logo = InbuiltLogo()
+        new_logo.name = self.validated_data['name']
+        new_logo.photo_path = upload_inbuilt_logo(self.validated_data["photo_path"], self.validated_data['name'])
+        new_logo.category = self.validated_data['category']
+        new_logo.save()
+
+        return new_logo
+
+
+
+
+class InbuiltLogoSerializer(serializers.ModelSerializer):
+    photo_path = serializers.ImageField()
+    class Meta:
+        model = InbuiltLogo
+        fields = ['name', 'photo_path', 'category']
     

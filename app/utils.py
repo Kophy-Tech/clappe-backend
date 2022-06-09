@@ -304,22 +304,33 @@ def process_picture(media, models, type="profile"):
 
 def upload_pdf_template(media, name):
     file_url = cloudinary.uploader.upload(media, folder="pdfs", 
-                                            public_id = f"{name}_pdf",
-                                            use_filename=True, unique_filename=False)['url']
+                                            # public_id = f"{name}_pdf",
+                                            use_filename=True, unique_filename=False)['secure_url']
 
     return file_url
 
 
 
-def get_pdf_file(filename, document, currency, document_type, request, pdf_template):
+def upload_inbuilt_logo(media) -> str:
+    file_url = cloudinary.uploader.upload(media, folder="inbuilt_logo", 
+                                            # public_id = f"{name}_logo",
+                                            use_filename=False, unique_filename=True,
+                                            filename_override=True)['url']
+
+    return file_url
+
+
+
+
+def get_pdf_file(filename, document, currency, document_type, request, pdf_template, logo_url):
     template = PDF_FUNCTION_DICT.get(pdf_template, None)
     # cur = pycountry.currencies.get(name=currency).alpha_3
-    cur = CurrencySymbols.get_symbol(currency)
-    if not cur:
-        cur = currency
+    # cur = CurrencySymbols.get_symbol(currency)
+    # if not cur:
+    #     cur = currency
 
     if template:
-        file_name = template(filename, document, cur, document_type, request)
+        file_name = template(filename, document, currency, document_type, request, logo_url)
         return file_name
 
     else:

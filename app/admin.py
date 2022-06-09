@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import CreditNote, Customer, DeliveryNote, Item, MyUsers, Invoice, PayCreditNote, PayDeliveryNote, PayQuote,\
                      PayReceipt, ProformaInvoice, Estimate, PurchaseOrder, PayInvoice, PayEstimate, PayProforma,\
-                     PayPurchaseOrder, Quote, Receipt, JWT, PDFTemplate
+                     PayPurchaseOrder, Quote, Receipt, JWT, PDFTemplate, InbuiltLogo
 # Register your models here.
 
 class UserAdmin(admin.ModelAdmin):
@@ -33,3 +33,4 @@ admin.site.register(PayQuote)
 admin.site.register(PayReceipt)
 admin.site.register(Quote)
 admin.site.register(Receipt)
+admin.site.register(InbuiltLogo)

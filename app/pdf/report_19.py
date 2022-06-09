@@ -157,7 +157,7 @@ def total_box(pdf, start_y, currency, document_type, document):
 
         pdf.setFillColor(fill_colour)
         pdf.rect(120, start_y+95, 530, 35, fill=1, stroke=0)
-        pdf.setFont('Helvetica-Bold', 15)
+        pdf.setFont('Helvetica-Bold', 13)
         pdf.setFillColor(colors.white)
         pdf.drawString(130, start_y+120, f"{document_type.split(' ')[0].upper()} TOTAL")
 
@@ -176,7 +176,7 @@ def total_box(pdf, start_y, currency, document_type, document):
 
         pdf.setFillColor(fill_colour)
         pdf.rect(120, start_y+75, 530, 35, fill=1, stroke=0)
-        pdf.setFont('Helvetica-Bold', 15)
+        pdf.setFont('Helvetica-Bold', 13)
         pdf.setFillColor(colors.white)
         pdf.drawString(130, start_y+100, f"{document_type.split(' ')[0].upper()} TOTAL")
 
@@ -207,7 +207,7 @@ def total_box(pdf, start_y, currency, document_type, document):
 
 
 
-def get_report_19(buffer, document, currency, document_type, request):
+def get_report_19(buffer, document, currency, document_type, request, logo):
 
     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
@@ -228,8 +228,8 @@ def get_report_19(buffer, document, currency, document_type, request):
 
     fill_colour = colors.Color(230/255, 162/255, 157/255)
 
-    if request.user.logo_path:
-        pdf = draw_image(pdf, request.user.logo_path, request.user.email, 540, 100, "logo")
+    if logo:
+        pdf = draw_image(pdf, logo, request.user.email, 540, 100, "logo")
 
 
     pdf.setFont('Helvetica-Bold', 15)

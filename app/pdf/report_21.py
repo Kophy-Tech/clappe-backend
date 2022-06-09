@@ -201,7 +201,7 @@ def total_box(pdf, start_y, currency, document_type, document):
 
 
 
-def get_report_21(buffer, document, currency, document_type, request):
+def get_report_21(buffer, document, currency, document_type, request, logo):
 
     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
@@ -218,8 +218,8 @@ def get_report_21(buffer, document, currency, document_type, request):
 
     pdf.setLineWidth(0.1)
 
-    if request.user.logo_path:
-        pdf = draw_image(pdf, request.user.logo_path, request.user.email, 540, 140, "logo")
+    if logo:
+        pdf = draw_image(pdf, logo, request.user.email, 540, 140, "logo")
             
 
 
@@ -280,7 +280,7 @@ def get_report_21(buffer, document, currency, document_type, request):
 
     pdf.setLineWidth(1)
     pdf.line(10, 230, 540, 230)
-    pdf.setFont('Helvetica-Bold', 25)
+    pdf.setFont('Helvetica-Bold', 23)
     pdf.drawString(10, 260, f"{document_type.title()} Total")
     pdf.drawRightString(535, 260, f"{currency} {document['grand_total']}")
     pdf.line(10, 275, 540, 275)

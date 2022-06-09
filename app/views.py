@@ -12,26 +12,26 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django_celery_beat.models import PeriodicTask
 
-from .serializers import CNCreateSerializer, CNEditSerializer, CreateItemSerializer, CreditNoteSerailizer, CustomerDetailsSerializer,\
+from .serializers import CNCreateSerializer, CNEditSerializer, CreateItemSerializer, CreditNoteSerailizer, CustomerDetailsSerializer, CustomerReportSerializer,\
                         CustomerSerializer, DNCreateSerializer,\
                         DNEditSerializer, DNSerailizer,EstimateCreateSerializer, EstimateEditSerializer, \
-                        EstimateSerailizer, InvoiceEditSerializer, InvoiceSerializer, ItemSerializer,\
+                        EstimateSerailizer, InbuiltLogoSerializer, InvoiceEditSerializer, InvoiceSerializer, ItemSerializer,\
                         PayCNSerializer, PayDNSerializer, PayEstimateSerializer, PayInvoiceSerializer, \
                         PayQuoteSerializer, PayReceiptSerializer, ProformaCreateSerializer, ProformaEditSerializer, \
                         ProformerInvoiceSerailizer, QuoteCreateSerializer, QuoteEditSerializer, QuoteSerailizer,\
                         REceiptCreateSerializer,ReceiptEditSerializer, ReceiptSerailizer, SignUpSerializer, \
-                        LoginSerializer, UserSerializer, InvoiceCreate, PayProformaSerializer, \
+                        LoginSerializer, UploadInbuiltLogo, UserSerializer, InvoiceCreate, PayProformaSerializer, \
                         PurchaseCreateSerializer, PurchaseEditSerializer, PurchaseOrderSerailizer, \
                         PayPurchaseSerializer, ProfileSerializer, PasswordChangeSerializer, PreferenceSerializer,\
                         UploadPDFTemplate, PDFTemplateSerializer, pdf_item_serializer, get_sku
 
-from .models import JWT, CreditNote, Customer, DeliveryNote, Estimate, Invoice, Item, MyUsers, PDFTemplate, \
+from .models import JWT, CreditNote, Customer, DeliveryNote, Estimate, InbuiltLogo, Invoice, Item, MyUsers, PDFTemplate, \
                     ProformaInvoice, PurchaseOrder, Quote, Receipt
 
 
 from app.my_email import send_my_email
 from .authentication import get_access_token, MyAuthentication
-from app.utils import encode_estimate, decode_estimate, custom_item_serializer, get_pdf_file
+from app.utils import encode_estimate, decode_estimate, custom_item_serializer, get_pdf_file, upload_inbuilt_logo
 from .forms import EstimateExpiration, delete_tasks
 
 
@@ -461,6 +461,7 @@ def all_invoice(request):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def create_invoice(request):
 
     if request.method == "POST":
@@ -470,19 +471,34 @@ def create_invoice(request):
             
         form = InvoiceCreate(data=request.data)
         context = {}
-        print(request.data)
 
         if form.is_valid():
-            new_invoice = form.save(request)
+            # print(form.validated_data)
+            new_invoice, item_list = form.save(request)
             context['message'] = "Invoice created successfully"
-            context['invoice'] = {"id": new_invoice.id, **form.data}
+            context['invoice'] = {"id": new_invoice.id, **form.validated_data}
+            context['invoice']['item_list'] = item_list
 
+            if "logo_name" in form.validated_data:
+                logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                logo_url = logo.photo_path
+            elif "logo_image" in form.validated_data:
+                print("")
+                logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                context['invoice'].pop("logo_image")
+            else:
+                logo_url = request.user.logo_path
+
+            if "currency" in form.validated_data:
+                currency = form.validated_data['currency']
+            else:
+                currency = request.user.currency
             
             if form.validated_data['download']:
                 buffer = io.BytesIO()
                 invoice_ser = InvoiceSerializer(new_invoice).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
-                file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "invoice", request, form.validated_data['pdf_number'])
+                file_name = get_pdf_file(buffer, invoice_ser, currency, "invoice", request, form.validated_data['pdf_number'], logo_url)
 
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -495,7 +511,7 @@ def create_invoice(request):
                 filename = f"{'invoice'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = InvoiceSerializer(new_invoice).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
-                _ = get_pdf_file(filename, invoice_ser, request.user.currency, "invoice", request, form.validated_data['pdf_number'])
+                _ = get_pdf_file(filename, invoice_ser, currency, "invoice", request, form.validated_data['pdf_number'], logo_url)
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
                 send_my_email(new_invoice.customer.email, body, subject, filename)
@@ -516,10 +532,7 @@ def create_invoice(request):
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
-        context = {"message": "create invoice page", "required fields": [
-            "first_name","last_name","address","email","phone_number","taxable","invoice_pref","logo_path","invoice_number",
-            "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes","item_list",
-            "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total"]}
+        context = {"message": "create invoice page"}
         return Response(context, status=status.HTTP_200_OK)
 
 
@@ -529,6 +542,7 @@ def create_invoice(request):
 @api_view(["GET", "PUT", "DELETE"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def edit_invoice(request, id):
 
     context = {}
@@ -565,16 +579,32 @@ def edit_invoice(request, id):
             context = {}
 
             if form.is_valid():
-                updated_invoice = form.update(invoice, form.validated_data, request)
+                updated_invoice, item_list = form.update(invoice, form.validated_data, request)
                 context['message'] = "Invoice updated successfully"
                 context['invoice'] = {"id": updated_invoice.id, **form.validated_data}
+                context['invoice']['item_list'] = item_list
+
+                if "logo_name" in form.validated_data:
+                    logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                    logo_url = logo.photo_path
+                elif "logo_image" in form.validated_data:
+                    print("")
+                    logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                    context['invoice'].pop("logo_image")
+                else:
+                    logo_url = request.user.logo_path
+
+                if "currency" in form.validated_data:
+                    currency = form.validated_data['currency']
+                else:
+                    currency = request.user.currency
 
 
                 if form.validated_data['download']:
                     buffer = io.BytesIO()
                     invoice_ser = InvoiceSerializer(updated_invoice).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_invoice.item_list, updated_invoice.quantity_list)
-                    file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "invoice", request, form.validated_data['pdf_number'])
+                    file_name = get_pdf_file(buffer, invoice_ser, currency, "invoice", request, form.validated_data['pdf_number'], logo_url)
 
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -587,7 +617,7 @@ def edit_invoice(request, id):
                     file_name = f"{'invoice'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = InvoiceSerializer(updated_invoice).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_invoice.item_list, updated_invoice.quantity_list)
-                    _ = get_pdf_file(file_name, invoice_ser, request.user.currency, "invoice", request, form.validated_data['pdf_number'])
+                    _ = get_pdf_file(file_name, invoice_ser, currency, "invoice", request, form.validated_data['pdf_number'], logo_url)
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_invoice.customer.email, body, subject, file_name)
@@ -714,6 +744,7 @@ def all_proforma(request):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def create_proforma(request):
 
     if request.method == "POST":
@@ -724,16 +755,32 @@ def create_proforma(request):
         print(request.data)
 
         if form.is_valid():
-            new_invoice = form.save(request)
+            new_invoice, item_list = form.save(request)
             context['message'] = "Proforma invoice created successfully"
-            context['invoice'] = {"id": new_invoice.id, **form.data}
+            context['invoice'] = {"id": new_invoice.id, **form.validated_data}
+            context['invoice']['item_list'] = item_list
+
+            if "logo_name" in form.validated_data:
+                logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                logo_url = logo.photo_path
+            elif "logo_image" in form.validated_data:
+                print("")
+                logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                context['invoice'].pop("logo_image")
+            else:
+                logo_url = request.user.logo_path
+
+            if "currency" in form.validated_data:
+                currency = form.validated_data['currency']
+            else:
+                currency = request.user.currency
             # context['invoice']['item_list'] = custom_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
 
             if form.validated_data['download']:
                 buffer = io.BytesIO()
                 invoice_ser = ProformerInvoiceSerailizer(new_invoice).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
-                file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "proforma invoice", request, form.validated_data['pdf_number'])
+                file_name = get_pdf_file(buffer, invoice_ser, currency, "proforma invoice", request, form.validated_data['pdf_number'], logo_url)
 
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -747,7 +794,7 @@ def create_proforma(request):
                 file_name = f"{'proforma invoice'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = ProformerInvoiceSerailizer(new_invoice).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_invoice.item_list, new_invoice.quantity_list)
-                _ = get_pdf_file(file_name, invoice_ser, request.user.currency, "proforma invoice", request, form.validated_data['pdf_number'])
+                _ = get_pdf_file(file_name, invoice_ser, currency, "proforma invoice", request, form.validated_data['pdf_number'], logo_url)
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
                 send_my_email(new_invoice.customer.email, body, subject, file_name)
@@ -767,10 +814,7 @@ def create_proforma(request):
 
             return Response(context, status=status.HTTP_400_BAD_REQUEST)
     else:
-        context = {"message": "create preforma invoice page", "required fields": [
-                "first_name", "last_name", "address", "email", "phone_number", "taxable", "invoice_pref", "logo_path", 
-                    "invoice_number", "invoice_date", "po_number", "due_date", "notes", "item_list", 
-                    "item_total", "tax", "add_charges", "grand_total"]}
+        context = {"message": "create proforma invoice page"}
         return Response(context, status=status.HTTP_200_OK)
 
 
@@ -780,6 +824,7 @@ def create_proforma(request):
 @api_view(["GET", "PUT", "DELETE"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def edit_proforma(request, id):
 
     context = {}
@@ -814,16 +859,32 @@ def edit_proforma(request, id):
             context = {}
 
             if form.is_valid():
-                updated_proforma = form.update(proforma, form.validated_data)
+                updated_proforma, item_list = form.update(proforma, form.validated_data)
                 context['message'] = "Proforma invoice updated successfully"
                 context['proforma'] = {"id": updated_proforma.id, **form.validated_data}
+                context['proforma']['item_list'] = item_list
+
+                if "logo_name" in form.validated_data:
+                    logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                    logo_url = logo.photo_path
+                elif "logo_image" in form.validated_data:
+                    print("")
+                    logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                    context['proforma'].pop("logo_image")
+                else:
+                    logo_url = request.user.logo_path
+
+                if "currency" in form.validated_data:
+                    currency = form.validated_data['currency']
+                else:
+                    currency = request.user.currency
                 # context['proforma']['item_list'] = custom_item_serializer(updated_proforma.item_list, updated_proforma.quantity_list)
 
                 if form.validated_data['download']:
                     buffer = io.BytesIO()
                     invoice_ser = ProformerInvoiceSerailizer(updated_proforma).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_proforma.item_list, updated_proforma.quantity_list)
-                    file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "proforma invoice", request, form.validated_data['pdf_number'])
+                    file_name = get_pdf_file(buffer, invoice_ser, currency, "proforma invoice", request, form.validated_data['pdf_number'], logo_url)
 
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -837,7 +898,7 @@ def edit_proforma(request, id):
                     file_name = f"{'proforma invoice'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = ProformerInvoiceSerailizer(updated_proforma).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_proforma.item_list, updated_proforma.quantity_list)
-                    _ = get_pdf_file(file_name, invoice_ser, request.user.currency, "proforma invoice", request, form.validated_data['pdf_number'])
+                    _ = get_pdf_file(file_name, invoice_ser, currency, "proforma invoice", request, form.validated_data['pdf_number'], logo_url)
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_proforma.customer.email, body, subject, file_name)
@@ -959,6 +1020,7 @@ def all_purchaseorder(request):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def create_purchaseorder(request):
 
     if request.method == "POST":
@@ -969,9 +1031,25 @@ def create_purchaseorder(request):
         print(request.data)
 
         if form.is_valid():
-            new_po = form.save(request)
+            new_po, item_list = form.save(request)
             context['message'] = "Purchase order created successfully"
-            context['invoice'] = {"id": new_po.id, **form.data}
+            context['invoice'] = {"id": new_po.id, **form.validated_data}
+            context['invoice']['item_list'] = item_list
+
+            if "logo_name" in form.validated_data:
+                logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                logo_url = logo.photo_path
+            elif "logo_image" in form.validated_data:
+                print("")
+                logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                context['invoice'].pop("logo_image")
+            else:
+                logo_url = request.user.logo_path
+
+            if "currency" in form.validated_data:
+                currency = form.validated_data['currency']
+            else:
+                currency = request.user.currency
             # context['invoice']['item_list'] = custom_item_serializer(new_po.item_list, new_po.quantity_list)
 
             if form.validated_data['download']:
@@ -979,7 +1057,7 @@ def create_purchaseorder(request):
                 invoice_ser = PurchaseOrderSerailizer(new_po).data
                 print(invoice_ser)
                 invoice_ser['item_list'] = pdf_item_serializer(new_po.item_list, new_po.quantity_list)
-                file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "purchase order", request, form.validated_data['pdf_number'])
+                file_name = get_pdf_file(buffer, invoice_ser, currency, "purchase order", request, form.validated_data['pdf_number'], logo_url)
 
                 buffer.seek(0)
                 print(file_name)
@@ -994,7 +1072,7 @@ def create_purchaseorder(request):
                 file_name = f"{'purchase order'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = PurchaseOrderSerailizer(new_po).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_po.item_list, new_po.quantity_list)
-                _ = get_pdf_file(file_name, invoice_ser, request.user.currency, "purchase order", request, form.validated_data['pdf_number'])
+                _ = get_pdf_file(file_name, invoice_ser, currency, "purchase order", request, form.validated_data['pdf_number'], logo_url)
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
                 send_my_email(new_po.customer.email, body, subject, file_name)
@@ -1026,6 +1104,7 @@ def create_purchaseorder(request):
 @api_view(["GET", "PUT", "DELETE"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def edit_purchaseorder(request, id):
 
     context = {}
@@ -1060,16 +1139,32 @@ def edit_purchaseorder(request, id):
             context = {}
 
             if form.is_valid():
-                updated_purchase = form.update(purchase, form.validated_data)
+                updated_purchase, item_list = form.update(purchase, form.validated_data)
                 context['message'] = "Purchase order updated successfully"
                 context['purchase'] = {"id": updated_purchase.id, **form.validated_data}
+                context['purchase']['item_list'] = item_list
+
+                if "logo_name" in form.validated_data:
+                    logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                    logo_url = logo.photo_path
+                elif "logo_image" in form.validated_data:
+                    print("")
+                    logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                    context['purchase'].pop("logo_image")
+                else:
+                    logo_url = request.user.logo_path
+
+                if "currency" in form.validated_data:
+                    currency = form.validated_data['currency']
+                else:
+                    currency = request.user.currency
                 # context['purchase']['item_list'] = custom_item_serializer(updated_purchase.item_list, updated_purchase.quantity_list)
 
                 if form.validated_data['download']:
                     buffer = io.BytesIO()
                     invoice_ser = PurchaseOrderSerailizer(updated_purchase).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_purchase.item_list, updated_purchase.quantity_list)
-                    file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "purchase order", request, form.validated_data['pdf_number'])
+                    file_name = get_pdf_file(buffer, invoice_ser, currency, "purchase order", request, form.validated_data['pdf_number'], logo_url)
 
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -1083,7 +1178,7 @@ def edit_purchaseorder(request, id):
                     file_name = f"{'purchase order'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = PurchaseOrderSerailizer(updated_purchase).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_purchase.item_list, updated_purchase.quantity_list)
-                    _ = get_pdf_file(file_name, invoice_ser, request.user.currency, "purchase order", request, form.validated_data['pdf_number'])
+                    _ = get_pdf_file(file_name, invoice_ser, currency, "purchase order", request, form.validated_data['pdf_number'], logo_url)
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_purchase.customer.email, body, subject, file_name)
@@ -1215,6 +1310,7 @@ def all_estimate(request):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def create_estimate(request):
 
     if request.method == "POST":
@@ -1225,15 +1321,31 @@ def create_estimate(request):
         print(request.data)
 
         if form.is_valid():
-            new_estimate = form.save(request)
+            new_estimate, item_list = form.save(request)
             context['message'] = "Estimate created successfully"
-            context['estimate'] = {"id": new_estimate.id, **form.data}
+            context['estimate'] = {"id": new_estimate.id, **form.validated_data}
+            context['estimate']['item_list'] = item_list
+
+            if "logo_name" in form.validated_data:
+                logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                logo_url = logo.photo_path
+            elif "logo_image" in form.validated_data:
+                print("")
+                logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                context['estimate'].pop("logo_image")
+            else:
+                logo_url = request.user.logo_path
+
+            if "currency" in form.validated_data:
+                currency = form.validated_data['currency']
+            else:
+                currency = request.user.currency
 
             if form.validated_data['download']:
                 buffer = io.BytesIO()
                 invoice_ser = EstimateSerailizer(new_estimate).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_estimate.item_list, new_estimate.quantity_list)
-                file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "estimate", request, form.validated_data['pdf_number'])
+                file_name = get_pdf_file(buffer, invoice_ser, currency, "estimate", request, form.validated_data['pdf_number'], logo_url)
 
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -1246,7 +1358,7 @@ def create_estimate(request):
                 filename = f"{'estimate'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = EstimateSerailizer(new_estimate).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_estimate.item_list, new_estimate.quantity_list)
-                _ = get_pdf_file(filename, invoice_ser, request.user.currency, "estimate", request, form.validated_data['pdf_number'])
+                _ = get_pdf_file(filename, invoice_ser, currency, "estimate", request, form.validated_data['pdf_number'], logo_url)
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
                 send_my_email(new_estimate.customer.email, body, subject, filename)
@@ -1424,6 +1536,7 @@ def accept_estimate(request):
 @api_view(["GET", "PUT", "DELETE"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def edit_estimate(request, id):
 
     context = {}
@@ -1458,15 +1571,31 @@ def edit_estimate(request, id):
             context = {}
 
             if form.is_valid():
-                updated_estimate = form.update(estimate, form.validated_data)
+                updated_estimate, item_list = form.update(estimate, form.validated_data)
                 context['message'] = "Estimate updated successfully"
                 context['estimate'] = {"id": updated_estimate.id, **form.validated_data}
+                context['estimate']['item_list'] = item_list
+
+                if "logo_name" in form.validated_data:
+                    logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                    logo_url = logo.photo_path
+                elif "logo_image" in form.validated_data:
+                    print("")
+                    logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                    context['estimate'].pop("logo_image")
+                else:
+                    logo_url = request.user.logo_path
+
+                if "currency" in form.validated_data:
+                    currency = form.validated_data['currency']
+                else:
+                    currency = request.user.currency
 
                 if form.validated_data['download']:
                     buffer = io.BytesIO()
                     invoice_ser = EstimateSerailizer(updated_estimate).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_estimate.item_list, updated_estimate.quantity_list)
-                    file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "estimate", request, form.validated_data['pdf_number'])
+                    file_name = get_pdf_file(buffer, invoice_ser, currency, "estimate", request, form.validated_data['pdf_number'], logo_url)
 
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -1479,7 +1608,7 @@ def edit_estimate(request, id):
                     filename = f"{'estimate'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = EstimateSerailizer(updated_estimate).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_estimate.item_list, updated_estimate.quantity_list)
-                    file_name = get_pdf_file(filename, invoice_ser, request.user.currency, "estimate", request, form.validated_data['pdf_number'])
+                    file_name = get_pdf_file(filename, invoice_ser, currency, "estimate", request, form.validated_data['pdf_number'], logo_url)
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_estimate.customer.email, body, subject, filename)
@@ -1789,6 +1918,7 @@ def all_quote(request):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def create_quote(request):
 
     if request.method == "POST":
@@ -1799,16 +1929,32 @@ def create_quote(request):
         print(request.data)
 
         if form.is_valid():
-            new_quote = form.save(request)
+            new_quote, item_list = form.save(request)
             context['message'] = "Quote created successfully"
-            context['quote'] = {"id": new_quote.id, **form.data}
+            context['quote'] = {"id": new_quote.id, **form.validated_data}
+            context['quote']['item_list'] = item_list
+
+            if "logo_name" in form.validated_data:
+                logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                logo_url = logo.photo_path
+            elif "logo_image" in form.validated_data:
+                print("")
+                logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                context['quote'].pop("logo_image")
+            else:
+                logo_url = request.user.logo_path
+
+            if "currency" in form.validated_data:
+                currency = form.validated_data['currency']
+            else:
+                currency = request.user.currency
             # context['quote']['item_list'] = custom_item_serializer(new_quote.item_list, new_quote.quantity_list)
 
             if form.validated_data['download']:
                 buffer = io.BytesIO()
                 invoice_ser = QuoteSerailizer(new_quote).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_quote.item_list, new_quote.quantity_list)
-                file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "quote", request, form.validated_data['pdf_number'])
+                file_name = get_pdf_file(buffer, invoice_ser, currency, "quote", request, form.validated_data['pdf_number'], logo_url)
 
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -1821,7 +1967,7 @@ def create_quote(request):
                 file_name = f"{'quote'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = QuoteSerailizer(new_quote).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_quote.item_list, new_quote.quantity_list)
-                _ = get_pdf_file(file_name, invoice_ser, request.user.currency, "quote", request, form.validated_data['pdf_number'])
+                _ = get_pdf_file(file_name, invoice_ser, currency, "quote", request, form.validated_data['pdf_number'], logo_url)
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
                 send_my_email(new_quote.customer.email, body, subject, file_name)
@@ -1854,6 +2000,7 @@ def create_quote(request):
 @api_view(["GET", "PUT", "DELETE"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def edit_quote(request, id):
 
     context = {}
@@ -1888,16 +2035,32 @@ def edit_quote(request, id):
             context = {}
 
             if form.is_valid():
-                updated_quote = form.update(quote, form.validated_data)
+                updated_quote, item_list = form.update(quote, form.validated_data)
                 context['message'] = "Quote updated successfully"
                 context['quote'] = {"id": updated_quote.id, **form.validated_data}
+                context['quote']['item_list'] = item_list
+
+                if "logo_name" in form.validated_data:
+                    logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                    logo_url = logo.photo_path
+                elif "logo_image" in form.validated_data:
+                    print("")
+                    logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                    context['quote'].pop("logo_image")
+                else:
+                    logo_url = request.user.logo_path
+
+                if "currency" in form.validated_data:
+                    currency = form.validated_data['currency']
+                else:
+                    currency = request.user.currency
                 # context['quote']['item_list'] = custom_item_serializer(updated_quote.item_list, updated_quote.quantity_list)
 
                 if form.validated_data['download']:
                     buffer = io.BytesIO()
                     invoice_ser = QuoteSerailizer(updated_quote).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_quote.item_list, updated_quote.quantity_list)
-                    file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "quote", request, form.validated_data['pdf_number'])
+                    file_name = get_pdf_file(buffer, invoice_ser, currency, "quote", request, form.validated_data['pdf_number'], logo_url)
 
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -1911,7 +2074,7 @@ def edit_quote(request, id):
                     file_name = f"{'quote'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = QuoteSerailizer(updated_quote).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_quote.item_list, updated_quote.quantity_list)
-                    _ = get_pdf_file(file_name, invoice_ser, request.user.currency, "quote", request, form.validated_data['pdf_number'])
+                    _ = get_pdf_file(file_name, invoice_ser, currency, "quote", request, form.validated_data['pdf_number'], logo_url)
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_quote.customer.email, body, subject, file_name)
@@ -2038,6 +2201,7 @@ def all_receipt(request):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def create_receipt(request):
 
     if request.method == "POST":
@@ -2048,16 +2212,32 @@ def create_receipt(request):
         print(request.data)
 
         if form.is_valid():
-            new_receipt = form.save(request)
+            new_receipt, item_list = form.save(request)
             context['message'] = "Receipt created successfully"
-            context['receipt'] = {"id": new_receipt.id, **form.data}
+            context['receipt'] = {"id": new_receipt.id, **form.validated_data}
+            context['receipt']['item_list'] = item_list
+
+            if "logo_name" in form.validated_data:
+                logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                logo_url = logo.photo_path
+            elif "logo_image" in form.validated_data:
+                print("")
+                logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                context['receipt'].pop("logo_image")
+            else:
+                logo_url = request.user.logo_path
+
+            if "currency" in form.validated_data:
+                currency = form.validated_data['currency']
+            else:
+                currency = request.user.currency
             # context['receipt']['item_list'] = custom_item_serializer(new_receipt.item_list, new_receipt.quantity_list)
 
             if form.validated_data['download']:
                 buffer = io.BytesIO()
                 invoice_ser = ReceiptSerailizer(new_receipt).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_receipt.item_list, new_receipt.quantity_list)
-                file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "receipt", request, form.validated_data['pdf_number'])
+                file_name = get_pdf_file(buffer, invoice_ser, currency, "receipt", request, form.validated_data['pdf_number'], logo_url)
 
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -2071,7 +2251,7 @@ def create_receipt(request):
                 file_name = f"{'receipt'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = ReceiptSerailizer(new_receipt).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_receipt.item_list, new_receipt.quantity_list)
-                _ = get_pdf_file(file_name, invoice_ser, request.user.currency, "receipt", request, form.validated_data['pdf_number'])
+                _ = get_pdf_file(file_name, invoice_ser, currency, "receipt", request, form.validated_data['pdf_number'], logo_url)
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
                 send_my_email(new_receipt.customer.email, body, subject, file_name)
@@ -2104,6 +2284,7 @@ def create_receipt(request):
 @api_view(["GET", "PUT", "DELETE"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def edit_receipt(request, id):
 
     context = {}
@@ -2138,16 +2319,32 @@ def edit_receipt(request, id):
             context = {}
 
             if form.is_valid():
-                updated_receipt = form.update(receipt, form.validated_data)
+                updated_receipt, item_list = form.update(receipt, form.validated_data)
                 context['message'] = "Receipt updated successfully"
                 context['receipt'] = {"id": updated_receipt.id, **form.validated_data}
+                context['receipt']['item_list'] = item_list
+
+                if "logo_name" in form.validated_data:
+                    logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                    logo_url = logo.photo_path
+                elif "logo_image" in form.validated_data:
+                    print("")
+                    logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                    context['receipt'].pop("logo_image")
+                else:
+                    logo_url = request.user.logo_path
+
+                if "currency" in form.validated_data:
+                    currency = form.validated_data['currency']
+                else:
+                    currency = request.user.currency
                 # context['receipt']['item_list'] = custom_item_serializer(updated_receipt.item_list, updated_receipt.quantity_list)
 
                 if form.validated_data['download']:
                     buffer = io.BytesIO()
                     invoice_ser = ReceiptSerailizer(updated_receipt).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_receipt.item_list, updated_receipt.quantity_list)
-                    file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "receipt", request, form.validated_data['pdf_number'])
+                    file_name = get_pdf_file(buffer, invoice_ser, currency, "receipt", request, form.validated_data['pdf_number'], logo_url)
 
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -2161,7 +2358,7 @@ def edit_receipt(request, id):
                     file_name = f"{'receipt'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = ReceiptSerailizer(updated_receipt).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_receipt.item_list, updated_receipt.quantity_list)
-                    _ = get_pdf_file(file_name, invoice_ser, request.user.currency, "receipt", request, form.validated_data['pdf_number'])
+                    _ = get_pdf_file(file_name, invoice_ser, currency, "receipt", request, form.validated_data['pdf_number'], logo_url)
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_receipt.customer.email, body, subject, file_name)
@@ -2291,6 +2488,7 @@ def all_credit(request):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def create_credit(request):
 
     if request.method == "POST":
@@ -2301,16 +2499,32 @@ def create_credit(request):
         print(request.data)
 
         if form.is_valid():
-            new_credit = form.save(request)
+            new_credit, item_list = form.save(request)
             context['message'] = "Credit note created successfully"
-            context['credit'] = {"id": new_credit.id, **form.data}
+            context['credit'] = {"id": new_credit.id, **form.validated_data}
+            context['credit']['item_list'] = item_list
+
+            if "logo_name" in form.validated_data:
+                logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                logo_url = logo.photo_path
+            elif "logo_image" in form.validated_data:
+                print("")
+                logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                context['credit'].pop("logo_image")
+            else:
+                logo_url = request.user.logo_path
+
+            if "currency" in form.validated_data:
+                currency = form.validated_data['currency']
+            else:
+                currency = request.user.currency
             # context['credit']['item_list'] = custom_item_serializer(new_credit.item_list, new_credit.quantity_list)
 
             if form.validated_data['download']:
                 buffer = io.BytesIO()
                 invoice_ser = CreditNoteSerailizer(new_credit).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_credit.item_list, new_credit.quantity_list)
-                file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "credit note", request, form.validated_data['pdf_number'])
+                file_name = get_pdf_file(buffer, invoice_ser, currency, "credit note", request, form.validated_data['pdf_number'], logo_url)
 
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -2324,7 +2538,7 @@ def create_credit(request):
                 file_name = f"{'credit note'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = CreditNoteSerailizer(new_credit).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_credit.item_list, new_credit.quantity_list)
-                _ = get_pdf_file(file_name, invoice_ser, request.user.currency, "credit note", request, form.validated_data['pdf_number'])
+                _ = get_pdf_file(file_name, invoice_ser, currency, "credit note", request, form.validated_data['pdf_number'], logo_url)
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
                 send_my_email(new_credit.customer.email, body, subject, file_name)
@@ -2357,6 +2571,7 @@ def create_credit(request):
 @api_view(["GET", "PUT", "DELETE"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def edit_credit(request, id):
 
     context = {}
@@ -2391,16 +2606,32 @@ def edit_credit(request, id):
             context = {}
 
             if form.is_valid():
-                updated_credit = form.update(credit, form.validated_data)
+                updated_credit, item_list = form.update(credit, form.validated_data)
                 context['message'] = "Credit note updated successfully"
                 context['credit'] = {"id": updated_credit.id, **form.validated_data}
+                context['credit']['item_list'] = item_list
+                
+                if "logo_name" in form.validated_data:
+                    logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                    logo_url = logo.photo_path
+                elif "logo_image" in form.validated_data:
+                    print("")
+                    logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                    context['credit'].pop("logo_image")
+                else:
+                    logo_url = request.user.logo_path
+
+                if "currency" in form.validated_data:
+                    currency = form.validated_data['currency']
+                else:
+                    currency = request.user.currency
                 # context['credit']['item_list'] = custom_item_serializer(updated_credit.item_list, updated_credit.quantity_list)
 
                 if form.validated_data['download']:
                     buffer = io.BytesIO()
                     invoice_ser = CreditNoteSerailizer(updated_credit).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_credit.item_list, updated_credit.quantity_list)
-                    file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "credit note", request, form.validated_data['pdf_number'])
+                    file_name = get_pdf_file(buffer, invoice_ser, currency, "credit note", request, form.validated_data['pdf_number'], logo_url)
 
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -2413,7 +2644,7 @@ def edit_credit(request, id):
                     file_name = f"{'credit note'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = CreditNoteSerailizer(updated_credit).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_credit.item_list, updated_credit.quantity_list)
-                    _ = get_pdf_file(file_name, invoice_ser, request.user.currency, "credit note", request, form.validated_data['pdf_number'])
+                    _ = get_pdf_file(file_name, invoice_ser, currency, "credit note", request, form.validated_data['pdf_number'], logo_url)
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_credit.customer.email, body, subject, file_name)
@@ -2539,6 +2770,7 @@ def all_delivery(request):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def create_delivery(request):
 
     if request.method == "POST":
@@ -2549,16 +2781,32 @@ def create_delivery(request):
         print(request.data)
 
         if form.is_valid():
-            new_delivery = form.save(request)
+            new_delivery, item_list = form.save(request)
             context['message'] = "Delivery note created successfully"
-            context['delivery'] = {"id": new_delivery.id, **form.data}
+            context['delivery'] = {"id": new_delivery.id, **form.validated_data}
+            context['delivery']['item_list'] = item_list
+
+            if "logo_name" in form.validated_data:
+                logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                logo_url = logo.photo_path
+            elif "logo_image" in form.validated_data:
+                print("")
+                logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                context['delivery'].pop("logo_image")
+            else:
+                logo_url = request.user.logo_path
+
+            if "currency" in form.validated_data:
+                currency = form.validated_data['currency']
+            else:
+                currency = request.user.currency
             # context['delivery']['item_list'] = custom_item_serializer(new_delivery.item_list, new_delivery.quantity_list)
 
             if form.validated_data['download']:
                 buffer = io.BytesIO()
                 invoice_ser = DNSerailizer(new_delivery).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_delivery.item_list, new_delivery.quantity_list)
-                file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "delivery note", request, form.validated_data['pdf_number'])
+                file_name = get_pdf_file(buffer, invoice_ser, currency, "delivery note", request, form.validated_data['pdf_number'], logo_url)
 
                 buffer.seek(0)
                 # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -2572,7 +2820,7 @@ def create_delivery(request):
                 file_name = f"{'delivery note'.title()} for {request.user.email} - {now}.pdf"
                 invoice_ser = DNSerailizer(new_delivery).data
                 invoice_ser['item_list'] = pdf_item_serializer(new_delivery.item_list, new_delivery.quantity_list)
-                _ = get_pdf_file(file_name, invoice_ser, request.user.currency, "delivery note", request, form.validated_data['pdf_number'])
+                _ = get_pdf_file(file_name, invoice_ser, currency, "delivery note", request, form.validated_data['pdf_number'], logo_url)
                 body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                 subject = "Transaction Receipt"
                 send_my_email(new_delivery.customer.email, body, subject, file_name)
@@ -2605,6 +2853,7 @@ def create_delivery(request):
 @api_view(["GET", "PUT", "DELETE"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def edit_delivery(request, id):
 
     context = {}
@@ -2639,16 +2888,32 @@ def edit_delivery(request, id):
             context = {}
 
             if form.is_valid():
-                updated_delivery = form.update(delivery, form.validated_data)
+                updated_delivery, item_list = form.update(delivery, form.validated_data)
                 context['message'] = "Delivery note updated successfully"
                 context['delivery'] = {"id": updated_delivery.id, **form.validated_data}
+                context['delivery']['item_list'] = item_list
+
+                if "logo_name" in form.validated_data:
+                    logo = InbuiltLogo.objects.get(name=form.validated_data['logo_name'])
+                    logo_url = logo.photo_path
+                elif "logo_image" in form.validated_data:
+                    print("")
+                    logo_url = upload_inbuilt_logo(form.validated_data['logo_image'])
+                    context['delivery'].pop("logo_image")
+                else:
+                    logo_url = request.user.logo_path
+
+                if "currency" in form.validated_data:
+                    currency = form.validated_data['currency']
+                else:
+                    currency = request.user.currency
                 # context['delivery']['item_list'] = custom_item_serializer(updated_delivery.item_list, updated_delivery.quantity_list)
 
                 if form.validated_data['download']:
                     buffer = io.BytesIO()
                     invoice_ser = DNSerailizer(updated_delivery).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_delivery.item_list, updated_delivery.quantity_list)
-                    file_name = get_pdf_file(buffer, invoice_ser, request.user.currency, "delivery note", request, form.validated_data['pdf_number'])
+                    file_name = get_pdf_file(buffer, invoice_ser, currency, "delivery note", request, form.validated_data['pdf_number'], logo_url)
 
                     buffer.seek(0)
                     # return FileResponse(buffer, as_attachment=True, filename=file_name)
@@ -2661,7 +2926,7 @@ def edit_delivery(request, id):
                     file_name = f"{'delivery note'.title()} for {request.user.email} - {now}.pdf"
                     invoice_ser = DNSerailizer(updated_delivery).data
                     invoice_ser['item_list'] = pdf_item_serializer(updated_delivery.item_list, updated_delivery.quantity_list)
-                    _ = get_pdf_file(file_name, invoice_ser, request.user.currency, "delivery note", request, form.validated_data['pdf_number'])
+                    _ = get_pdf_file(file_name, invoice_ser, currency, "delivery note", request, form.validated_data['pdf_number'], logo_url)
                     body = "Attached to the email is the receipt of your transaction on https://www.clappe.com"
                     subject = "Transaction Receipt"
                     send_my_email(updated_delivery.customer.email, body, subject, file_name)
@@ -3126,7 +3391,7 @@ def customer_report(request):
                                                 .filter(date_created__gte=start_date)\
                                                 .filter(date_created__lte=end_date).order_by("first_name").all()
                     if len(customers) > 0:
-                        customer_ser = CustomerSerializer(customers, many=True, fields=("id", "business_name", "address", "email", "taxable", "status"))
+                        customer_ser = CustomerReportSerializer(customers, many=True, fields=("id", "business_name", "address", "email", "taxable", "status"))
                         context["message"] = customer_ser.data
                         return Response(context, status=status.HTTP_200_OK)
 
@@ -3349,7 +3614,7 @@ def customer_report(request):
                                                 .filter(date_created__gte=start_date)\
                                                 .filter(date_created__lte=end_date).order_by("business_name").all()
                     if len(customers) > 0:
-                        customer_ser = CustomerSerializer(customers, many=True, fields=("id", "business_name", "address", "email", "taxable"))
+                        customer_ser = CustomerReportSerializer(customers, many=True, fields=("id", "business_name", "address", "email", "taxable"))
                         context["message"] = customer_ser.data
 
                         return Response(context, status=status.HTTP_200_OK)
@@ -3365,7 +3630,7 @@ def customer_report(request):
                                                 .filter(date_created__gte=start_date)\
                                                 .filter(date_created__lte=end_date).order_by("first_name").all()
                     if len(customers) > 0:
-                        customer_ser = CustomerSerializer(customers, many=True, fields=("id", "first_name", "last_name", "address", "email", "taxable"))
+                        customer_ser = CustomerReportSerializer(customers, many=True, fields=("id", "first_name", "last_name", "address", "email", "taxable"))
                         context["message"] = customer_ser.data
                         
                         return Response(context, status=status.HTTP_200_OK)
@@ -3381,7 +3646,7 @@ def customer_report(request):
                                                 .filter(date_created__gte=start_date)\
                                                 .filter(date_created__lte=end_date).order_by("first_name", "business_name").all()
                     if len(customers) > 0:
-                        customer_ser = CustomerSerializer(customers, many=True, fields=("id", "first_name", "last_name", "business_name", "address", "email", "taxable"))
+                        customer_ser = CustomerReportSerializer(customers, many=True, fields=("id", "first_name", "last_name", "business_name", "address", "email", "taxable"))
                         context["message"] = customer_ser.data
                         
                         return Response(context, status=status.HTTP_200_OK)
@@ -3397,7 +3662,7 @@ def customer_report(request):
                                                 .filter(date_created__gte=start_date)\
                                                 .filter(date_created__lte=end_date).order_by("phone_number").all()
                     if len(customers) > 0:
-                        customer_ser = CustomerSerializer(customers, many=True, fields=("id", "first_name", "last_name", "business_name", "phone_number", "email"))
+                        customer_ser = CustomerReportSerializer(customers, many=True, fields=("id", "first_name", "last_name", "business_name", "phone_number", "email"))
                         context["message"] = customer_ser.data
                         
                         return Response(context, status=status.HTTP_200_OK)
@@ -3429,10 +3694,10 @@ def customer_report(request):
             # customer_company = customers.order_by("business_name")
             # customer_phone = customers.order_by("phone_number")
 
-            # customer_ser = CustomerSerializer(customers, many=True)
-            customer_name_ser = CustomerSerializer(customer_name, many=True, fields=("id", "first_name", "last_name", "business_name", "phone_number"))
-            # customer_company_ser = CustomerSerializer(customer_company, many=True)
-            # customer_phone_ser = CustomerSerializer(customer_phone, many=True)
+            # customer_ser = CustomerReportSerializer(customers, many=True)
+            customer_name_ser = CustomerReportSerializer(customer_name, many=True, fields=("id", "first_name", "last_name", "business_name", "phone_number"))
+            # customer_company_ser = CustomerReportSerializer(customer_company, many=True)
+            # customer_phone_ser = CustomerReportSerializer(customer_phone, many=True)
 
             context["message"] = customer_name_ser.data
             # context["message"]['by_company'] = customer_company_ser.data
@@ -21558,7 +21823,7 @@ def dashboard(request):
 
 
 
-################################################# PDF endpoints #####################################
+################################################# picture endpoints #####################################
 @api_view(["GET", "POST"])
 @parser_classes([FormParser, MultiPartParser])
 def upload_screenshot(request):
@@ -21616,5 +21881,88 @@ def get_region(request):
 
     context["Countries"] = country
     context["Currencies"] = currencies
+
+    return Response(context, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+@api_view(["GET", "POST"])
+@parser_classes([FormParser, MultiPartParser])
+def upload_logo(request):
+    if request.method == "GET":
+        context = {"page": "inbuilt logo upload page", "required": ["name", "photo_path", "category"]}
+        return Response(context, status=status.HTTP_200_OK)
+
+    else:
+        context = {}
+        form = UploadInbuiltLogo(data=request.data)
+
+        if form.is_valid():
+            _ = form.save()
+            context["message"] = "Logo uploaded successfully"
+
+            return Response(context, status=status.HTTP_200_OK)
+
+        else:
+            context["error"] = form.errors
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+
+
+@api_view(["GET"])
+def get_logo_details(request):
+    logos = InbuiltLogo.objects.all()
+
+    logos_ser = InbuiltLogoSerializer(logos, many=True)
+
+
+    clipart_dict = []
+    people_dict = []
+    jobs_dict = []
+
+    for logo in logos_ser.data:
+        if logo['category'] == "clipart":
+            clipart_dict.append({
+                "Name": logo['name'],
+                "Link": logo['photo_path']
+            })
+        
+        elif logo['category'] == "people":
+            people_dict.append({
+                "Name": logo['name'],
+                "Link": logo['photo_path']
+            })
+
+        if logo['category'] == "jobs":
+            jobs_dict.append({
+                "Name": logo['name'],
+                "Link": logo['photo_path']
+            })
+
+
+    context = {'message': [
+        {
+            "Category": "Clipart",
+            "Data": clipart_dict
+        },
+        {
+            "Category": "People",
+            "Data": people_dict
+        },
+        {
+            "Category": "Jobs",
+            "Data": jobs_dict
+        },
+    ]}
 
     return Response(context, status=status.HTTP_200_OK)

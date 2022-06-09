@@ -125,7 +125,7 @@ def total_box(pdf, start_y, currency, document_type, document):
         pdf.drawRightString(535, start_y+60, f"{document['add_charges']}")
         pdf.drawRightString(535, start_y+85, f"{document.get('discount_amount', '0')}")
 
-        pdf.setFont('Helvetica', 15)
+        pdf.setFont('Helvetica', 13)
         pdf.drawRightString(535, start_y+120, f"{currency} {document['grand_total']}")
         
 
@@ -145,7 +145,7 @@ def total_box(pdf, start_y, currency, document_type, document):
         pdf.drawRightString(535, start_y+40, f"{document['add_charges']}")
         pdf.drawRightString(535, start_y+65, f"{document.get('discount_amount', '0')}")
 
-        pdf.setFont('Helvetica', 15)
+        pdf.setFont('Helvetica', 13)
         pdf.drawRightString(535, start_y+100, f"{currency} {document['grand_total']}")
 
     pdf.setFont('Helvetica-Bold', 10)
@@ -182,7 +182,7 @@ def total_box(pdf, start_y, currency, document_type, document):
 
 
 
-def get_report_34(buffer, document, currency, document_type, request):
+def get_report_34(buffer, document, currency, document_type, request, logo):
 
     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 

@@ -161,7 +161,7 @@ def total_box(pdf, start_y, currency, document_type, document):
 
 
 
-def get_report_23(buffer, document, currency, document_type, request):
+def get_report_23(buffer, document, currency, document_type, request, logo):
 
     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
@@ -231,7 +231,7 @@ def get_report_23(buffer, document, currency, document_type, request):
     pdf.drawRightString(width - 55, 230, f"{document[doc_date_key]}")
     pdf.drawRightString(width - 55, 250, f"{document['due_date']}")
 
-    pdf.setFont('Helvetica-Bold', 30)
+    pdf.setFont('Helvetica-Bold', 25)
     pdf.setStrokeColor(fill_colour)
     pdf.setFillColor(fill_colour)
     pdf.setLineWidth(1)

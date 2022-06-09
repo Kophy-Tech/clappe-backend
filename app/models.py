@@ -640,3 +640,29 @@ class PDFTemplate(models.Model):
 
     def __str__(self):
         return self.name
+
+
+
+
+
+
+
+class InbuiltLogo(models.Model):
+    name = models.CharField("Name", max_length=1024, unique=True)
+    photo_path = CloudinaryField("Photo", null=True, blank=True)
+    category = models.CharField("Category", max_length=1024)
+
+    def image_preview(self):
+        if self.photo_path:
+            return mark_safe('<img src="{}" width="150" height="150" />'.format(self.photo_path.url))
+        else:
+            return '(No image)'
+
+    class Meta:
+        ordering = ['name']
+
+    image_preview.short_description = "Image Preview"
+
+
+    def __str__(self):
+        return self.name

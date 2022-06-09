@@ -154,7 +154,7 @@ def total_box(pdf, start_y, currency, document_type, document):
         pdf.setFillColor(colors.ReportLabFidBlue)
         pdf.setLineWidth(3)
         pdf.rect(10, start_y+100, 530, 40)
-        pdf.setFont('Times-Roman', 25)
+        pdf.setFont('Times-Roman', 23)
         pdf.drawString(20, start_y+125, "TOTAL")
         pdf.drawRightString(535, start_y+125, f"{currency} {document['grand_total']}")
         
@@ -172,7 +172,7 @@ def total_box(pdf, start_y, currency, document_type, document):
         pdf.setFillColor(colors.ReportLabFidBlue)
         pdf.setLineWidth(3)
         pdf.rect(10, start_y+100, 530, 40)
-        pdf.setFont('Times-Roman', 25)
+        pdf.setFont('Times-Roman', 23)
         pdf.drawString(20, start_y+125, "TOTAL")
         pdf.drawRightString(535, start_y+125, f"{currency} {document['grand_total']}")
 
@@ -209,7 +209,7 @@ def total_box(pdf, start_y, currency, document_type, document):
 
 
 
-def get_report_28(buffer, document, currency, document_type, request):
+def get_report_28(buffer, document, currency, document_type, request, logo):
 
     now = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
