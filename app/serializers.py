@@ -2538,7 +2538,7 @@ class UploadInbuiltLogo(serializers.Serializer):
     def save(self):
         new_logo = InbuiltLogo()
         new_logo.name = self.validated_data['name']
-        new_logo.photo_path = upload_inbuilt_logo(self.validated_data["photo_path"], self.validated_data['name'])
+        new_logo.photo_path = upload_inbuilt_logo(self.validated_data["photo_path"])
         new_logo.category = self.validated_data['category']
         new_logo.save()
 
