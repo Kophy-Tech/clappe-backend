@@ -122,7 +122,7 @@ urlpatterns = [
     path("report/item", item_report, name="item_report"),
 
 
-    # pdf
+    # pdf and logo
     path("pdf/upload", upload_screenshot, name="upload_screenshot"),
     path("pdf/fetch", get_pdf_details, name="get_pdf_details"),
     path("logo/upload", upload_logo, name="upload_inbuilt_logo"),

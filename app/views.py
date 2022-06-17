@@ -85,6 +85,7 @@ def signup(request):
 
 # login view
 @api_view(["GET", "POST"])
+@parser_classes([FormParser, MultiPartParser])
 def login(request):
     context = {}
     if request.method == 'GET':
@@ -125,7 +126,7 @@ def login(request):
 
 
 
-@api_view(["GET", "POST"])
+@api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def user_profile(request):
@@ -167,6 +168,7 @@ def logout(request):
 
 
 @api_view(["POST"])
+@parser_classes([FormParser, MultiPartParser])
 def get_code(request):
     context = {}
 
@@ -220,6 +222,7 @@ The Clappe account team
 
 
 @api_view(["POST"])
+@parser_classes([FormParser, MultiPartParser])
 def confirm_code(request):
     context = {}
 
@@ -264,6 +267,7 @@ def confirm_code(request):
 
 
 @api_view(["POST"])
+@parser_classes([FormParser, MultiPartParser])
 def reset_password(request):
     context = {}
 
@@ -666,6 +670,7 @@ def edit_invoice(request, id):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def pay_invoice(request):
     
     if request.method == "POST":
@@ -947,6 +952,7 @@ def edit_proforma(request, id):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def pay_proforma(request):
     
     if request.method == "POST":
@@ -1226,6 +1232,7 @@ def edit_purchaseorder(request, id):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def pay_purchaseorder(request):
     
     if request.method == "POST":
@@ -1699,6 +1706,7 @@ def edit_estimate(request, id):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def pay_estimate(request):
     
     if request.method == "POST":
@@ -1774,6 +1782,7 @@ def all_items(request):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def create_item(request):
 
     if request.method == "POST":
@@ -1809,6 +1818,7 @@ def create_item(request):
 @api_view(["GET", "PUT", "DELETE"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def edit_item(request, id):
 
     context = {}
@@ -2122,6 +2132,7 @@ def edit_quote(request, id):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def pay_quote(request):
     
     if request.method == "POST":
@@ -2406,6 +2417,7 @@ def edit_receipt(request, id):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def pay_receipt(request):
     
     if request.method == "POST":
@@ -2692,6 +2704,7 @@ def edit_credit(request, id):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def pay_credit(request):
     
     if request.method == "POST":
@@ -2974,6 +2987,7 @@ def edit_delivery(request, id):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def pay_delivery(request):
     
     if request.method == "POST":
@@ -3076,6 +3090,7 @@ def change_profile(request):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def change_password(request):
 
     if request.method == "GET":
@@ -3123,6 +3138,7 @@ def change_password(request):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def change_preference(request):
 
     my_preference = PreferenceSerializer(instance=request.user)
@@ -3206,6 +3222,7 @@ def change_preference(request):
 @api_view(["GET", "POST"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+@parser_classes([FormParser, MultiPartParser])
 def get_number(request):
 
     if request.method == "POST":
@@ -21582,6 +21599,7 @@ def item_report(request):
 @api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
+# @parser_classes([FormParser, MultiPartParser])
 def dashboard(request):
 
     context = {}
