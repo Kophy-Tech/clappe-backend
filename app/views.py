@@ -476,6 +476,8 @@ def create_invoice(request):
         form = InvoiceCreate(data=request.data)
         context = {}
 
+        print(request.data)
+
         if form.is_valid():
             # print(form.validated_data)
             new_invoice, item_list = form.save(request)
@@ -581,6 +583,8 @@ def edit_invoice(request, id):
             invoice = Invoice.objects.get(id=id)
             form = InvoiceEditSerializer(instance=invoice, data=request.data)
             context = {}
+
+            print(request.data)
 
             if form.is_valid():
                 updated_invoice, item_list = form.update(invoice, form.validated_data, request)
@@ -863,6 +867,8 @@ def edit_proforma(request, id):
             form = ProformaEditSerializer(instance=proforma, data=request.data)
             context = {}
 
+            print(request.data)
+
             if form.is_valid():
                 updated_proforma, item_list = form.update(proforma, form.validated_data)
                 context['message'] = "Proforma invoice updated successfully"
@@ -1143,6 +1149,8 @@ def edit_purchaseorder(request, id):
             purchase = PurchaseOrder.objects.get(id=id)
             form = PurchaseEditSerializer(instance=purchase, data=request.data)
             context = {}
+
+            print(request.data)
 
             if form.is_valid():
                 updated_purchase, item_list = form.update(purchase, form.validated_data)
@@ -1576,6 +1584,8 @@ def edit_estimate(request, id):
             estimate = Estimate.objects.get(id=id)
             form = EstimateEditSerializer(instance=estimate, data=request.data)
             context = {}
+
+            print(request.data)
 
             if form.is_valid():
                 updated_estimate, item_list = form.update(estimate, form.validated_data)
@@ -2044,6 +2054,8 @@ def edit_quote(request, id):
             form = QuoteEditSerializer(instance=quote, data=request.data)
             context = {}
 
+            print(request.data)
+
             if form.is_valid():
                 updated_quote, item_list = form.update(quote, form.validated_data)
                 context['message'] = "Quote updated successfully"
@@ -2328,6 +2340,8 @@ def edit_receipt(request, id):
             receipt = Receipt.objects.get(id=id)
             form = ReceiptEditSerializer(instance=receipt, data=request.data)
             context = {}
+
+            print(request.data)
 
             if form.is_valid():
                 updated_receipt, item_list = form.update(receipt, form.validated_data)
@@ -2617,6 +2631,8 @@ def edit_credit(request, id):
             form = CNEditSerializer(instance=credit, data=request.data)
             context = {}
 
+            print(request.data)
+
             if form.is_valid():
                 updated_credit, item_list = form.update(credit, form.validated_data)
                 context['message'] = "Credit note updated successfully"
@@ -2899,6 +2915,8 @@ def edit_delivery(request, id):
             delivery = DeliveryNote.objects.get(id=id)
             form = DNEditSerializer(instance=delivery, data=request.data)
             context = {}
+
+            print(request.data)
 
             if form.is_valid():
                 updated_delivery, item_list = form.update(delivery, form.validated_data)
