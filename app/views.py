@@ -1401,7 +1401,7 @@ def create_estimate(request):
             invoice_ser = EstimateSerailizer(new_estimate).data
             invoice_ser['item_list'] = pdf_item_serializer(new_estimate.item_list, new_estimate.quantity_list)
             pdf_number = form.validated_data.get("pdf_number", "Clapbill 13")
-            file_name = get_pdf_file(filename, invoice_ser, request.user.currency, "estimate", request, pdf_number)
+            file_name = get_pdf_file(filename, invoice_ser, request.user.currency, "estimate", request, pdf_number, logo_url)
             subject = "Estimate Approval"
             body = template
             send_my_email(new_estimate.customer.email, body, subject, filename, "html")
