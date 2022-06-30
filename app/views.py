@@ -3407,6 +3407,7 @@ def get_all_report(request):
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def customer_report(request):
+    print(request.query_params)
     context = {}
 
     # report_type = request.query_params.get("type", None)
@@ -3754,10 +3755,13 @@ def customer_report(request):
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def invoice_report(request):
+
+    print(request.query_params)
     
     measure = request.query_params.get("measure", None)
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
+
 
     if measure:
         measure = measure.lower()
@@ -8111,6 +8115,7 @@ def invoice_report(request):
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def proforma_report(request):
+    print(request.query_params)
     context = {}
     measure = request.query_params.get("measure", None)
     start_date = request.query_params.get("start_date", None)
@@ -10294,6 +10299,7 @@ def proforma_report(request):
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def purchase_report(request):
+    print(request.query_params)
     context = {}
     measure = request.query_params.get("measure", None)
     start_date = request.query_params.get("start_date", None)
@@ -12487,6 +12493,7 @@ def purchase_report(request):
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def estimate_report(request):
+    print(request.query_params)
     context = {}
     measure = request.query_params.get("measure", None)
     start_date = request.query_params.get("start_date", None)
@@ -14683,6 +14690,7 @@ def estimate_report(request):
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def quote_report(request):
+    print(request.query_params)
     context = {}
     measure = request.query_params.get("measure", None)
     start_date = request.query_params.get("start_date", None)
@@ -16864,6 +16872,7 @@ def quote_report(request):
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def receipt_report(request):
+    print(request.query_params)
     context = {}
     measure = request.query_params.get("measure", None)
     start_date = request.query_params.get("start_date", None)
@@ -17940,6 +17949,7 @@ def receipt_report(request):
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def credit_report(request):
+    print(request.query_params)
     context = {}
     measure = request.query_params.get("measure", None)
     start_date = request.query_params.get("start_date", None)
@@ -19682,6 +19692,7 @@ def credit_report(request):
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def delivery_report(request):
+    print(request.query_params)
     context = {}
     measure = request.query_params.get("measure", None)
     start_date = request.query_params.get("start_date", None)
@@ -21462,6 +21473,7 @@ def delivery_report(request):
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def item_report(request):
+    print(request.query_params)
     context = {}
 
     measure = request.query_params.get("measure", None)
