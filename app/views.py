@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import venv
 from dateutil.relativedelta import relativedelta
 import os, io, base64, pycountry
 from collections import namedtuple
@@ -23,7 +24,7 @@ from .serializers import CNCreateSerializer, CNEditSerializer, CreateItemSeriali
                         LoginSerializer, UploadInbuiltLogo, UserSerializer, InvoiceCreate, PayProformaSerializer, \
                         PurchaseCreateSerializer, PurchaseEditSerializer, PurchaseOrderSerailizer, \
                         PayPurchaseSerializer, ProfileSerializer, PasswordChangeSerializer, PreferenceSerializer,\
-                        UploadPDFTemplate, PDFTemplateSerializer, pdf_item_serializer, get_sku
+                        UploadPDFTemplate, PDFTemplateSerializer, pdf_item_serializer, get_sku, MyPagination
 
 from .models import JWT, CreditNote, Customer, DeliveryNote, Estimate, InbuiltLogo, Invoice, Item, MyUsers, PDFTemplate, \
                     ProformaInvoice, PurchaseOrder, Quote, Receipt
@@ -33,10 +34,6 @@ from app.my_email import send_my_email
 from .authentication import get_access_token, MyAuthentication
 from app.utils import encode_estimate, decode_estimate, custom_item_serializer, get_pdf_file, upload_inbuilt_logo
 from .forms import EstimateExpiration, delete_tasks
-
-
-
-PDF_HEADER = "data:application/pdf;base64,"
 
 
 
@@ -3415,6 +3412,10 @@ def customer_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if not start_date or not end_date:
+        context['message'] = "You need to select start date and end date"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
     if measure != "searchbox windows":
 
         if start_date:
@@ -3757,10 +3758,16 @@ def customer_report(request):
 def invoice_report(request):
 
     print(request.query_params)
+
+    context = {}
     
     measure = request.query_params.get("measure", None)
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
+
+    if not start_date or not end_date:
+        context['message'] = "You need to select start date and end date"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
     if measure:
@@ -3773,8 +3780,13 @@ def invoice_report(request):
         invoices = Invoice.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
+        
+        paginator = MyPagination()
+        invoices_per_page = paginator.paginate_queryset(invoices, request)
+
         if len(invoices) > 0:
-            invoice_ser = InvoiceSerializer(invoices, many=True)
+            invoice_ser = InvoiceSerializer(invoices_per_page, many=True)
+            total_invoices = []
             for invoice in invoice_ser.data:
                 single_invoice = {}
 
@@ -3785,8 +3797,14 @@ def invoice_report(request):
                 single_invoice['status'] = invoice['status']
                 single_invoice['id'] = invoice['id']
 
-                context["message"].append(single_invoice)
-            # context['message'] = invoice_ser.data
+                total_invoices.append(single_invoice)
+
+            a = paginator.get_paginated_response(total_invoices).data
+            a['message'] = a['results']
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -3800,10 +3818,13 @@ def invoice_report(request):
         invoices = Invoice.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
+        
+        paginator = MyPagination()
+        invoices_per_page = paginator.paginate_queryset(invoices, request)
 
         if len(invoices) > 0:
-            
-            invoice_ser = InvoiceSerializer(invoices, many=True)
+            invoice_ser = InvoiceSerializer(invoices_per_page, many=True)
+            total_invoices = []
             for invoice in invoice_ser.data:
                 single_invoice = {}
 
@@ -3814,7 +3835,15 @@ def invoice_report(request):
                 single_invoice['status'] = invoice['status']
                 single_invoice['id'] = invoice['id']
 
-                context["message"].append(single_invoice)
+                # context["message"].append(single_invoice)
+                total_invoices.append(single_invoice)
+
+            a = paginator.get_paginated_response(total_invoices).data
+            a['message'] = a['results']
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -3829,6 +3858,7 @@ def invoice_report(request):
         invoices = Invoice.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date).all().order_by("date_created")
+        
 
         if len(invoices) > 0:
             invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -3844,7 +3874,15 @@ def invoice_report(request):
             for k,v in total_data.items():
                 final_data.append({"customer_name": k, "total_amount": v})
 
-            context['message'] = final_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(final_data, request)
+
+            a = paginator.get_paginated_response(invoices_per_page).data
+            a['message'] = a['results']
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
 
             return Response(context, status=status.HTTP_200_OK)
@@ -3867,11 +3905,12 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
-                                          .filter(date_created__hour=current_time.hour)
+                                        .filter(date_created__hour=current_time.hour)\
+                                        .filter(vendor=request.user.id)
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
                 # for inv in invoice_ser.data:
@@ -3879,9 +3918,20 @@ def invoice_report(request):
                 for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), total_amount))
+
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
             
-            context["message"] = total_data
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -3892,10 +3942,10 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
-                invoices = Invoice.objects.filter(date_created__date=current_time.date())
+                invoices = Invoice.objects.filter(date_created__date=current_time.date()).filter(vendor=request.user.id)
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
@@ -3903,9 +3953,22 @@ def invoice_report(request):
                 for inv in invoice_ser.data:
                     total_amount += float(inv['grand_total'])
 
-                total_data[current_time.strftime('%Y-%m-%d')] = total_amount
+                # total_data[current_time.strftime('%Y-%m-%d')] = total_amount
+                total_data.append((current_time.strftime('%Y-%m-%d'), total_amount))
 
-            context["message"] = total_data
+
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -3917,7 +3980,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -3931,7 +3994,8 @@ def invoice_report(request):
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week).filter(vendor=request.user.id)
+
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -3939,9 +4003,23 @@ def invoice_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
-                        
-                context["message"] = total_data
+                    total_data.append((key, total_amount))
+
+                    # total_data.append((current_time.strftime('%Y-%m-%d'), total_amount))
+
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -3960,6 +4038,8 @@ def invoice_report(request):
                         total_amount += float(inv['grand_total'])
 
                     total_data[key] = total_amount
+                    context["next"] =  None
+                    context["previous"] =  None
                     context['message'] = total_data
 
                     return Response(context, status=status.HTTP_200_OK)
@@ -3978,7 +4058,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -3992,7 +4072,9 @@ def invoice_report(request):
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -4001,8 +4083,25 @@ def invoice_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
-                context["message"] = total_data
+                    total_data.append((key, total_amount))
+
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
+
+
+
+                # context["message"] = total_data
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -4020,6 +4119,8 @@ def invoice_report(request):
                         total_amount += float(inv['grand_total'])
 
                     total_data[key] = total_amount
+                    context["next"] =  None
+                    context["previous"] =  None
                     context['message'] = total_data
 
                     return Response(context, status=status.HTTP_200_OK)
@@ -4041,7 +4142,7 @@ def invoice_report(request):
             # print(total_months)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -4057,7 +4158,9 @@ def invoice_report(request):
                     
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -4066,9 +4169,21 @@ def invoice_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
-                print(total_data)
-                context["message"] = total_data
+                    total_data.append((key, total_amount))
+
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -4086,6 +4201,8 @@ def invoice_report(request):
                         total_amount += float(inv['grand_total'])
 
                     total_data[key] = total_amount
+                    context["next"] =  None
+                    context["previous"] =  None
                     context['message'] = total_data
 
                     return Response(context, status=status.HTTP_200_OK)
@@ -4104,20 +4221,22 @@ def invoice_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -4126,8 +4245,20 @@ def invoice_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
-                context["message"] = total_data
+                    total_data.append((key, total_amount))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -4145,6 +4276,8 @@ def invoice_report(request):
                         total_amount += float(inv['grand_total'])
 
                     total_data[key] = total_amount
+                    context["next"] =  None
+                    context["previous"] =  None
                     context['message'] = total_data
 
                     return Response(context, status=status.HTTP_200_OK)
@@ -4164,7 +4297,7 @@ def invoice_report(request):
                             .filter(date_created__lte=end_date).all().order_by("date_created")
 
             if len(invoices) > 0:
-                total_data = {}
+                total_data = []
                 invoice_ser = InvoiceSerializer(invoices, many=True)
                 key = f"{start_date} - {end_date}"
 
@@ -4172,14 +4305,32 @@ def invoice_report(request):
                 for inv in invoice_ser.data:
                     total_amount += float(inv['grand_total'])
 
-                total_data[key] = total_amount
-                context['message'] = total_data
+                total_data.append((key, total_amount))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
                 context["message"] = "No invoices were created within this date range"
                 return Response(context, status=status.HTTP_404_NOT_FOUND)
+        
+
+        else:
+            context = {"message": "Invalid 'how' parameter", 
+                        "valid_parameters": ["hour", "day", "week", "months", "quarter", "yearly", "custom date (if you don't want the how parameter to take effect)"]}
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
     
@@ -4191,7 +4342,7 @@ def invoice_report(request):
             return Response({"message": "You need to pass the 'how' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
         if how == "hour":
-            total_data = {}
+            total_data = []
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
             end_time = datetime.strptime(end_date, "%Y-%m-%d")
 
@@ -4202,17 +4353,29 @@ def invoice_report(request):
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = Invoice.objects.filter(date_created__date=current_time.date())\
-                                          .filter(date_created__hour=current_time.hour)\
-                                            .filter(emailed=True).count()
+                                        .filter(date_created__hour=current_time.hour)\
+                                        .filter(vendor=request.user.id)\
+                                        .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), emailed_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "day":
-            total_data = {}
+            total_data = []
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
             end_time = datetime.strptime(end_date, "%Y-%m-%d")
 
@@ -4224,11 +4387,23 @@ def invoice_report(request):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = Invoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), emailed_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -4240,7 +4415,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -4254,12 +4429,25 @@ def invoice_report(request):
                         break
 
                     emailed_count = Invoice.objects.filter(date_created__gte=begin)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
+
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
+                    total_data.append((key, emailed_count))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4271,13 +4459,15 @@ def invoice_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
+                context["next"] =  None
+                context["previous"] =  None
                 context["message"] = {key: emailed_count}
                 # context[key] = emailed_count
                 return Response(context, status=status.HTTP_200_OK)
                 
         
         elif how == "months":
-            total_data = {}
+            total_data = []
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
             end_time = datetime.strptime(end_date, "%Y-%m-%d")
 
@@ -4298,12 +4488,25 @@ def invoice_report(request):
                         break
 
                     emailed_count = Invoice.objects.filter(date_created__gte=begin)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
-                context["message"] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4315,12 +4518,14 @@ def invoice_report(request):
 
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
+                context["next"] =  None
+                context["previous"] =  None
                 context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
 
 
         elif how == "quarter":
-            total_data = {}
+            total_data = []
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
             end_time = datetime.strptime(end_date, "%Y-%m-%d")
 
@@ -4341,12 +4546,26 @@ def invoice_report(request):
                         break
 
                     emailed_count = Invoice.objects.filter(date_created__gte=begin)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
-                context["message"] = total_data
+                    total_data.append((key, emailed_count))
+
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4358,6 +4577,8 @@ def invoice_report(request):
 
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
+                context["next"] =  None
+                context["previous"] =  None
                 context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
         
@@ -4370,14 +4591,14 @@ def invoice_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -4387,8 +4608,21 @@ def invoice_report(request):
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
-                context["message"] = total_data
+
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4400,6 +4634,8 @@ def invoice_report(request):
 
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
+                context["next"] =  None
+                context["previous"] =  None
                 context["message"] = {key: emailed_count}
                 return Response(context, status=status.HTTP_200_OK)
         
@@ -4415,6 +4651,8 @@ def invoice_report(request):
                 
             key = f"{start_date} - {end_date}"
             # context[key] = emailed_count
+            context["next"] =  None
+            context["previous"] =  None
             context["message"] = {key: emailed_count}
             return Response(context, status=status.HTTP_200_OK)
     
@@ -4434,12 +4672,12 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
-                                          .filter(emailed=True)
+                                          .filter(emailed=True).filter(vendor=request.user.id).order_by("-date_created")
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
                 single_data = []
@@ -4456,16 +4694,21 @@ def invoice_report(request):
                     single_data.append(single_invoice)
 
                 # context['message'] = invoice_ser.data
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = invoice_ser.data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
             
-            context["message"] = total_data
-
-                # # for inv in invoice_ser.data:
-                # total_amount = 0
-                # for inv in invoice_ser.data:
-                #         total_amount += float(inv['grand_total'])
-
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
             
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
+
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "day":
@@ -4475,11 +4718,11 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
-                                            .filter(emailed=True)
+                                            .filter(emailed=True).filter(vendor=request.user.id)
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
                 single_data = []
@@ -4494,10 +4737,20 @@ def invoice_report(request):
 
                     single_data.append(single_invoice)
 
-                # context['message'] = invoice_ser.data
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -4509,7 +4762,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -4524,7 +4777,8 @@ def invoice_report(request):
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
-                                                .filter(emailed=True)
+                                                .filter(emailed=True).filter(vendor=request.user.id)
+
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
@@ -4539,9 +4793,20 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
                     
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data                      
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}                    
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4568,11 +4833,10 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
                     
-                    # total_data[key] = single_data
 
+                    context['next'] = None
+                    context['previous'] = None
                     context["message"] = {key: single_data}
-
-                    # context[key] = invoice_ser.data
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -4590,7 +4854,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -4606,6 +4870,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -4622,9 +4887,21 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
                     
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                # context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4633,6 +4910,7 @@ def invoice_report(request):
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date)\
                             .filter(emailed=True)\
+                            .filter(vendor=request.user.id)\
                             .order_by("date_created")
 
                 if len(invoices) > 0:
@@ -4653,6 +4931,8 @@ def invoice_report(request):
                     
                         # total_data[key] = single_data
 
+                    context['next'] = None
+                    context['previous'] = None
                     context["message"] = {key: single_data}
                     # context[key] = invoice_ser.data
 
@@ -4674,7 +4954,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -4690,6 +4970,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -4706,9 +4987,21 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
                     
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                # context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4737,6 +5030,8 @@ def invoice_report(request):
                     
                         # total_data[key] = single_data
 
+                    context['next'] = None
+                    context['previous'] = None
                     context["message"] = {key: single_data}
                     # context[key] = invoice_ser.data
 
@@ -4756,14 +5051,14 @@ def invoice_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -4771,6 +5066,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -4787,9 +5083,21 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
                     
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                # context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4818,6 +5126,8 @@ def invoice_report(request):
                     
                         # total_data[key] = single_data
 
+                    context['next'] = None
+                    context['previous'] = None
                     context["message"] = {key: single_data}
                     # context[key] = invoice_ser.data
 
@@ -4857,6 +5167,8 @@ def invoice_report(request):
                 
                     # total_data[key] = single_data
 
+                context['next'] = None
+                context['previous'] = None
                 context["message"] = {key: single_data}
                 # context[key] = invoice_ser.data
 
@@ -4867,6 +5179,11 @@ def invoice_report(request):
                 return Response(context, status=status.HTTP_404_NOT_FOUND)
 
 
+        else:
+            context = {}
+            context['message'] = "Invalid 'how' parameter"
+            context['valid_parameters'] = ["hour", "day", "week", "months", "quarter", "yearly", "custom date"]
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
     
 
     # 2.7
@@ -4884,16 +5201,29 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 overdue_count = Invoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)\
                                             .filter(status="Overdue").count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), overdue_count))
             
-            context["message"] = total_data
+            # context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -4904,16 +5234,29 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 overdue_count = Invoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(status="Overdue").count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = overdue_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), overdue_count))
             
-            context["message"] = total_data
+            # context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -4925,7 +5268,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -4940,11 +5283,25 @@ def invoice_report(request):
 
                     overdue_count = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
+
+                    total_data.append((key, overdue_count))
                 
-                context["message"] = total_data
+                # context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -4956,6 +5313,8 @@ def invoice_report(request):
                             .count()
 
                 key = f"{start_date} - {end_date}"
+                context['next'] = None
+                context['previous'] = None
                 context["message"] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
@@ -4968,7 +5327,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -4983,12 +5342,25 @@ def invoice_report(request):
 
                     overdue_count = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
+                    total_data.append((key, overdue_count))
                 
-                context["message"] = total_data
+                # context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5000,6 +5372,8 @@ def invoice_report(request):
 
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
+                context['next'] = None
+                context['previous'] = None
                 context["message"] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
@@ -5013,7 +5387,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -5028,12 +5402,25 @@ def invoice_report(request):
 
                     overdue_count = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
+                    total_data.append((key, overdue_count))
                 
-                context["message"] = total_data
+                # context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5045,6 +5432,8 @@ def invoice_report(request):
 
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
+                context['next'] = None
+                context['previous'] = None
                 context["message"] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
                 
@@ -5062,20 +5451,33 @@ def invoice_report(request):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     overdue_count = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
+                    total_data.append((key, overdue_count))
                 
-                context["message"] = total_data
+                # context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5087,6 +5489,8 @@ def invoice_report(request):
 
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
+                context['next'] = None
+                context['previous'] = None
                 context["message"] = {key: overdue_count}
                 return Response(context, status=status.HTTP_200_OK)
         
@@ -5101,6 +5505,8 @@ def invoice_report(request):
                 
             key = f"{start_date} - {end_date}"
             # context[key] = overdue_count
+            context['next'] = None
+            context['previous'] = None
             context["message"] = {key: overdue_count}
             return Response(context, status=status.HTTP_200_OK)
 
@@ -5119,13 +5525,15 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
-                                          .filter(date_created__hour=current_time.hour)\
-                                          .filter(status="Overdue")\
-                                            .order_by("date_created")
+                                        .filter(date_created__hour=current_time.hour)\
+                                        .filter(status="Overdue")\
+                                        .filter(vendor=request.user.id)\
+                                        .order_by("date_created")
+
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
                 single_data = []
@@ -5142,9 +5550,21 @@ def invoice_report(request):
                     single_data.append(single_invoice)
 
                 # context['message'] = invoice_ser.data
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context["message"] = total_data
+            # context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -5156,11 +5576,12 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -5179,9 +5600,21 @@ def invoice_report(request):
                     single_data.append(single_invoice)
 
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
 
-            context["message"] = total_data
+            # context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -5193,7 +5626,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -5209,6 +5642,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -5226,8 +5660,21 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                # context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5235,6 +5682,7 @@ def invoice_report(request):
                 invoices = Invoice.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date)\
+                            .filter(vendor=request.user.id)\
                             .filter(status="Overdue")\
                             .order_by("date_created")
 
@@ -5257,6 +5705,8 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     # total_data[key] = single_data
+                    context['next'] = None
+                    context['previous'] = None
                     context["message"] = {key: single_data}
 
                     return Response(context, status=status.HTTP_200_OK)
@@ -5275,7 +5725,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -5291,6 +5741,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -5308,9 +5759,21 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                # context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -5339,6 +5802,8 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -5356,7 +5821,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -5372,6 +5837,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -5389,9 +5855,21 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                # context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -5420,6 +5898,8 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -5437,14 +5917,14 @@ def invoice_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -5452,6 +5932,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -5469,9 +5950,21 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                # context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -5500,11 +5993,13 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
                 else:
-                    context["message"] = "No emailed invoices within this date range"
+                    context["message"] = "No overdue invoices within this date range"
                     return Response(context, status=status.HTTP_404_NOT_FOUND)
             
             # return Response(context, status=status.HTTP_200_OK)
@@ -5537,12 +6032,19 @@ def invoice_report(request):
                     single_data.append(single_invoice)
 
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
                 context["message"] = "No invoices were created within this date range"
                 return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+
+        else:
+            context = {}
+            context['message'] = "Invalid 'how' parameter"
 
     
     # 2.9
@@ -5559,13 +6061,15 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(status="Pending")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
+
                 invoice_ser = InvoiceSerializer(invoices, many=True)
                 single_data = []
                 for invoice in invoice_ser.data:
@@ -5580,9 +6084,21 @@ def invoice_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
             
-            context["message"] = total_data
+            # context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -5594,12 +6110,13 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Pending")\
-                                            .order_by("date_created")
+                                            .filter(vendor=request.user.id)\
+                                            .order_by("-date_created")
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
                 single_data = []
@@ -5615,8 +6132,21 @@ def invoice_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
-            context["message"] = total_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
+
+            # context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -5628,7 +6158,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -5644,6 +6174,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -5660,8 +6191,20 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key,  single_data))
+                # context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -5669,6 +6212,7 @@ def invoice_report(request):
                 invoices = Invoice.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date)\
+                            .filter(vendor=request.user.id)\
                             .filter(status="Pending")\
                             .order_by("date_created")
 
@@ -5690,14 +6234,15 @@ def invoice_report(request):
                         single_data.append(single_invoice)
                     
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
                 else:
                     context["message"] = "No emailed invoices within this date range"
                     return Response(context, status=status.HTTP_404_NOT_FOUND)
-            
-            # return Response(context, status=status.HTTP_200_OK)
+
         
         elif how == "months":
             start_time = datetime.strptime(start_date, "%Y-%m-%d")
@@ -5707,7 +6252,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -5723,6 +6268,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -5740,8 +6286,20 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -5749,6 +6307,7 @@ def invoice_report(request):
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date)\
                             .filter(status="Pending")\
+                            .filter(vendor=request.user.id)\
                             .order_by("date_created")
 
                 if len(invoices) > 0:
@@ -5768,6 +6327,8 @@ def invoice_report(request):
                         single_data.append(single_invoice)
                     
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -5786,7 +6347,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -5802,6 +6363,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -5819,8 +6381,20 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -5847,6 +6421,7 @@ def invoice_report(request):
                         single_data.append(single_invoice)
                     
                     context["message"] = {key: single_data}
+                    context['next'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -5870,8 +6445,8 @@ def invoice_report(request):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -5879,6 +6454,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -5896,8 +6472,20 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -5924,6 +6512,8 @@ def invoice_report(request):
                         single_data.append(single_invoice)
                     
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -5937,6 +6527,7 @@ def invoice_report(request):
 
 
         elif how == "custom date":
+            context = {}
             invoices = Invoice.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date)\
@@ -5961,12 +6552,21 @@ def invoice_report(request):
                     single_data.append(single_invoice)
 
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
                 context["message"] = "No invoices were created within this date range"
                 return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+        
+        else:
+            context = {}
+            context['message'] = "Invalid 'how' parameter"
+            context['valid_parameters'] = ["hour", "day", "week", "months", "quarter", "yearly", "custom date"]
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
     # 2.10
@@ -5983,12 +6583,13 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(status="Paid")\
+                                        .filter(vendor=request.user.id)\
                                             .order_by("date_created")
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
@@ -6003,14 +6604,26 @@ def invoice_report(request):
                     single_invoice['invoice_date'] = invoice['invoice_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
                 
-            context["message"] = total_data
+            # context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -6022,11 +6635,12 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Paid")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -6039,13 +6653,25 @@ def invoice_report(request):
                     single_invoice['invoice_date'] = invoice['invoice_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
-            context["message"] = total_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
+
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -6057,7 +6683,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -6073,7 +6699,10 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Paid")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
+
+
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -6085,13 +6714,26 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6100,6 +6742,7 @@ def invoice_report(request):
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date)\
                             .filter(status="Paid")\
+                            .filter(vendor=request.user.id)\
                             .order_by("date_created")
 
                 if len(invoices) > 0:
@@ -6114,12 +6757,14 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6137,7 +6782,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -6153,25 +6798,39 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Paid")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     single_data = []
                     for invoice in invoice_ser.data:
+                        print(type(invoice['date_created']))
                         single_invoice = {}
                         single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
                         single_invoice['invoice_number'] = invoice['invoice_number']
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
+
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6194,12 +6853,14 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6217,7 +6878,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -6233,6 +6894,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Paid")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -6245,13 +6907,25 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
+
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6260,6 +6934,7 @@ def invoice_report(request):
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date)\
                             .filter(status="Paid")\
+                            .filter(vendor=request.user.id)\
                             .order_by("date_created")
 
                 if len(invoices) > 0:
@@ -6274,12 +6949,14 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6297,14 +6974,14 @@ def invoice_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -6312,6 +6989,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Paid")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -6324,13 +7002,26 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
+
+
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6353,12 +7044,14 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6389,18 +7082,25 @@ def invoice_report(request):
                     single_invoice['invoice_date'] = invoice['invoice_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%Y-%m-%d")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
                 context["message"] = "No invoices were created within this date range"
                 return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+        else:
+            context = {}
+            context['message'] = "Invalid 'how' parameter"
+            context['valid_parameters'] = ["hour", "day", "week", "quarter", "yearly", "custom date"]
     
 
     # 2.11
@@ -6417,12 +7117,13 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(status="Unpaid")\
+                                        .filter(vendor=request.user.id)\
                                             .order_by("date_created")
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
@@ -6434,14 +7135,25 @@ def invoice_report(request):
                     single_invoice['invoice_date'] = invoice['invoice_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -6452,11 +7164,12 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Unpaid")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -6469,14 +7182,25 @@ def invoice_report(request):
                     single_invoice['invoice_date'] = invoice['invoice_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -6488,7 +7212,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -6504,6 +7228,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Unpaid")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -6516,13 +7241,25 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6545,12 +7282,14 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6568,7 +7307,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -6584,6 +7323,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Unpaid")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -6597,13 +7337,26 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = invoice_ser.data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6626,12 +7379,14 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6649,7 +7404,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -6665,6 +7420,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Unpaid")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -6678,13 +7434,26 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = invoice_ser.data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6707,12 +7476,14 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6730,14 +7501,14 @@ def invoice_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -6745,6 +7516,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Unpaid")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -6758,13 +7530,26 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = invoice_ser.data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6787,12 +7572,14 @@ def invoice_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6823,18 +7610,22 @@ def invoice_report(request):
                     single_invoice['invoice_date'] = invoice['invoice_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
                 context["message"] = "No invoices were created within this date range"
                 return Response(context, status=status.HTTP_404_NOT_FOUND)
+
+        
 
 
     # 2.12
@@ -6851,11 +7642,13 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
-                                          .filter(date_created__hour=current_time.hour)
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)
+
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
                 single_data = []
@@ -6869,9 +7662,20 @@ def invoice_report(request):
 
                     single_data.append(single_invoice)
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
                     
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -6882,10 +7686,10 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
-                invoices = Invoice.objects.filter(date_created__date=current_time.date())
+                invoices = Invoice.objects.filter(date_created__date=current_time.date()).filter(vendor=request.user.id)
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
@@ -6900,9 +7704,20 @@ def invoice_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -6914,7 +7729,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -6928,7 +7743,9 @@ def invoice_report(request):
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -6943,9 +7760,20 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -6970,6 +7798,8 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -6987,7 +7817,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -7001,7 +7831,9 @@ def invoice_report(request):
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -7017,9 +7849,20 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7044,6 +7887,8 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -7059,7 +7904,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -7073,7 +7918,9 @@ def invoice_report(request):
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -7089,9 +7936,20 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7116,6 +7974,8 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -7131,20 +7991,22 @@ def invoice_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -7160,9 +8022,20 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7187,6 +8060,8 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -7217,6 +8092,8 @@ def invoice_report(request):
                     single_data.append(single_invoice)
 
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7240,17 +8117,19 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices_percent = Invoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(discount_type="percent")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
                 
                 invoices_value = Invoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(discount_type="value")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_pser = InvoiceSerializer(invoices_percent, many=True)
@@ -7261,16 +8140,29 @@ def invoice_report(request):
                 p_amount = 0
                 v_amount = 0
                 for a in invoice_pser.data:
-                    p_amount += a['tax']
+                    if a['tax']:
+                        p_amount += int(a['tax'])
                 
                 for b in invoice_vser.data:
-                    v_amount += b['tax']
+                    if b['tax']:
+                        v_amount += int(b['tax'])
                 
                 single_data.append({"percent": p_amount, "value": v_amount})
                     
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -7282,15 +8174,17 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices_percent = Invoice.objects.filter(date_created__date=current_time.date())\
                                             .filter(discount_type="percent")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoices_value = Invoice.objects.filter(date_created__date=current_time.date())\
                                             .filter(discount_type="value")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_pser = InvoiceSerializer(invoices_percent, many=True)
@@ -7300,15 +8194,30 @@ def invoice_report(request):
                 p_amount = 0
                 v_amount = 0
                 for a in invoice_pser.data:
-                    p_amount += a['tax']
+                    if a['tax']:
+                        p_amount += int(a['tax'])
                 
                 for b in invoice_vser.data:
-                    v_amount += b['tax']
+                    if b['tax']:
+                        v_amount += int(b['tax'])
                 
                 single_data.append({"percent": p_amount, "value": v_amount})
 
-                total_data[current_time.strftime('%Y-%m-%d')]['percent'] = single_data
-            context["message"] = total_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
+
+            
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -7320,7 +8229,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -7336,11 +8245,13 @@ def invoice_report(request):
                     invoices_percent = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(discount_type="percent")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoices_value = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(discount_type="value")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_pser = InvoiceSerializer(invoices_percent, many=True)
@@ -7352,15 +8263,29 @@ def invoice_report(request):
                     p_amount = 0
                     v_amount = 0
                     for a in invoice_pser.data:
-                        p_amount += a['tax']
+                        if a['tax']:
+                            p_amount += int(a['tax'])
                     
                     for b in invoice_vser.data:
-                        v_amount += b['tax']
+                        if b['tax']:
+                            v_amount += int(b['tax'])
                 
                     single_data.append({"percent": p_amount, "value": v_amount})
 
+                    total_data.append((key, single_data))
 
-                    total_data[key] = single_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7386,15 +8311,19 @@ def invoice_report(request):
                 p_amount = 0
                 v_amount = 0
                 for a in invoice_pser.data:
-                    p_amount += a['tax']
+                    if a['tax']:
+                        p_amount += int(a['tax'])
                 
                 for b in invoice_vser.data:
-                    v_amount += b['tax']
+                    if b['tax']:
+                        v_amount += int(b['tax'])
                 
                 single_data.append({"percent": p_amount, "value": v_amount})
 
 
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7407,7 +8336,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -7423,11 +8352,13 @@ def invoice_report(request):
                     invoices_percent = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(discount_type="percent")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     
                     invoices_value = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(discount_type="value")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_pser = InvoiceSerializer(invoices_percent, many=True)
@@ -7438,16 +8369,29 @@ def invoice_report(request):
                     p_amount = 0
                     v_amount = 0
                     for a in invoice_pser.data:
-                        p_amount += a['tax']
+                        if a['tax']:
+                            p_amount += int(a['tax'])
                     
                     for b in invoice_vser.data:
-                        v_amount += b['tax']
+                        if b['tax']:
+                            v_amount += int(b['tax'])
                     
                     single_data.append({"percent": p_amount, "value": v_amount})
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -7472,14 +8416,18 @@ def invoice_report(request):
                 p_amount = 0
                 v_amount = 0
                 for a in invoice_pser.data:
-                    p_amount += a['tax']
+                    if a['tax']:
+                        p_amount += int(a['tax'])
                 
                 for b in invoice_vser.data:
-                    v_amount += b['tax']
+                    if b['tax']:
+                        v_amount += int(b['tax'])
                 
                 single_data.append({"percent": p_amount, "value": v_amount})
 
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
         
@@ -7491,7 +8439,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -7507,11 +8455,13 @@ def invoice_report(request):
                     invoices_percent = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(discount_type="percent")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     
                     invoices_value = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(discount_type="value")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_pser = InvoiceSerializer(invoices_percent, many=True)
@@ -7522,16 +8472,29 @@ def invoice_report(request):
                     p_amount = 0
                     v_amount = 0
                     for a in invoice_pser.data:
-                        p_amount += a['tax']
+                        if a['tax']:
+                            p_amount += int(a['tax'])
                     
                     for b in invoice_vser.data:
-                        v_amount += b['tax']
+                        if b['tax']:
+                            v_amount += int(b['tax'])
                     
                     single_data.append({"percent": p_amount, "value": v_amount})
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -7556,14 +8519,18 @@ def invoice_report(request):
                 p_amount = 0
                 v_amount = 0
                 for a in invoice_pser.data:
-                    p_amount += a['tax']
+                    if a['tax']:
+                        p_amount += int(a['tax'])
                 
                 for b in invoice_vser.data:
-                    v_amount += b['tax']
+                    if b['tax']:
+                        v_amount += int(b['tax'])
                 
                 single_data.append({"percent": p_amount, "value": v_amount})
 
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
         
@@ -7575,14 +8542,14 @@ def invoice_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -7590,11 +8557,13 @@ def invoice_report(request):
                     invoices_percent = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(discount_type="percent")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     
                     invoices_value = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(discount_type="value")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_pser = InvoiceSerializer(invoices_percent, many=True)
@@ -7605,16 +8574,29 @@ def invoice_report(request):
                     p_amount = 0
                     v_amount = 0
                     for a in invoice_pser.data:
-                        p_amount += a['tax']
+                        if a['tax']:
+                            p_amount += int(a['tax'])
                     
                     for b in invoice_vser.data:
-                        v_amount += b['tax']
+                        if b['tax']:
+                            v_amount += int(b['tax'])
                     
                     single_data.append({"percent": p_amount, "value": v_amount})
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -7639,14 +8621,18 @@ def invoice_report(request):
                 p_amount = 0
                 v_amount = 0
                 for a in invoice_pser.data:
-                    p_amount += a['tax']
+                    if a['tax']:
+                        p_amount += int(a['tax'])
                 
                 for b in invoice_vser.data:
-                    v_amount += b['tax']
+                    if b['tax']:
+                        v_amount += int(b['tax'])
                 
                 single_data.append({"percent": p_amount, "value": v_amount})
 
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
         
@@ -7667,21 +8653,25 @@ def invoice_report(request):
 
             # if len(invoices) > 0:
             invoice_pser = InvoiceSerializer(invoices_percent, many=True)
-            invoice_vser = InvoiceSerializer(invoices_percent, many=True)
+            invoice_vser = InvoiceSerializer(invoices_value, many=True)
             key = f"{start_date} - {end_date}"
 
             single_data = []
             p_amount = 0
             v_amount = 0
             for a in invoice_pser.data:
-                p_amount += a['tax']
+                if a['tax']:
+                    p_amount += int(a['tax'])
             
             for b in invoice_vser.data:
-                v_amount += b['tax']
+                if b['tax']:
+                    v_amount += int(b['tax'])
             
             single_data.append({"percent": p_amount, "value": v_amount})
 
             context["message"] = {key: single_data}
+            context['next'] = None
+            context['previous'] = None
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -7700,12 +8690,14 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
-                                          .filter(recurring=True)
+                                          .filter(recurring=True)\
+                                          .filter(vendor=request.user.id)
+
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
                 single_data = []
@@ -7720,8 +8712,20 @@ def invoice_report(request):
 
                     single_data.append(single_invoice)
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
-            context["message"] = total_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
+                
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -7732,11 +8736,12 @@ def invoice_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Invoice.objects.filter(date_created__date=current_time.date())\
-                                            .filter(recurring=True)
+                                            .filter(recurring=True)\
+                                            .filter(vendor=request.user.id)
 
                 invoice_ser = InvoiceSerializer(invoices, many=True)
 
@@ -7752,8 +8757,20 @@ def invoice_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
-            context["message"] = total_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
+
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -7765,7 +8782,7 @@ def invoice_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -7780,7 +8797,8 @@ def invoice_report(request):
 
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
-                                                .filter(recurring=True)
+                                                .filter(recurring=True).filter(vendor=request.user.id)
+
                     invoice_ser = InvoiceSerializer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -7796,8 +8814,20 @@ def invoice_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -7825,6 +8855,8 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -7842,7 +8874,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -7858,6 +8890,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(recurring=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -7876,8 +8909,20 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     # context[key] = total_amount
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+                    
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -7904,6 +8949,8 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -7921,7 +8968,7 @@ def invoice_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -7937,6 +8984,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(recurring=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -7955,8 +9003,20 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     # context[key] = total_amount
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -7983,6 +9043,8 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8000,14 +9062,14 @@ def invoice_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -8015,6 +9077,7 @@ def invoice_report(request):
                     invoices = Invoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(recurring=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = InvoiceSerializer(invoices, many=True)
@@ -8033,8 +9096,20 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     # context[key] = total_amount
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -8061,6 +9136,8 @@ def invoice_report(request):
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8096,6 +9173,8 @@ def invoice_report(request):
                     single_data.append(single_invoice)
 
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8121,10 +9200,16 @@ def proforma_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if not start_date or not end_date:
+        context['message'] = "You need to select start date and end date"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
     if measure:
         measure = measure.lower()
     else:
         return Response({"message": "You need to pass 'measure'"}, status=status.HTTP_400_BAD_REQUEST)
+
+
     # 3.1
     if measure == "proforma invoice search":
         invoices = ProformaInvoice.objects.filter(vendor=request.user.id)\
@@ -8140,12 +9225,21 @@ def proforma_report(request):
                 single_invoice['invoice_number'] = invoice['invoice_number']
                 single_invoice['invoice_date'] = invoice['invoice_date']
                 single_invoice['invoice_amount'] = invoice['grand_total']
-                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                 single_invoice['id'] = invoice['id']
 
                 single_data.append(single_invoice)
             
-            context["message"] = single_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -8169,11 +9263,19 @@ def proforma_report(request):
                 single_invoice['invoice_date'] = invoice['invoice_date']
                 single_invoice['invoice_amount'] = invoice['grand_total']
                 single_invoice['id'] = invoice['id']
-                # single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
 
                 single_data.append(single_invoice)
 
-            context['message'] = single_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -8203,8 +9305,17 @@ def proforma_report(request):
             for k,v in total_data.items():
                 final_data.append({"full_name": k, "total_amount": v})
 
-            context['message'] = final_data
 
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(final_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -8226,11 +9337,13 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
-                                          .filter(date_created__hour=current_time.hour)
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)
+
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
 
                 # for inv in invoice_ser.data:
@@ -8238,8 +9351,21 @@ def proforma_report(request):
                 for inv in invoice_ser.data:
                     total_amount += float(inv['grand_total'])
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
-            context["message"] = total_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), total_amount))
+
+
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -8250,10 +9376,10 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
-                invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())
+                invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date()).filter(vendor=request.user.id)
 
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
 
@@ -8261,8 +9387,21 @@ def proforma_report(request):
                 for inv in invoice_ser.data:
                     total_amount += float(inv['grand_total'])
 
-                total_data[current_time.strftime('%Y-%m-%d')] = total_amount
-            context["message"] = total_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), total_amount))
+
+
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -8274,7 +9413,7 @@ def proforma_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -8288,7 +9427,9 @@ def proforma_report(request):
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -8296,9 +9437,20 @@ def proforma_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 
                 return Response(context, status=status.HTTP_200_OK)
@@ -8318,6 +9470,8 @@ def proforma_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8335,7 +9489,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -8349,7 +9503,9 @@ def proforma_report(request):
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -8358,9 +9514,20 @@ def proforma_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -8378,6 +9545,8 @@ def proforma_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8395,7 +9564,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -8409,7 +9578,9 @@ def proforma_report(request):
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -8418,9 +9589,20 @@ def proforma_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -8438,6 +9620,8 @@ def proforma_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8455,20 +9639,22 @@ def proforma_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -8477,9 +9663,20 @@ def proforma_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -8497,6 +9694,8 @@ def proforma_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8546,17 +9745,29 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), emailed_count))
             
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -8568,16 +9779,28 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), emailed_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -8589,7 +9812,7 @@ def proforma_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -8604,13 +9827,26 @@ def proforma_report(request):
 
                     emailed_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
+
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     
-                    total_data[key] = emailed_count
+                    total_data.append((key, emailed_count))
                 
                             
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8623,6 +9859,8 @@ def proforma_report(request):
 
                 key = f"{start_date} - {end_date}"
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -8634,7 +9872,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -8649,12 +9887,25 @@ def proforma_report(request):
 
                     emailed_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
+
+                    total_data.append((key, emailed_count))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8666,6 +9917,8 @@ def proforma_report(request):
 
                 key = f"{start_date} - {end_date}"
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -8677,7 +9930,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -8692,12 +9945,25 @@ def proforma_report(request):
 
                     emailed_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
+
+                    total_data.append((key, emailed_count))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8709,6 +9975,8 @@ def proforma_report(request):
 
                 key = f"{start_date} - {end_date}"
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -8720,26 +9988,39 @@ def proforma_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     emailed_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
+
+                    total_data.append((key, emailed_count))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8751,6 +10032,8 @@ def proforma_report(request):
 
                 key = f"{start_date} - {end_date}"
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -8763,11 +10046,13 @@ def proforma_report(request):
                 
             key = f"{start_date} - {end_date}"
             context["message"] = {key: emailed_count}
+            context['next'] = None
+            context['previous'] = None
             return Response(context, status=status.HTTP_200_OK)
     
 
     # 3.6
-    elif measure == "detail performa invoice email search":
+    elif measure == "detail proforma invoice email search":
         context = {}
         how = request.query_params.get("how", None)
         if how is None:
@@ -8780,12 +10065,13 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
-                                          .filter(emailed=True)
+                                          .filter(emailed=True).filter(vendor=request.user.id)
+
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
 
                 single_data = []
@@ -8800,9 +10086,20 @@ def proforma_report(request):
 
                     single_data.append(single_invoice)
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -8814,11 +10111,11 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
-                                            .filter(emailed=True)
+                                            .filter(emailed=True).filter(vendor=request.user.id)
 
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
 
@@ -8834,9 +10131,20 @@ def proforma_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -8848,7 +10156,7 @@ def proforma_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -8863,7 +10171,8 @@ def proforma_report(request):
 
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
-                                                .filter(emailed=True)
+                                                .filter(emailed=True).filter(vendor=request.user.id)
+
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -8879,9 +10188,20 @@ def proforma_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -8909,6 +10229,8 @@ def proforma_report(request):
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -8926,7 +10248,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -8942,6 +10264,7 @@ def proforma_report(request):
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
@@ -8959,8 +10282,20 @@ def proforma_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -8987,6 +10322,8 @@ def proforma_report(request):
                         single_data.append(single_invoice)
                         
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -9004,7 +10341,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -9020,6 +10357,7 @@ def proforma_report(request):
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
@@ -9037,8 +10375,21 @@ def proforma_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -9065,6 +10416,9 @@ def proforma_report(request):
                         single_data.append(single_invoice)
                         
                     context["message"] = {key: single_data}
+                    
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -9082,14 +10436,14 @@ def proforma_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -9097,6 +10451,7 @@ def proforma_report(request):
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
@@ -9114,8 +10469,20 @@ def proforma_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -9142,14 +10509,14 @@ def proforma_report(request):
                         single_data.append(single_invoice)
                         
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
                 else:
                     context["message"] = "No emailed invoices within this date range"
                     return Response(context, status=status.HTTP_404_NOT_FOUND)
-            
-            # return Response(context, status=status.HTTP_200_OK)
         
 
 
@@ -9177,6 +10544,8 @@ def proforma_report(request):
                     single_data.append(single_invoice)
 
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9202,16 +10571,28 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 overdue_count = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)\
                                             .filter(status="Overdue").count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), overdue_count))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9222,17 +10603,29 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 overdue_count = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(status="Overdue").count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = overdue_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), overdue_count))
 
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             return Response(context, status=status.HTTP_200_OK)
         
         elif how == "week":
@@ -9243,7 +10636,7 @@ def proforma_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -9258,12 +10651,24 @@ def proforma_report(request):
 
                     overdue_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     
-                    total_data[key] = overdue_count
+                    total_data.append((key, overdue_count))
                             
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9277,6 +10682,8 @@ def proforma_report(request):
                 key = f"{start_date} - {end_date}"
                 
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -9288,7 +10695,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -9303,11 +10710,25 @@ def proforma_report(request):
 
                     overdue_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
-                context["message"] = total_data
+
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9319,6 +10740,8 @@ def proforma_report(request):
 
                 key = f"{start_date} - {end_date}"
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -9330,7 +10753,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -9345,11 +10768,25 @@ def proforma_report(request):
 
                     overdue_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
-                context["message"] = total_data
+
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9361,6 +10798,8 @@ def proforma_report(request):
 
                 key = f"{start_date} - {end_date}"
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -9378,19 +10817,33 @@ def proforma_report(request):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     overdue_count = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
-                context["message"] = total_data
+
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9402,6 +10855,8 @@ def proforma_report(request):
 
                 key = f"{start_date} - {end_date}"
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -9415,6 +10870,8 @@ def proforma_report(request):
                 
             key = f"{start_date} - {end_date}"
             context["message"] = {key: overdue_count}
+            context['next'] = None
+            context['previous'] = None
             return Response(context, status=status.HTTP_200_OK)
 
 
@@ -9432,12 +10889,13 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
 
@@ -9449,14 +10907,25 @@ def proforma_report(request):
                     single_invoice['invoice_date'] = invoice['invoice_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -9468,11 +10937,12 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
@@ -9485,15 +10955,26 @@ def proforma_report(request):
                     single_invoice['invoice_date'] = invoice['invoice_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
                     
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9505,7 +10986,7 @@ def proforma_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -9521,6 +11002,7 @@ def proforma_report(request):
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -9533,14 +11015,25 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9563,12 +11056,14 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -9586,7 +11081,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -9602,6 +11097,7 @@ def proforma_report(request):
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
@@ -9615,14 +11111,25 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9645,12 +11152,14 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                         
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -9668,7 +11177,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -9684,6 +11193,7 @@ def proforma_report(request):
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
@@ -9697,14 +11207,25 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9727,12 +11248,14 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                         
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -9750,7 +11273,7 @@ def proforma_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
@@ -9765,6 +11288,7 @@ def proforma_report(request):
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
@@ -9778,14 +11302,25 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9808,12 +11343,14 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                         
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -9844,12 +11381,14 @@ def proforma_report(request):
                     single_invoice['invoice_date'] = invoice['invoice_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['pevious'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -9872,12 +11411,13 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(status="Pending")\
+                                        .filter(vendor=request.user.id)\
                                             .order_by("date_created")
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
 
@@ -9889,14 +11429,25 @@ def proforma_report(request):
                     single_invoice['invoice_date'] = invoice['invoice_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9907,11 +11458,12 @@ def proforma_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = ProformaInvoice.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Pending")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
@@ -9924,13 +11476,25 @@ def proforma_report(request):
                     single_invoice['invoice_date'] = invoice['invoice_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
-            context["message"] = total_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
+
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -9942,7 +11506,7 @@ def proforma_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -9958,6 +11522,7 @@ def proforma_report(request):
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -9970,14 +11535,25 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10000,12 +11576,14 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10023,7 +11601,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -10039,6 +11617,7 @@ def proforma_report(request):
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
@@ -10052,14 +11631,26 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key,  single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -10081,12 +11672,14 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                         
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10104,7 +11697,7 @@ def proforma_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -10120,6 +11713,7 @@ def proforma_report(request):
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
@@ -10133,14 +11727,26 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key,  single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -10162,12 +11768,14 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                         
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10185,14 +11793,14 @@ def proforma_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -10200,6 +11808,7 @@ def proforma_report(request):
                     invoices = ProformaInvoice.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = ProformerInvoiceSerailizer(invoices, many=True)
@@ -10213,14 +11822,27 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key,  single_data))
+
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -10242,12 +11864,14 @@ def proforma_report(request):
                         single_invoice['invoice_date'] = invoice['invoice_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                         
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10278,12 +11902,14 @@ def proforma_report(request):
                     single_invoice['invoice_date'] = invoice['invoice_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['pevious'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10305,6 +11931,10 @@ def purchase_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if not start_date or not end_date:
+        context['message'] = "You need to select start date and end date"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
     if measure:
         measure = measure.lower()
     else:
@@ -10325,12 +11955,21 @@ def purchase_report(request):
                 single_invoice['po_number'] = invoice['po_number']
                 single_invoice['po_date'] = invoice['po_date']
                 single_invoice['invoice_amount'] = invoice['grand_total']
-                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                 single_invoice['id'] = invoice['id']
 
                 single_data.append(single_invoice)
             
-            context["message"] = single_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -10357,7 +11996,16 @@ def purchase_report(request):
 
                 single_data.append(single_invoice)
 
-            context['message'] = single_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -10386,7 +12034,16 @@ def purchase_report(request):
             for k,v in total_data.items():
                 final_data.append({"full_name": k, "total_amount": v})
 
-            context['message'] = final_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(final_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
 
             return Response(context, status=status.HTTP_200_OK)
@@ -10409,11 +12066,13 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
-                                          .filter(date_created__hour=current_time.hour)
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)
+
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
 
                 # for inv in invoice_ser.data:
@@ -10421,8 +12080,20 @@ def purchase_report(request):
                 for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
-            context["message"] = total_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), total_amount))
+
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -10433,10 +12104,11 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
-                invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())
+                invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
+                                                .filter(vendor=request.user.id)
 
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
 
@@ -10444,9 +12116,20 @@ def purchase_report(request):
                 for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                total_data[current_time.strftime('%Y-%m-%d')] = total_amount
+                total_data.append((current_time.strftime('%Y-%m-%d'), total_amount))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -10458,7 +12141,7 @@ def purchase_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -10472,17 +12155,30 @@ def purchase_report(request):
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 
                 return Response(context, status=status.HTTP_200_OK)
@@ -10502,6 +12198,8 @@ def purchase_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10519,7 +12217,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -10533,17 +12231,31 @@ def purchase_report(request):
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
-                context["message"] = total_data
+                    total_data.append((key, total_amount))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10558,10 +12270,12 @@ def purchase_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10579,7 +12293,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -10593,17 +12307,31 @@ def purchase_report(request):
                         break
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
-                context["message"] = total_data
+                    total_data.append((key, total_amount))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10622,6 +12350,8 @@ def purchase_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10639,14 +12369,14 @@ def purchase_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -10659,10 +12389,22 @@ def purchase_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
-                context["message"] = total_data
+                    total_data.append((key,  total_amount))
+                
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10677,10 +12419,12 @@ def purchase_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -10706,6 +12450,8 @@ def purchase_report(request):
 
                 # context[key] = total_amount
                 context['message'] = {key: total_amount}
+                context['next'] = None
+                context['pevious'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10729,16 +12475,28 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), emailed_count))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -10749,16 +12507,28 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), emailed_count))
                 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -10770,7 +12540,7 @@ def purchase_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -10785,12 +12555,24 @@ def purchase_report(request):
 
                     emailed_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     
-                    total_data[key] = emailed_count
+                    total_data.append((key, emailed_count))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10804,6 +12586,8 @@ def purchase_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['pevious'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -10815,7 +12599,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -10830,12 +12614,25 @@ def purchase_report(request):
 
                     emailed_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
+
+                    total_data.append((key, emailed_count))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10848,6 +12645,8 @@ def purchase_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['pevious'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -10859,7 +12658,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -10874,12 +12673,25 @@ def purchase_report(request):
 
                     emailed_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
+
+                    total_data.append((key, emailed_count))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10892,6 +12704,8 @@ def purchase_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['pevious'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -10903,26 +12717,39 @@ def purchase_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     emailed_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
+
+                    total_data.append((key, emailed_count))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -10935,6 +12762,8 @@ def purchase_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['pevious'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -10949,6 +12778,8 @@ def purchase_report(request):
             key = f"{start_date} - {end_date}"
             # context[key] = emailed_count
             context["message"] = {key: emailed_count}
+            context['next'] = None
+            context['pevious'] = None
             return Response(context, status=status.HTTP_200_OK)
     
 
@@ -10966,12 +12797,14 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
-                                          .filter(date_created__hour=current_time.hour)\
-                                          .filter(emailed=True)
+                                        .filter(date_created__hour=current_time.hour)\
+                                        .filter(vendor=request.user.id)\
+                                        .filter(emailed=True)
+
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
 
                 single_data = []
@@ -10986,9 +12819,20 @@ def purchase_report(request):
 
                     single_data.append(single_invoice)
                     
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -11000,11 +12844,12 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
-                                            .filter(emailed=True)
+                                            .filter(emailed=True)\
+                                            .filter(vendor=request.user.id)
 
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
 
@@ -11020,8 +12865,20 @@ def purchase_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
-            context["message"] = total_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
+
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -11033,7 +12890,7 @@ def purchase_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -11048,7 +12905,9 @@ def purchase_report(request):
 
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
-                                                .filter(emailed=True)
+                                                .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -11064,9 +12923,20 @@ def purchase_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11078,7 +12948,7 @@ def purchase_report(request):
                             .order_by("date_created")
 
                 if len(invoices) > 0:
-                    total_data = {}
+                    total_data = []
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{start_date} - {end_date}"
 
@@ -11094,9 +12964,20 @@ def purchase_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                    context["message"] = total_data
+                    paginator = MyPagination()
+                    invoices_per_page = paginator.paginate_queryset(total_data, request)
+                    
+                    a = paginator.get_paginated_response(invoices_per_page).data
+                    before_data = a['results']
+                    final_data = {k[0]:k[1] for k in before_data}
+                    
+                    a['message'] = final_data
+                    a.pop("results")
+                    a.pop("count")
+
+                    context = {**a}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -11114,7 +12995,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -11130,6 +13011,7 @@ def purchase_report(request):
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
@@ -11147,8 +13029,20 @@ def purchase_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -11175,6 +13069,8 @@ def purchase_report(request):
                         single_data.append(single_invoice)
                     
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -11192,7 +13088,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -11208,6 +13104,7 @@ def purchase_report(request):
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
@@ -11225,8 +13122,20 @@ def purchase_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -11253,6 +13162,8 @@ def purchase_report(request):
                         single_data.append(single_invoice)
                     
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -11270,14 +13181,14 @@ def purchase_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -11285,6 +13196,7 @@ def purchase_report(request):
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
@@ -11302,8 +13214,20 @@ def purchase_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -11330,6 +13254,8 @@ def purchase_report(request):
                         single_data.append(single_invoice)
                     
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -11364,13 +13290,14 @@ def purchase_report(request):
                     single_data.append(single_invoice)
 
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['pevious'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
                 context["message"] = "No invoices were created within this date range"
                 return Response(context, status=status.HTTP_404_NOT_FOUND)
-
 
     
 
@@ -11389,17 +13316,29 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 overdue_count = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
-                                          .filter(date_created__hour=current_time.hour)\
-                                            .filter(status="Overdue").count()
+                                        .filter(date_created__hour=current_time.hour)\
+                                        .filter(vendor=request.user.id)\
+                                        .filter(status="Overdue").count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), overdue_count))
 
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -11411,16 +13350,28 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 overdue_count = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(status="Overdue").count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = overdue_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), overdue_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -11432,7 +13383,7 @@ def purchase_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -11447,12 +13398,24 @@ def purchase_report(request):
 
                     overdue_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    total_data[key] = overdue_count
+                    total_data.append((key, overdue_count))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11466,6 +13429,8 @@ def purchase_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['pevious'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -11477,7 +13442,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -11492,13 +13457,25 @@ def purchase_report(request):
 
                     overdue_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    total_data[key] = overdue_count
+                    total_data.append((key, overdue_count))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11511,6 +13488,8 @@ def purchase_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['pevious'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -11522,7 +13501,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -11537,13 +13516,25 @@ def purchase_report(request):
 
                     overdue_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    total_data[key] = overdue_count
+                    total_data.append((key, overdue_count))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11556,6 +13547,8 @@ def purchase_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['pevious'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -11567,27 +13560,39 @@ def purchase_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     overdue_count = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
-                    total_data[key] = overdue_count
+                    total_data.append((key, overdue_count))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11600,6 +13605,8 @@ def purchase_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['pevious'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -11613,6 +13620,8 @@ def purchase_report(request):
             key = f"{start_date} - {end_date}"
             # context[key] = overdue_count
             context["message"] = {key: overdue_count}
+            context['next'] = None
+            context['pevious'] = None
             return Response(context, status=status.HTTP_200_OK)
 
 
@@ -11630,12 +13639,13 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
 
@@ -11647,14 +13657,25 @@ def purchase_report(request):
                     single_invoice['po_date'] = invoice['po_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -11666,11 +13687,12 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
@@ -11683,12 +13705,25 @@ def purchase_report(request):
                     single_invoice['po_date'] = invoice['po_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                context[current_time.strftime('%Y-%m-%d')] = invoice_ser.data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
+
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -11700,7 +13735,7 @@ def purchase_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -11716,7 +13751,9 @@ def purchase_report(request):
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
+
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -11728,14 +13765,25 @@ def purchase_report(request):
                         single_invoice['po_date'] = invoice['po_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11758,13 +13806,15 @@ def purchase_report(request):
                         single_invoice['po_date'] = invoice['po_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -11782,7 +13832,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -11798,6 +13848,7 @@ def purchase_report(request):
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
@@ -11810,14 +13861,25 @@ def purchase_report(request):
                         single_invoice['po_date'] = invoice['po_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11840,13 +13902,22 @@ def purchase_report(request):
                         single_invoice['po_date'] = invoice['po_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     # context[key] = invoice_ser.data
-                    context["message"] = single_data
+                    paginator = MyPagination()
+                    invoices_per_page = paginator.paginate_queryset(single_data, request)
+                    
+                    a = paginator.get_paginated_response(invoices_per_page).data
+                    
+                    a['message'] = invoices_per_page
+                    a.pop("results")
+                    a.pop("count")
+
+                    context = {**a}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -11864,12 +13935,115 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
                     current_week = start_time + relativedelta(months=(week+1)*3)
                     
+
+                    if current_week > end_time:
+                        current_week = end_time
+                        # break
+                    if begin > end_time:
+                        break
+
+                    invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
+                                                .order_by("date_created")
+
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['po_number'] = invoice['po_number']
+                        single_invoice['po_date'] = invoice['po_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
+                        single_invoice['id'] = invoice['id']
+
+                        single_data.append(single_invoice)
+
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
+
+                return Response(context, status=status.HTTP_200_OK)
+
+            else:
+                invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
+                            .filter(date_created__gte=start_date)\
+                            .filter(date_created__lte=end_date)\
+                            .filter(status="Overdue")\
+                            .order_by("date_created")
+
+                if len(invoices) > 0:
+                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
+                    key = f"{start_date} - {end_date}"
+
+                    single_data = []
+                    for invoice in invoice_ser.data:
+                        single_invoice = {}
+                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
+                        single_invoice['po_number'] = invoice['po_number']
+                        single_invoice['po_date'] = invoice['po_date']
+                        single_invoice['invoice_amount'] = invoice['grand_total']
+                        single_invoice['status'] = invoice['status']
+                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['id'] = invoice['id']
+
+                        single_data.append(single_invoice)
+
+                    # context[key] = invoice_ser.data
+                    paginator = MyPagination()
+                    invoices_per_page = paginator.paginate_queryset(single_data, request)
+                    
+                    a = paginator.get_paginated_response(invoices_per_page).data
+                    
+                    a['message'] = invoices_per_page
+                    a.pop("results")
+                    a.pop("count")
+
+                    context = {**a}
+
+
+                    return Response(context, status=status.HTTP_200_OK)
+
+                else:
+                    context["message"] = "No purchase orders were created within this date range"
+                    return Response(context, status=status.HTTP_404_NOT_FOUND)
+            
+            # return Response(context, status=status.HTTP_200_OK)
+        
+        elif how == "yearly":
+            start_time = datetime.strptime(start_date, "%Y-%m-%d")
+            end_time = datetime.strptime(end_date, "%Y-%m-%d")
+
+            interval = (end_time - start_time)
+            total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
+
+            if total_year > 0:
+                total_data = []
+
+                for year in range(total_year+1):
+                    begin = start_time + relativedelta(years=year)
+                    current_week = start_time + relativedelta(years=(year+1))
 
                     if current_week > end_time:
                         current_week = end_time
@@ -11892,14 +14066,25 @@ def purchase_report(request):
                         single_invoice['po_date'] = invoice['po_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -11922,94 +14107,22 @@ def purchase_report(request):
                         single_invoice['po_date'] = invoice['po_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     # context[key] = invoice_ser.data
-                    context["message"] = single_data
+                    paginator = MyPagination()
+                    invoices_per_page = paginator.paginate_queryset(single_data, request)
+                    
+                    a = paginator.get_paginated_response(invoices_per_page).data
+                    
+                    a['message'] = invoices_per_page
+                    a.pop("results")
+                    a.pop("count")
 
-                    return Response(context, status=status.HTTP_200_OK)
-
-                else:
-                    context["message"] = "No purchase orders were created within this date range"
-                    return Response(context, status=status.HTTP_404_NOT_FOUND)
-            
-            # return Response(context, status=status.HTTP_200_OK)
-        
-        elif how == "yearly":
-            start_time = datetime.strptime(start_date, "%Y-%m-%d")
-            end_time = datetime.strptime(end_date, "%Y-%m-%d")
-
-            interval = (end_time - start_time)
-            total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
-
-            if total_year > 0:
-                total_data = {}
-
-                for year in range(total_year+1):
-                    begin = start_time + relativedelta(years=year)
-                    current_week = start_time + relativedelta(years=(year+1))
-
-                    if current_week > end_date:
-                        current_week = end_date
-                        # break
-                    if begin > end_time:
-                        break
-
-                    invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)\
-                                                .filter(status="Overdue")\
-                                                .order_by("date_created")
-
-                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
-                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    single_data = []
-                    for invoice in invoice_ser.data:
-                        single_invoice = {}
-                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
-                        single_invoice['po_number'] = invoice['po_number']
-                        single_invoice['po_date'] = invoice['po_date']
-                        single_invoice['invoice_amount'] = invoice['grand_total']
-                        single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
-                        single_invoice['id'] = invoice['id']
-
-                        single_data.append(single_invoice)
-
-                    total_data[key] = single_data
-
-                context["message"] = total_data
-
-                return Response(context, status=status.HTTP_200_OK)
-
-            else:
-                invoices = PurchaseOrder.objects.filter(vendor=request.user.id)\
-                            .filter(date_created__gte=start_date)\
-                            .filter(date_created__lte=end_date)\
-                            .filter(status="Overdue")\
-                            .order_by("date_created")
-
-                if len(invoices) > 0:
-                    invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
-                    key = f"{start_date} - {end_date}"
-
-                    single_data = []
-                    for invoice in invoice_ser.data:
-                        single_invoice = {}
-                        single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
-                        single_invoice['po_number'] = invoice['po_number']
-                        single_invoice['po_date'] = invoice['po_date']
-                        single_invoice['invoice_amount'] = invoice['grand_total']
-                        single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
-                        single_invoice['id'] = invoice['id']
-
-                        single_data.append(single_invoice)
-
-                    # context[key] = invoice_ser.data
-                    context["message"] = single_data
+                    context = {**a}
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -12046,6 +14159,8 @@ def purchase_report(request):
 
                 # context[key] = invoice_ser.data
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['pevious'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -12068,12 +14183,13 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(status="Pending")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
 
@@ -12085,14 +14201,25 @@ def purchase_report(request):
                     single_invoice['po_date'] = invoice['po_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -12104,11 +14231,12 @@ def purchase_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = PurchaseOrder.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Pending")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
@@ -12121,14 +14249,25 @@ def purchase_report(request):
                     single_invoice['po_date'] = invoice['po_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -12140,7 +14279,7 @@ def purchase_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -12156,6 +14295,7 @@ def purchase_report(request):
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -12168,14 +14308,25 @@ def purchase_report(request):
                         single_invoice['po_date'] = invoice['po_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -12198,12 +14349,14 @@ def purchase_report(request):
                         single_invoice['po_date'] = invoice['po_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -12221,7 +14374,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -12237,6 +14390,7 @@ def purchase_report(request):
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
@@ -12249,13 +14403,25 @@ def purchase_report(request):
                         single_invoice['po_date'] = invoice['po_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -12283,6 +14449,8 @@ def purchase_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -12301,7 +14469,7 @@ def purchase_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -12317,6 +14485,7 @@ def purchase_report(request):
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
@@ -12329,13 +14498,25 @@ def purchase_report(request):
                         single_invoice['po_date'] = invoice['po_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -12357,12 +14538,14 @@ def purchase_report(request):
                         single_invoice['po_date'] = invoice['po_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -12380,14 +14563,14 @@ def purchase_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -12395,6 +14578,7 @@ def purchase_report(request):
                     invoices = PurchaseOrder.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = PurchaseOrderSerailizer(invoices, many=True)
@@ -12407,13 +14591,25 @@ def purchase_report(request):
                         single_invoice['po_date'] = invoice['po_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -12435,12 +14631,14 @@ def purchase_report(request):
                         single_invoice['po_date'] = invoice['po_date']
                         single_invoice['invoice_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['pevious'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -12471,13 +14669,22 @@ def purchase_report(request):
                     single_invoice['po_date'] = invoice['po_date']
                     single_invoice['invoice_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
                 # context[key] = invoice_ser.data
-                context["message"] = single_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(single_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                
+                a['message'] = invoices_per_page
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -12499,6 +14706,10 @@ def estimate_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if not start_date or not end_date:
+        context['message'] = "You need to select start date and end date"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
     if measure:
         measure = measure.lower()
     else:
@@ -12518,13 +14729,21 @@ def estimate_report(request):
                 single_invoice['estimate_number'] = invoice['estimate_number']
                 single_invoice['estimate_date'] = invoice['estimate_date']
                 single_invoice['estimate_amount'] = invoice['grand_total']
-                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                 single_invoice['id'] = invoice['id']
 
                 single_data.append(single_invoice)
 
             # context['message'] = invoice_ser.data
-            context["message"] = single_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -12547,13 +14766,21 @@ def estimate_report(request):
                 single_invoice['estimate_number'] = invoice['estimate_number']
                 single_invoice['estimate_date'] = invoice['estimate_date']
                 single_invoice['estimate_amount'] = invoice['grand_total']
-                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                 single_invoice['id'] = invoice['id']
 
                 single_data.append(single_invoice)
 
             # context['message'] = invoice_ser.data
-            context["message"] = single_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -12582,7 +14809,15 @@ def estimate_report(request):
             for k,v in total_data.items():
                 final_data.append({"full_name": k, "total_amount": v})
 
-            context['message'] = final_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(final_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
 
 
             return Response(context, status=status.HTTP_200_OK)
@@ -12605,11 +14840,13 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())\
-                                          .filter(date_created__hour=current_time.hour)
+                                            .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)
+
                 invoice_ser = EstimateSerailizer(invoices, many=True)
 
                 # for inv in invoice_ser.data:
@@ -12617,9 +14854,20 @@ def estimate_report(request):
                 for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), total_amount))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -12630,10 +14878,11 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
-                invoices = Estimate.objects.filter(date_created__date=current_time.date())
+                invoices = Estimate.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)
 
                 invoice_ser = EstimateSerailizer(invoices, many=True)
 
@@ -12641,9 +14890,20 @@ def estimate_report(request):
                 for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                total_data[current_time.strftime('%Y-%m-%d')] = total_amount
+                total_data.append((current_time.strftime('%Y-%m-%d'), total_amount))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -12655,7 +14915,7 @@ def estimate_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -12669,7 +14929,9 @@ def estimate_report(request):
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -12677,9 +14939,20 @@ def estimate_report(request):
                     for inv in invoice_ser.data:
                             total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
                         
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -12698,6 +14971,8 @@ def estimate_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -12715,7 +14990,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -12729,7 +15004,10 @@ def estimate_report(request):
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
+
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -12738,8 +15016,20 @@ def estimate_report(request):
                     for inv in invoice_ser.data:
                             total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
-                context["message"] = total_data
+                    total_data.append((key, total_amount))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -12757,6 +15047,8 @@ def estimate_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -12774,7 +15066,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -12788,17 +15080,32 @@ def estimate_report(request):
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
-                context["message"] = total_data
+                    total_data.append((key, total_amount))
+
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -12816,6 +15123,8 @@ def estimate_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -12834,30 +15143,44 @@ def estimate_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
-                context["message"] = total_data
+                    total_data.append((key, total_amount))
+
+                    
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -12871,10 +15194,12 @@ def estimate_report(request):
 
                     total_amount = 0
                     for inv in invoice_ser.data:
-                            total_amount += float(inv['grand_total'])
+                        total_amount += float(inv['grand_total'])
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -12897,10 +15222,12 @@ def estimate_report(request):
 
                 total_amount = 0
                 for inv in invoice_ser.data:
-                        total_amount += float(inv['grand_total'])
+                    total_amount += float(inv['grand_total'])
 
                 # context[key] = total_amount
                 context['message'] = {key: total_amount}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -12924,16 +15251,28 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = Estimate.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), emailed_count))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -12944,16 +15283,28 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = Estimate.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), emailed_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
                 
             return Response(context, status=status.HTTP_200_OK)
@@ -12966,7 +15317,7 @@ def estimate_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -12981,11 +15332,25 @@ def estimate_report(request):
 
                     emailed_count = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
-                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context["message"] = total_data
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -12999,6 +15364,8 @@ def estimate_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -13010,7 +15377,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -13025,12 +15392,25 @@ def estimate_report(request):
 
                     emailed_count = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context["message"] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -13043,6 +15423,8 @@ def estimate_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -13054,7 +15436,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -13069,12 +15451,25 @@ def estimate_report(request):
 
                     emailed_count = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context["message"] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -13087,6 +15482,8 @@ def estimate_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -13098,26 +15495,39 @@ def estimate_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     emailed_count = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context["message"] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -13130,6 +15540,8 @@ def estimate_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -13144,6 +15556,8 @@ def estimate_report(request):
             key = f"{start_date} - {end_date}"
             # context[key] = emailed_count
             context["message"] = {key: emailed_count}
+            context['next'] = None
+            context['previous'] = None
             return Response(context, status=status.HTTP_200_OK)
     
 
@@ -13161,12 +15575,14 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
-                                          .filter(emailed=True)
+                                          .filter(emailed=True)\
+                                            .filter(vendor=request.user.id)
+
                 invoice_ser = EstimateSerailizer(invoices, many=True)
 
                 single_data = []
@@ -13181,9 +15597,20 @@ def estimate_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -13195,11 +15622,12 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())\
-                                            .filter(emailed=True)
+                                            .filter(emailed=True)\
+                                            .filter(vendor=request.user.id)
 
                 invoice_ser = EstimateSerailizer(invoices, many=True)
 
@@ -13215,9 +15643,20 @@ def estimate_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -13229,7 +15668,7 @@ def estimate_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -13244,7 +15683,9 @@ def estimate_report(request):
 
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
-                                                .filter(emailed=True)
+                                                .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -13260,9 +15701,20 @@ def estimate_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -13291,6 +15743,8 @@ def estimate_report(request):
                         
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -13308,7 +15762,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -13324,6 +15778,7 @@ def estimate_report(request):
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
@@ -13340,9 +15795,20 @@ def estimate_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -13369,6 +15835,8 @@ def estimate_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -13387,7 +15855,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -13403,6 +15871,7 @@ def estimate_report(request):
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
@@ -13419,9 +15888,21 @@ def estimate_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
+                    
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -13448,6 +15929,8 @@ def estimate_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -13465,14 +15948,14 @@ def estimate_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -13480,6 +15963,7 @@ def estimate_report(request):
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
@@ -13496,9 +15980,20 @@ def estimate_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -13525,6 +16020,8 @@ def estimate_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -13560,6 +16057,8 @@ def estimate_report(request):
 
                 # context[key] = invoice_ser.data
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -13585,16 +16084,28 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 overdue_count = Estimate.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)\
                                             .filter(status="Overdue").count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), overdue_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -13605,16 +16116,28 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 overdue_count = Estimate.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(status="Overdue").count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = overdue_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), overdue_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
                 
             return Response(context, status=status.HTTP_200_OK)
@@ -13627,7 +16150,7 @@ def estimate_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -13642,11 +16165,24 @@ def estimate_report(request):
 
                     overdue_count = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
 
-                context["message"] = total_data
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -13660,6 +16196,8 @@ def estimate_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -13671,7 +16209,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -13686,12 +16224,25 @@ def estimate_report(request):
 
                     overdue_count = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
+
+                    total_data.append((key, overdue_count))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -13704,6 +16255,8 @@ def estimate_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -13715,7 +16268,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -13730,12 +16283,25 @@ def estimate_report(request):
 
                     overdue_count = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
+
+                    total_data.append((key, overdue_count))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -13748,6 +16314,8 @@ def estimate_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -13759,26 +16327,39 @@ def estimate_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     overdue_count = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
+
+                    total_data.append((key, overdue_count))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -13791,6 +16372,8 @@ def estimate_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -13805,6 +16388,8 @@ def estimate_report(request):
             key = f"{start_date} - {end_date}"
             # context[key] = overdue_count
             context["message"] = {key: overdue_count}
+            context['next'] = None
+            context['previous'] = None
             return Response(context, status=status.HTTP_200_OK)
 
 
@@ -13822,12 +16407,13 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(status="Overdue")\
+                                            .filter(vendor=request.user)\
                                             .order_by("date_created")
                 invoice_ser = EstimateSerailizer(invoices, many=True)
 
@@ -13839,14 +16425,25 @@ def estimate_report(request):
                     single_invoice['estimate_date'] = invoice['estimate_date']
                     single_invoice['estimate_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -13858,11 +16455,12 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_ser = EstimateSerailizer(invoices, many=True)
@@ -13875,12 +16473,25 @@ def estimate_report(request):
                     single_invoice['estimate_date'] = invoice['estimate_date']
                     single_invoice['estimate_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
+
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -13892,7 +16503,7 @@ def estimate_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -13908,6 +16519,7 @@ def estimate_report(request):
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -13920,14 +16532,25 @@ def estimate_report(request):
                         single_invoice['estimate_date'] = invoice['estimate_date']
                         single_invoice['estimate_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -13950,12 +16573,14 @@ def estimate_report(request):
                         single_invoice['estimate_date'] = invoice['estimate_date']
                         single_invoice['estimate_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -13973,7 +16598,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -13989,6 +16614,7 @@ def estimate_report(request):
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
@@ -14001,14 +16627,25 @@ def estimate_report(request):
                         single_invoice['estimate_date'] = invoice['estimate_date']
                         single_invoice['estimate_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -14036,6 +16673,8 @@ def estimate_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -14053,7 +16692,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -14069,6 +16708,7 @@ def estimate_report(request):
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
@@ -14081,14 +16721,25 @@ def estimate_report(request):
                         single_invoice['estimate_date'] = invoice['estimate_date']
                         single_invoice['estimate_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -14116,6 +16767,8 @@ def estimate_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -14134,14 +16787,14 @@ def estimate_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -14149,6 +16802,7 @@ def estimate_report(request):
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
@@ -14161,14 +16815,25 @@ def estimate_report(request):
                         single_invoice['estimate_date'] = invoice['estimate_date']
                         single_invoice['estimate_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -14190,12 +16855,14 @@ def estimate_report(request):
                         single_invoice['estimate_date'] = invoice['estimate_date']
                         single_invoice['estimate_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -14225,13 +16892,15 @@ def estimate_report(request):
                     single_invoice['estimate_date'] = invoice['estimate_date']
                     single_invoice['estimate_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
                 # context[key] = invoice_ser.data
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -14254,12 +16923,13 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(status="Pending")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
                 invoice_ser = EstimateSerailizer(invoices, many=True)
 
@@ -14271,15 +16941,26 @@ def estimate_report(request):
                     single_invoice['estimate_date'] = invoice['estimate_date']
                     single_invoice['estimate_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
                 # context['message'] = invoice_ser.data
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -14291,11 +16972,12 @@ def estimate_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Estimate.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Pending")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_ser = EstimateSerailizer(invoices, many=True)
@@ -14308,14 +16990,25 @@ def estimate_report(request):
                     single_invoice['estimate_date'] = invoice['estimate_date']
                     single_invoice['estimate_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'),  single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -14327,7 +17020,7 @@ def estimate_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -14343,6 +17036,7 @@ def estimate_report(request):
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     invoice_ser = EstimateSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -14355,14 +17049,25 @@ def estimate_report(request):
                         single_invoice['estimate_date'] = invoice['estimate_date']
                         single_invoice['estimate_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -14371,6 +17076,7 @@ def estimate_report(request):
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date)\
                             .filter(status="Pending")\
+                            .filter(vendor=request.user.id)\
                             .order_by("date_created")
 
                 if len(invoices) > 0:
@@ -14385,12 +17091,14 @@ def estimate_report(request):
                         single_invoice['estimate_date'] = invoice['estimate_date']
                         single_invoice['estimate_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -14408,7 +17116,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -14424,6 +17132,7 @@ def estimate_report(request):
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
@@ -14436,14 +17145,25 @@ def estimate_report(request):
                         single_invoice['estimate_date'] = invoice['estimate_date']
                         single_invoice['estimate_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key,  single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -14465,13 +17185,15 @@ def estimate_report(request):
                         single_invoice['estimate_date'] = invoice['estimate_date']
                         single_invoice['estimate_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -14489,7 +17211,7 @@ def estimate_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -14505,6 +17227,7 @@ def estimate_report(request):
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
@@ -14517,14 +17240,25 @@ def estimate_report(request):
                         single_invoice['estimate_date'] = invoice['estimate_date']
                         single_invoice['estimate_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -14546,13 +17280,15 @@ def estimate_report(request):
                         single_invoice['estimate_date'] = invoice['estimate_date']
                         single_invoice['estimate_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -14570,14 +17306,14 @@ def estimate_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -14585,6 +17321,7 @@ def estimate_report(request):
                     invoices = Estimate.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(venfor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = EstimateSerailizer(invoices, many=True)
@@ -14597,14 +17334,25 @@ def estimate_report(request):
                         single_invoice['estimate_date'] = invoice['estimate_date']
                         single_invoice['estimate_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
                 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -14626,13 +17374,15 @@ def estimate_report(request):
                         single_invoice['estimate_date'] = invoice['estimate_date']
                         single_invoice['estimate_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -14662,13 +17412,15 @@ def estimate_report(request):
                     single_invoice['estimate_date'] = invoice['estimate_date']
                     single_invoice['estimate_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
                     
                 # context[key] = invoice_ser.data
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -14696,6 +17448,10 @@ def quote_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if not start_date or not end_date:
+        context['message'] = "You need to select start date and end date"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
     if measure:
         measure = measure.lower()
     else:
@@ -14715,12 +17471,20 @@ def quote_report(request):
                 single_invoice['quote_number'] = invoice['quote_number']
                 single_invoice['quote_date'] = invoice['quote_date']
                 single_invoice['quote_amount'] = invoice['grand_total']
-                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                 single_invoice['id'] = invoice['id']
 
                 single_data.append(single_invoice)
 
-            context['message'] = single_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -14743,13 +17507,21 @@ def quote_report(request):
                 single_invoice['quote_number'] = invoice['quote_number']
                 single_invoice['quote_date'] = invoice['quote_date']
                 single_invoice['quote_amount'] = invoice['grand_total']
-                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                 single_invoice['id'] = invoice['id']
 
                 single_data.append(single_invoice)
 
             # context['message'] = invoice_ser.data
-            context["message"] = single_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -14778,7 +17550,15 @@ def quote_report(request):
             for k,v in total_data.items():
                 final_data.append({"full_name": k, "total_amount": v})
 
-            context['message'] = final_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(final_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
 
 
             return Response(context, status=status.HTTP_200_OK)
@@ -14801,11 +17581,13 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())\
-                                          .filter(date_created__hour=current_time.hour)
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)
+
                 invoice_ser = QuoteSerailizer(invoices, many=True)
 
                 # for inv in invoice_ser.data:
@@ -14813,9 +17595,20 @@ def quote_report(request):
                 for inv in invoice_ser.data:
                     total_amount += float(inv['grand_total'])
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), total_amount))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -14826,10 +17619,11 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
-                invoices = Quote.objects.filter(date_created__date=current_time.date())
+                invoices = Quote.objects.filter(date_created__date=current_time.date())\
+                                        .filter(vendor=request.user.id)
 
                 invoice_ser = QuoteSerailizer(invoices, many=True)
 
@@ -14837,9 +17631,20 @@ def quote_report(request):
                 for inv in invoice_ser.data:
                     total_amount += float(inv['grand_total'])
 
-                total_data[current_time.strftime('%Y-%m-%d')] = total_amount
+                total_data.append((current_time.strftime('%Y-%m-%d'), total_amount))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -14851,7 +17656,7 @@ def quote_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -14865,7 +17670,9 @@ def quote_report(request):
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -14873,9 +17680,20 @@ def quote_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
                         
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 
                 return Response(context, status=status.HTTP_200_OK)
@@ -14895,6 +17713,8 @@ def quote_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -14912,7 +17732,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -14926,7 +17746,9 @@ def quote_report(request):
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -14935,8 +17757,20 @@ def quote_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
-                context["message"] = total_data
+                    total_data.append((key, total_amount))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -14955,6 +17789,8 @@ def quote_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -14973,7 +17809,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -14987,7 +17823,9 @@ def quote_report(request):
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -14996,8 +17834,20 @@ def quote_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
-                context["message"] = total_data
+                    total_data.append((key, total_amount))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -15016,6 +17866,8 @@ def quote_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -15033,20 +17885,22 @@ def quote_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -15055,8 +17909,20 @@ def quote_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
-                context["message"] = total_data
+                    total_data.append((key, total_amount))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -15075,6 +17941,8 @@ def quote_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -15100,6 +17968,8 @@ def quote_report(request):
 
                 # context[key] = total_amount
                 context['message'] = {key: total_amount}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -15123,16 +17993,28 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = Quote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                        .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), emailed_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -15143,16 +18025,28 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = Quote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), emailed_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -15164,7 +18058,7 @@ def quote_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -15179,11 +18073,25 @@ def quote_report(request):
 
                     emailed_count = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
+
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
+
+                    total_data.append((key, emailed_count))
                             
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -15197,6 +18105,8 @@ def quote_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -15208,7 +18118,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -15223,12 +18133,25 @@ def quote_report(request):
 
                     emailed_count = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context["message"] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -15241,6 +18164,8 @@ def quote_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -15253,7 +18178,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -15268,12 +18193,25 @@ def quote_report(request):
 
                     emailed_count = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context["message"] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -15286,6 +18224,8 @@ def quote_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -15297,26 +18237,39 @@ def quote_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     emailed_count = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context["message"] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -15329,6 +18282,8 @@ def quote_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -15342,6 +18297,8 @@ def quote_report(request):
             key = f"{start_date} - {end_date}"
             # context[key] = emailed_count
             context["message"] = {key: emailed_count}
+            context['next'] = None
+            context['previous'] = None
             return Response(context, status=status.HTTP_200_OK)
     
 
@@ -15359,12 +18316,14 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
-                                          .filter(emailed=True)
+                                          .filter(emailed=True)\
+                                            .filter(vendor=request.user.id)
+
                 invoice_ser = QuoteSerailizer(invoices, many=True)
 
                 single_data = []
@@ -15379,9 +18338,20 @@ def quote_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -15393,11 +18363,12 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())\
-                                            .filter(emailed=True)
+                                            .filter(emailed=True)\
+                                            .filter(vendor=request.user.id)
 
                 invoice_ser = QuoteSerailizer(invoices, many=True)
 
@@ -15413,9 +18384,20 @@ def quote_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -15427,7 +18409,7 @@ def quote_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -15442,7 +18424,9 @@ def quote_report(request):
 
                     invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
-                                                .filter(emailed=True)
+                                                .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -15458,8 +18442,20 @@ def quote_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -15488,6 +18484,8 @@ def quote_report(request):
                     # context[key] = invoice_ser.data
 
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -15505,7 +18503,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -15521,6 +18519,7 @@ def quote_report(request):
                     invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
@@ -15536,9 +18535,21 @@ def quote_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -15565,6 +18576,8 @@ def quote_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -15583,7 +18596,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -15599,6 +18612,7 @@ def quote_report(request):
                     invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
@@ -15614,9 +18628,21 @@ def quote_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -15643,6 +18669,8 @@ def quote_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -15660,14 +18688,14 @@ def quote_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -15675,6 +18703,7 @@ def quote_report(request):
                     invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
@@ -15690,9 +18719,21 @@ def quote_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -15719,6 +18760,8 @@ def quote_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -15754,6 +18797,8 @@ def quote_report(request):
 
                 # context[key] = invoice_ser.data
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -15779,16 +18824,28 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 overdue_count = Quote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)\
                                             .filter(status="Overdue").count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), overdue_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -15799,16 +18856,28 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 overdue_count = Quote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(status="Overdue").count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = overdue_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), overdue_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -15820,7 +18889,7 @@ def quote_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -15835,11 +18904,25 @@ def quote_report(request):
 
                     overdue_count = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
-                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
 
-                context["message"] = total_data
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -15853,6 +18936,8 @@ def quote_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -15864,7 +18949,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -15879,12 +18964,25 @@ def quote_report(request):
 
                     overdue_count = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
 
-                context["message"] = total_data
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -15897,6 +18995,8 @@ def quote_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -15908,7 +19008,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -15923,12 +19023,25 @@ def quote_report(request):
 
                     overdue_count = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
 
-                context["message"] = total_data
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -15941,6 +19054,8 @@ def quote_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -15952,26 +19067,39 @@ def quote_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     overdue_count = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
 
-                context["message"] = total_data
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -15984,6 +19112,8 @@ def quote_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context["message"] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -15998,6 +19128,8 @@ def quote_report(request):
             key = f"{start_date} - {end_date}"
             # context[key] = overdue_count
             context["message"] = {key: overdue_count}
+            context['next'] = None
+            context['previous'] = None
             return Response(context, status=status.HTTP_200_OK)
 
 
@@ -16015,12 +19147,13 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
                 invoice_ser = QuoteSerailizer(invoices, many=True)
 
@@ -16037,9 +19170,20 @@ def quote_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -16051,11 +19195,12 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_ser = QuoteSerailizer(invoices, many=True)
@@ -16074,9 +19219,20 @@ def quote_report(request):
                     single_data.append(single_invoice)
 
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
             
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -16088,7 +19244,7 @@ def quote_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -16104,6 +19260,7 @@ def quote_report(request):
                     invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -16121,9 +19278,20 @@ def quote_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -16154,6 +19322,8 @@ def quote_report(request):
                     # context[key] = total_amount
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -16171,7 +19341,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -16187,6 +19357,7 @@ def quote_report(request):
                     invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
@@ -16203,9 +19374,21 @@ def quote_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -16233,6 +19416,8 @@ def quote_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -16251,7 +19436,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -16267,6 +19452,7 @@ def quote_report(request):
                     invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
@@ -16283,9 +19469,21 @@ def quote_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -16313,6 +19511,8 @@ def quote_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -16330,14 +19530,14 @@ def quote_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -16345,6 +19545,7 @@ def quote_report(request):
                     invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
@@ -16361,9 +19562,21 @@ def quote_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -16391,6 +19604,8 @@ def quote_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -16427,6 +19642,8 @@ def quote_report(request):
 
                 # context[key] = invoice_ser.data
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -16449,12 +19666,13 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(status="Pending")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
                 invoice_ser = QuoteSerailizer(invoices, many=True)
 
@@ -16471,9 +19689,20 @@ def quote_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -16484,11 +19713,12 @@ def quote_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Quote.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Pending")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_ser = QuoteSerailizer(invoices, many=True)
@@ -16506,9 +19736,20 @@ def quote_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -16520,7 +19761,7 @@ def quote_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -16536,6 +19777,7 @@ def quote_report(request):
                     invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     invoice_ser = QuoteSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -16553,9 +19795,20 @@ def quote_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -16584,6 +19837,8 @@ def quote_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -16601,7 +19856,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -16617,6 +19872,7 @@ def quote_report(request):
                     invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
@@ -16633,9 +19889,21 @@ def quote_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -16663,6 +19931,8 @@ def quote_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -16680,7 +19950,7 @@ def quote_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -16696,6 +19966,7 @@ def quote_report(request):
                     invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
@@ -16712,9 +19983,21 @@ def quote_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -16742,6 +20025,8 @@ def quote_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -16759,14 +20044,14 @@ def quote_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -16774,6 +20059,7 @@ def quote_report(request):
                     invoices = Quote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = QuoteSerailizer(invoices, many=True)
@@ -16790,9 +20076,21 @@ def quote_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -16820,6 +20118,8 @@ def quote_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -16856,6 +20156,8 @@ def quote_report(request):
 
                 # context[key] = invoice_ser.data
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -16878,6 +20180,10 @@ def receipt_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if not start_date or not end_date:
+        context['message'] = "You need to select start date and end date"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
     if measure:
         measure = measure.lower()
     else:
@@ -16897,12 +20203,20 @@ def receipt_report(request):
                 single_invoice['receipt_number'] = invoice['receipt_number']
                 single_invoice['receipt_date'] = invoice['receipt_date']
                 single_invoice['receipt_amount'] = invoice['grand_total']
-                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                 single_invoice['id'] = invoice['id']
 
                 single_data.append(single_invoice)
             # context['message'] = invoice_ser.data
-            context["message"] = single_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -16925,12 +20239,20 @@ def receipt_report(request):
                 single_invoice['receipt_number'] = invoice['receipt_number']
                 single_invoice['receipt_date'] = invoice['receipt_date']
                 single_invoice['receipt_amount'] = invoice['grand_total']
-                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                 single_invoice['id'] = invoice['id']
 
                 single_data.append(single_invoice)
 
-            context['message'] = single_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -16959,7 +20281,15 @@ def receipt_report(request):
             for k,v in total_data.items():
                 final_data.append({"full_name": k, "total_amount": v})
 
-            context['message'] = final_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(final_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
 
 
             return Response(context, status=status.HTTP_200_OK)
@@ -16982,11 +20312,13 @@ def receipt_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Receipt.objects.filter(date_created__date=current_time.date())\
-                                          .filter(date_created__hour=current_time.hour)
+                                          .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)
+
                 invoice_ser = ReceiptSerailizer(invoices, many=True)
 
                 # for inv in invoice_ser.data:
@@ -16994,9 +20326,20 @@ def receipt_report(request):
                 for inv in invoice_ser.data:
                     total_amount += float(inv['grand_total'])
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), total_amount))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -17007,10 +20350,11 @@ def receipt_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
-                invoices = Receipt.objects.filter(date_created__date=current_time.date())
+                invoices = Receipt.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)
 
                 invoice_ser = ReceiptSerailizer(invoices, many=True)
 
@@ -17018,9 +20362,20 @@ def receipt_report(request):
                 for inv in invoice_ser.data:
                     total_amount += float(inv['grand_total'])
 
-                total_data[current_time.strftime('%Y-%m-%d')] = total_amount
+                total_data.append((current_time.strftime('%Y-%m-%d'), total_amount))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -17032,7 +20387,7 @@ def receipt_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -17046,7 +20401,9 @@ def receipt_report(request):
                         break
 
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -17054,9 +20411,20 @@ def receipt_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
+            
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
                 
-                context["message"] = total_data
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -17075,6 +20443,8 @@ def receipt_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -17092,7 +20462,7 @@ def receipt_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -17106,7 +20476,9 @@ def receipt_report(request):
                         break
 
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -17115,9 +20487,20 @@ def receipt_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -17136,6 +20519,8 @@ def receipt_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -17153,7 +20538,7 @@ def receipt_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -17167,7 +20552,9 @@ def receipt_report(request):
                         break
 
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -17176,9 +20563,20 @@ def receipt_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -17197,6 +20595,8 @@ def receipt_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -17214,20 +20614,22 @@ def receipt_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -17236,9 +20638,20 @@ def receipt_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -17257,6 +20670,8 @@ def receipt_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -17282,6 +20697,8 @@ def receipt_report(request):
 
                 # context[key] = total_amount
                 context['message'] = {key: total_amount}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -17305,16 +20722,28 @@ def receipt_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = Receipt.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), emailed_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -17325,16 +20754,28 @@ def receipt_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = Receipt.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), emailed_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -17346,7 +20787,7 @@ def receipt_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -17361,11 +20802,25 @@ def receipt_report(request):
 
                     emailed_count = Receipt.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
+
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
+
+                    total_data.append((key, emailed_count))
                             
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -17379,6 +20834,8 @@ def receipt_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -17390,7 +20847,7 @@ def receipt_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -17405,12 +20862,25 @@ def receipt_report(request):
 
                     emailed_count = Receipt.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context["message"] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -17423,6 +20893,8 @@ def receipt_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -17434,7 +20906,7 @@ def receipt_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -17449,12 +20921,25 @@ def receipt_report(request):
 
                     emailed_count = Receipt.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context["message"] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -17467,6 +20952,8 @@ def receipt_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -17478,26 +20965,39 @@ def receipt_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     emailed_count = Receipt.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context["message"] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -17510,6 +21010,8 @@ def receipt_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -17523,6 +21025,8 @@ def receipt_report(request):
             key = f"{start_date} - {end_date}"
             # context[key] = emailed_count
             context["message"] = {key: emailed_count}
+            context['next'] = None
+            context['previous'] = None
             return Response(context, status=status.HTTP_200_OK)
     
 
@@ -17540,12 +21044,14 @@ def receipt_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = Receipt.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
-                                          .filter(emailed=True)
+                                          .filter(emailed=True)\
+                                            .filter(vendor=request.user.id)
+
                 invoice_ser = ReceiptSerailizer(invoices, many=True)
 
                 single_data = []
@@ -17561,9 +21067,20 @@ def receipt_report(request):
                     single_data.append(single_invoice)
 
                 # context['message'] = invoice_ser.data
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -17574,11 +21091,11 @@ def receipt_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = Receipt.objects.filter(date_created__date=current_time.date())\
-                                            .filter(emailed=True)
+                                            .filter(emailed=True).filter(vendor=request.user.id)
 
                 invoice_ser = ReceiptSerailizer(invoices, many=True)
 
@@ -17594,9 +21111,20 @@ def receipt_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -17608,7 +21136,7 @@ def receipt_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -17623,6 +21151,7 @@ def receipt_report(request):
 
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True)
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -17639,9 +21168,20 @@ def receipt_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -17669,6 +21209,8 @@ def receipt_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -17686,7 +21228,7 @@ def receipt_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -17702,6 +21244,7 @@ def receipt_report(request):
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
@@ -17717,9 +21260,21 @@ def receipt_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context["message"] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -17746,6 +21301,8 @@ def receipt_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -17763,7 +21320,7 @@ def receipt_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -17779,6 +21336,7 @@ def receipt_report(request):
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
@@ -17794,9 +21352,22 @@ def receipt_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context["message"] = total_data
+
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -17823,6 +21394,8 @@ def receipt_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -17840,14 +21413,14 @@ def receipt_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -17855,6 +21428,7 @@ def receipt_report(request):
                     invoices = Receipt.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = ReceiptSerailizer(invoices, many=True)
@@ -17870,9 +21444,21 @@ def receipt_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
+                    
+                    total_data.append((key, single_data))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -17899,6 +21485,8 @@ def receipt_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context["message"] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -17933,6 +21521,8 @@ def receipt_report(request):
                     single_data.append(single_invoice)
                 # context[key] = invoice_ser.data
                 context["message"] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -17955,6 +21545,10 @@ def credit_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if not start_date or not end_date:
+        context['message'] = "You need to select start date and end date"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
     if measure:
         measure = measure.lower()
     else:
@@ -17974,11 +21568,20 @@ def credit_report(request):
                 single_invoice['credit_number'] = invoice['cn_number']
                 single_invoice['credit_date'] = invoice['cn_date']
                 single_invoice['crdit_amount'] = invoice['grand_total']
-                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                 single_invoice['id'] = invoice['id']
 
                 single_data.append(single_invoice)
-            context['message'] = single_data
+
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -18001,12 +21604,20 @@ def credit_report(request):
                 single_invoice['credit_number'] = invoice['cn_number']
                 single_invoice['credit_date'] = invoice['cn_date']
                 single_invoice['credit_amount'] = invoice['grand_total']
-                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                 single_invoice['id'] = invoice['id']
 
                 single_data.append(single_invoice)
 
-            context['message'] = single_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -18035,7 +21646,16 @@ def credit_report(request):
             for k,v in total_data.items():
                 final_data.append({"full_name": k, "total_amount": v})
 
-            context['message'] = final_data
+            
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(final_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
 
 
             return Response(context, status=status.HTTP_200_OK)
@@ -18058,7 +21678,7 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
@@ -18070,9 +21690,20 @@ def credit_report(request):
                 for inv in invoice_ser.data:
                     total_amount += float(inv['grand_total'])
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = total_amount
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), total_amount))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -18083,7 +21714,7 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = CreditNote.objects.filter(date_created__date=current_time.date())
@@ -18094,9 +21725,20 @@ def credit_report(request):
                 for inv in invoice_ser.data:
                     total_amount += float(inv['grand_total'])
 
-                total_data[current_time.strftime('%Y-%m-%d')] = total_amount
+                total_data.append((current_time.strftime('%Y-%m-%d'), total_amount))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -18108,7 +21750,7 @@ def credit_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -18130,9 +21772,20 @@ def credit_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
                         
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
             
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -18151,6 +21804,8 @@ def credit_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -18168,7 +21823,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -18182,7 +21837,9 @@ def credit_report(request):
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -18191,9 +21848,20 @@ def credit_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -18212,6 +21880,8 @@ def credit_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -18229,7 +21899,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -18243,7 +21913,9 @@ def credit_report(request):
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -18252,9 +21924,20 @@ def credit_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -18273,6 +21956,8 @@ def credit_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -18290,20 +21975,22 @@ def credit_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
-                                                .filter(date_created__lte=current_week)
+                                                .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)
+
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
                     # key = f"{start_time.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -18312,9 +21999,20 @@ def credit_report(request):
                     for inv in invoice_ser.data:
                         total_amount += float(inv['grand_total'])
 
-                    total_data[key] = total_amount
+                    total_data.append((key, total_amount))
 
-                context["message"] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     # context[key] = invoice_ser.data
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -18333,6 +22031,8 @@ def credit_report(request):
 
                     # context[key] = total_amount
                     context['message'] = {key: total_amount}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -18358,6 +22058,8 @@ def credit_report(request):
 
                 # context[key] = total_amount
                 context['message'] = {key: total_amount}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -18381,16 +22083,28 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = CreditNote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), emailed_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -18401,16 +22115,28 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = CreditNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), emailed_count))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -18422,7 +22148,7 @@ def credit_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -18437,11 +22163,25 @@ def credit_report(request):
 
                     emailed_count = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
-                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context["message"] = total_data
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -18455,6 +22195,8 @@ def credit_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -18466,7 +22208,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -18481,12 +22223,25 @@ def credit_report(request):
 
                     emailed_count = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context["message"] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -18499,6 +22254,8 @@ def credit_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -18510,7 +22267,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -18525,12 +22282,25 @@ def credit_report(request):
 
                     emailed_count = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context["message"] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -18543,6 +22313,8 @@ def credit_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -18554,26 +22326,39 @@ def credit_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     emailed_count = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context["message"] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -18586,6 +22371,8 @@ def credit_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context["message"] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -18599,6 +22386,8 @@ def credit_report(request):
             key = f"{start_date} - {end_date}"
             # context[key] = emailed_count
             context["message"] = {key: emailed_count}
+            context['next'] = None
+            context['previous'] = None
             return Response(context, status=status.HTTP_200_OK)
     
 
@@ -18616,11 +22405,12 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                          .filter(vendor=request.user.id)\
                                           .filter(emailed=True)
                 invoice_ser = CreditNoteSerailizer(invoices, many=True)
 
@@ -18635,9 +22425,21 @@ def credit_report(request):
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -18648,10 +22450,11 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True)
 
                 invoice_ser = CreditNoteSerailizer(invoices, many=True)
@@ -18668,9 +22471,20 @@ def credit_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
 
-            context["message"] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -18682,7 +22496,7 @@ def credit_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -18697,7 +22511,9 @@ def credit_report(request):
 
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True)
+
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -18713,9 +22529,20 @@ def credit_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context['message'] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -18744,6 +22571,8 @@ def credit_report(request):
 
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -18761,7 +22590,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -18777,6 +22606,7 @@ def credit_report(request):
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
@@ -18792,9 +22622,21 @@ def credit_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context['message'] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -18821,6 +22663,8 @@ def credit_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -18838,7 +22682,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -18854,6 +22698,7 @@ def credit_report(request):
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
@@ -18869,9 +22714,21 @@ def credit_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context['message'] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -18898,6 +22755,8 @@ def credit_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -18915,14 +22774,14 @@ def credit_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -18930,6 +22789,7 @@ def credit_report(request):
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
@@ -18945,9 +22805,21 @@ def credit_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context['message'] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -18974,6 +22846,8 @@ def credit_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -19009,6 +22883,8 @@ def credit_report(request):
 
                 # context[key] = invoice_ser.data
                 context['message'] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -19034,16 +22910,28 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 overdue_count = CreditNote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)\
                                             .filter(status="Pending").count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), overdue_count))
 
-            context['message'] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         
@@ -19054,16 +22942,28 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 overdue_count = CreditNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(status="Pending").count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = overdue_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), overdue_count))
 
-            context['message'] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -19075,7 +22975,7 @@ def credit_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -19090,11 +22990,25 @@ def credit_report(request):
 
                     overdue_count = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Pending").count()
-                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
 
-                context['message'] = total_data
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -19108,6 +23022,8 @@ def credit_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context['message'] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -19119,7 +23035,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -19134,12 +23050,25 @@ def credit_report(request):
 
                     overdue_count = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Pending").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
 
-                context['message'] = total_data
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -19152,6 +23081,8 @@ def credit_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context['message'] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -19163,7 +23094,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -19178,12 +23109,25 @@ def credit_report(request):
 
                     overdue_count = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Pending").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
 
-                context['message'] = total_data
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -19196,6 +23140,8 @@ def credit_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context['message'] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -19207,26 +23153,39 @@ def credit_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     overdue_count = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Pending").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
 
-                context['message'] = total_data
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -19239,6 +23198,8 @@ def credit_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context['message'] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -19252,6 +23213,8 @@ def credit_report(request):
             key = f"{start_date} - {end_date}"
             # context[key] = overdue_count
             context['message'] = {key: overdue_count}
+            context['next'] = None
+            context['previous'] = None
             return Response(context, status=status.HTTP_200_OK)
 
 
@@ -19269,11 +23232,12 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)\
                                           .filter(status="Pending")\
                                             .order_by("date_created")
                 invoice_ser = CreditNoteSerailizer(invoices, many=True)
@@ -19286,14 +23250,25 @@ def credit_report(request):
                     single_invoice['cnredit_date'] = invoice['cn_date']
                     single_invoice['credit_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context['message'] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -19304,10 +23279,11 @@ def credit_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = CreditNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(status="Pending")\
                                             .order_by("date_created")
 
@@ -19321,14 +23297,25 @@ def credit_report(request):
                     single_invoice['credit_date'] = invoice['cn_date']
                     single_invoice['credit_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
 
-            context['message'] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -19340,7 +23327,7 @@ def credit_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -19356,7 +23343,9 @@ def credit_report(request):
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
+
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
 
@@ -19368,14 +23357,25 @@ def credit_report(request):
                         single_invoice['credit_date'] = invoice['cn_date']
                         single_invoice['credit_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context['message'] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -19398,12 +23398,14 @@ def credit_report(request):
                         single_invoice['credit_date'] = invoice['cn_date']
                         single_invoice['credit_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -19421,7 +23423,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -19437,6 +23439,7 @@ def credit_report(request):
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
@@ -19449,13 +23452,25 @@ def credit_report(request):
                         single_invoice['credit_date'] = invoice['cn_date']
                         single_invoice['credit_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context['message'] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -19477,12 +23492,15 @@ def credit_report(request):
                         single_invoice['credit_date'] = invoice['cn_date']
                         single_invoice['credit_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
+
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -19500,7 +23518,7 @@ def credit_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -19516,6 +23534,7 @@ def credit_report(request):
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
@@ -19528,13 +23547,25 @@ def credit_report(request):
                         single_invoice['credit_date'] = invoice['cn_date']
                         single_invoice['credit_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context['message'] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -19556,12 +23587,14 @@ def credit_report(request):
                         single_invoice['credit_date'] = invoice['cn_date']
                         single_invoice['credit_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -19579,14 +23612,14 @@ def credit_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -19594,6 +23627,7 @@ def credit_report(request):
                     invoices = CreditNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = CreditNoteSerailizer(invoices, many=True)
@@ -19606,13 +23640,25 @@ def credit_report(request):
                         single_invoice['credit_date'] = invoice['cn_date']
                         single_invoice['credit_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context['message'] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -19634,12 +23680,14 @@ def credit_report(request):
                         single_invoice['credit_date'] = invoice['cn_date']
                         single_invoice['credit_amount'] = invoice['grand_total']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -19669,13 +23717,15 @@ def credit_report(request):
                     single_invoice['credit_date'] = invoice['cn_date']
                     single_invoice['credit_amount'] = invoice['grand_total']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
                 # context[key] = invoice_ser.data
                 context['message'] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -19698,6 +23748,10 @@ def delivery_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if not start_date or not end_date:
+        context['message'] = "You need to select start date and end date"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
     if measure:
         measure = measure.lower()
     else:
@@ -19716,11 +23770,20 @@ def delivery_report(request):
                 single_invoice['customer_name'] = invoice['customer']['first_name'] + ' ' + invoice['customer']['first_name']
                 single_invoice['delivery_number'] = invoice['dn_number']
                 single_invoice['delivery_date'] = invoice['dn_date']
-                single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                 single_invoice['id'] = invoice['id']
 
                 single_data.append(single_invoice)
-            context['message'] = single_data
+            
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
 
@@ -19749,7 +23812,15 @@ def delivery_report(request):
             for k,v in total_data.items():
                 final_data.append({"full_name": k, "total_amount": v})
 
-            context['message'] = final_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(final_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
 
 
             return Response(context, status=status.HTTP_200_OK)
@@ -19774,16 +23845,28 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 emailed_count = DeliveryNote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), emailed_count))
 
-            context['message'] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -19794,16 +23877,28 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 emailed_count = DeliveryNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(emailed=True).count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = emailed_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), emailed_count))
 
-            context['message'] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -19815,7 +23910,7 @@ def delivery_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -19830,11 +23925,25 @@ def delivery_report(request):
 
                     emailed_count = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
-                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context['message'] = total_data
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -19848,6 +23957,8 @@ def delivery_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context['message'] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -19859,7 +23970,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -19874,12 +23985,25 @@ def delivery_report(request):
 
                     emailed_count = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
+                    
+                    total_data.append((key, emailed_count))
 
-                context['message'] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -19892,6 +24016,8 @@ def delivery_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context['message'] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -19903,7 +24029,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -19918,12 +24044,25 @@ def delivery_report(request):
 
                     emailed_count = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context['message'] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -19936,6 +24075,8 @@ def delivery_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context['message'] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -19948,26 +24089,39 @@ def delivery_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     emailed_count = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True).count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = emailed_count
 
-                context['message'] = total_data
+                    total_data.append((key, emailed_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -19980,6 +24134,8 @@ def delivery_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = emailed_count
                 context['message'] = {key: emailed_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -19993,6 +24149,8 @@ def delivery_report(request):
             key = f"{start_date} - {end_date}"
             # context[key] = emailed_count
             context['message'] = {key: emailed_count}
+            context['next'] = None
+            context['previous'] = None
             return Response(context, status=status.HTTP_200_OK)
     
 
@@ -20010,11 +24168,12 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)\
                                               .filter(emailed=True)
                 invoice_ser = DNSerailizer(invoices, many=True)
 
@@ -20028,9 +24187,20 @@ def delivery_report(request):
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context['message'] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -20041,11 +24211,12 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
-                                            .filter(emailed=True)
+                                            .filter(emailed=True)\
+                                            .filter(vendor=request.user.id)
 
                 invoice_ser = DNSerailizer(invoices, many=True)
                 single_data = []
@@ -20059,9 +24230,20 @@ def delivery_report(request):
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
 
-            context['message'] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -20073,7 +24255,7 @@ def delivery_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -20088,6 +24270,7 @@ def delivery_report(request):
 
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(emailed=True)
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -20103,9 +24286,20 @@ def delivery_report(request):
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
+                    total_data.append((key, single_data))
 
-                context['message'] = total_data
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -20132,6 +24326,8 @@ def delivery_report(request):
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -20149,7 +24345,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -20165,6 +24361,7 @@ def delivery_report(request):
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = DNSerailizer(invoices, many=True)
@@ -20179,9 +24376,21 @@ def delivery_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context['message'] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -20208,6 +24417,8 @@ def delivery_report(request):
 
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -20224,7 +24435,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -20240,6 +24451,7 @@ def delivery_report(request):
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = DNSerailizer(invoices, many=True)
@@ -20254,9 +24466,21 @@ def delivery_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context['message'] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -20283,6 +24507,8 @@ def delivery_report(request):
 
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -20299,14 +24525,14 @@ def delivery_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -20314,6 +24540,7 @@ def delivery_report(request):
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(emailed=True)\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = DNSerailizer(invoices, many=True)
@@ -20328,9 +24555,21 @@ def delivery_report(request):
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
 
-                context['message'] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -20357,6 +24596,8 @@ def delivery_report(request):
 
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -20390,6 +24631,8 @@ def delivery_report(request):
 
                 # context[key] = invoice_ser.data
                 context['message'] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -20415,16 +24658,28 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 overdue_count = DeliveryNote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
+                                            .filter(vendor=request.user.id)\
                                             .filter(status="Overdue").count()
                 
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = overdue_count
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), overdue_count))
 
-            context['message'] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -20435,16 +24690,28 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 
                 overdue_count = DeliveryNote.objects.filter(date_created__date=current_time.date())\
+                                            .filter(vendor=request.user.id)\
                                             .filter(status="Overdue").count()
                 
-                total_data[current_time.strftime('%Y-%m-%d')] = overdue_count
+                total_data.append((current_time.strftime('%Y-%m-%d'), overdue_count))
 
-            context['message'] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -20456,7 +24723,7 @@ def delivery_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -20471,11 +24738,25 @@ def delivery_report(request):
 
                     overdue_count = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
-                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
 
-                context['message'] = total_data
+                    key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
+
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -20489,6 +24770,8 @@ def delivery_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context['message'] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -20500,7 +24783,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -20515,12 +24798,25 @@ def delivery_report(request):
 
                     overdue_count = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
 
-                context['message'] = total_data
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -20533,6 +24829,8 @@ def delivery_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context['message'] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -20544,7 +24842,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -20559,12 +24857,25 @@ def delivery_report(request):
 
                     overdue_count = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
 
-                context['message'] = total_data
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -20577,6 +24888,8 @@ def delivery_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context['message'] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -20588,26 +24901,39 @@ def delivery_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
 
                     overdue_count = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Overdue").count()
                     
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
-                    total_data[key] = overdue_count
 
-                context['message'] = total_data
+                    total_data.append((key, overdue_count))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                     
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -20620,6 +24946,8 @@ def delivery_report(request):
                 key = f"{start_date} - {end_date}"
                 # context[key] = overdue_count
                 context['message'] = {key: overdue_count}
+                context['next'] = None
+                context['previous'] = None
                 return Response(context, status=status.HTTP_200_OK)
                 
         
@@ -20633,6 +24961,8 @@ def delivery_report(request):
             key = f"{start_date} - {end_date}"
             # context[key] = overdue_count
             context['message'] = {key: overdue_count}
+            context['next'] = None
+            context['previous'] = None
             return Response(context, status=status.HTTP_200_OK)
 
     # 9.6
@@ -20649,12 +24979,13 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
                 invoice_ser = DNSerailizer(invoices, many=True)
 
@@ -20665,15 +24996,26 @@ def delivery_report(request):
                     single_invoice['delivery_number'] = invoice['dn_number']
                     single_invoice['delivery_date'] = invoice['dn_date']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
                 # context['message'] = invoice_ser.data
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
 
-            context['message'] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             
             return Response(context, status=status.HTTP_200_OK)
@@ -20685,11 +25027,12 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Overdue")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_ser = DNSerailizer(invoices, many=True)
@@ -20701,14 +25044,25 @@ def delivery_report(request):
                     single_invoice['delivery_number'] = invoice['dn_number']
                     single_invoice['delivery_date'] = invoice['dn_date']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
 
-            context['message'] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -20720,7 +25074,7 @@ def delivery_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -20736,6 +25090,7 @@ def delivery_report(request):
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -20747,13 +25102,25 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context['message'] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -20775,12 +25142,14 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -20798,7 +25167,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -20814,6 +25183,7 @@ def delivery_report(request):
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = DNSerailizer(invoices, many=True)
@@ -20825,12 +25195,25 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
-                context['message'] = total_data
+
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -20851,12 +25234,14 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -20874,7 +25259,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -20890,6 +25275,7 @@ def delivery_report(request):
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = DNSerailizer(invoices, many=True)
@@ -20901,12 +25287,25 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
-                context['message'] = total_data
+
+                    total_data.append((key, single_data))
+                
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -20927,12 +25326,14 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -20950,14 +25351,14 @@ def delivery_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -20965,6 +25366,7 @@ def delivery_report(request):
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Overdue")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = DNSerailizer(invoices, many=True)
@@ -20976,12 +25378,25 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
-                context['message'] = total_data
+
+                    total_data.append((key, single_data))
+                
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -21002,12 +25417,14 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -21036,13 +25453,15 @@ def delivery_report(request):
                     single_invoice['delivery_number'] = invoice['dn_number']
                     single_invoice['delivery_date'] = invoice['dn_date']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
                 # context[key] = invoice_ser.data
                 context['message'] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -21065,12 +25484,13 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_hours = int((interval.days*1440 + interval.seconds/60)/60)
 
-            total_data = {}
+            total_data = []
             for hour in range(0, total_hours+1):
                 current_time = start_time + timedelta(hours=hour)
                 invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
                                           .filter(date_created__hour=current_time.hour)\
                                           .filter(status="Pending")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
                 invoice_ser = DNSerailizer(invoices, many=True)
 
@@ -21081,12 +25501,24 @@ def delivery_report(request):
                     single_invoice['delivery_number'] = invoice['dn_number']
                     single_invoice['delivery_date'] = invoice['dn_date']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
-                total_data[current_time.strftime('%Y-%m-%d %I%p')] = single_data
-            context['message'] = total_data
+                total_data.append((current_time.strftime('%Y-%m-%d %I%p'), single_data))
+
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -21097,11 +25529,12 @@ def delivery_report(request):
             interval = (end_time - start_time)
             total_days = int(((interval.days*1440 + interval.seconds/60)/60)/24)
 
-            total_data = {}
+            total_data = []
             for day in range(0, total_days+1):
                 current_time = start_time + timedelta(days=day)
                 invoices = DeliveryNote.objects.filter(date_created__date=current_time.date())\
                                             .filter(status="Pending")\
+                                            .filter(vendor=request.user.id)\
                                             .order_by("date_created")
 
                 invoice_ser = DNSerailizer(invoices, many=True)
@@ -21113,14 +25546,25 @@ def delivery_report(request):
                     single_invoice['delivery_number'] = invoice['dn_number']
                     single_invoice['delivery_date'] = invoice['dn_date']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
-                total_data[current_time.strftime('%Y-%m-%d')] = single_data
+                total_data.append((current_time.strftime('%Y-%m-%d'), single_data))
 
-            context['message'] = total_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(total_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            before_data = a['results']
+            final_data = {k[0]:k[1] for k in before_data}
+            
+            a['message'] = final_data
+            a.pop("results")
+            a.pop("count")
+
+            context = {**a}
                 
             return Response(context, status=status.HTTP_200_OK)
         
@@ -21132,7 +25576,7 @@ def delivery_report(request):
             total_weeks = int((((interval.days*1440 + interval.seconds/60)/60)/24)/7)
 
             if total_weeks > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_weeks+1):
                     
                     begin = start_time + relativedelta(weeks=week)
@@ -21148,6 +25592,7 @@ def delivery_report(request):
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
                     invoice_ser = DNSerailizer(invoices, many=True)
                     key = f"{begin.strftime('%Y-%m-%d')} - {current_week.strftime('%Y-%m-%d')}"
@@ -21159,13 +25604,25 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
 
-                    total_data[key] = single_data
-                context['message'] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -21187,12 +25644,14 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -21210,7 +25669,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week)
@@ -21226,6 +25685,7 @@ def delivery_report(request):
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = DNSerailizer(invoices, many=True)
@@ -21237,12 +25697,24 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
-                context['message'] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -21263,12 +25735,14 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -21286,7 +25760,7 @@ def delivery_report(request):
             total_months = int(((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)
 
             if total_months > 0:
-                total_data = {}
+                total_data = []
                 for week in range(0, total_months+1):
                     
                     begin = start_time + relativedelta(months=week*3)
@@ -21301,6 +25775,7 @@ def delivery_report(request):
 
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
+                                                .filter(vendor=request.user.id)\
                                                 .filter(status="Pending")\
                                                 .order_by("date_created")
 
@@ -21313,12 +25788,24 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
-                context['message'] = total_data
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -21339,12 +25826,14 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -21362,14 +25851,14 @@ def delivery_report(request):
             total_year = int((((((interval.days*1440 + interval.seconds/60)/60)/24)/7)/4)/12)
 
             if total_year > 0:
-                total_data = {}
+                total_data = []
 
                 for year in range(total_year+1):
                     begin = start_time + relativedelta(years=year)
                     current_week = start_time + relativedelta(years=(year+1))
 
-                    if current_week > end_date:
-                        current_week = end_date
+                    if current_week > end_time:
+                        current_week = end_time
                         # break
                     if begin > end_time:
                         break
@@ -21377,6 +25866,7 @@ def delivery_report(request):
                     invoices = DeliveryNote.objects.filter(date_created__gte=begin)\
                                                 .filter(date_created__lte=current_week)\
                                                 .filter(status="Pending")\
+                                                .filter(vendor=request.user.id)\
                                                 .order_by("date_created")
 
                     invoice_ser = DNSerailizer(invoices, many=True)
@@ -21388,12 +25878,25 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
-                    total_data[key] = single_data
-                context['message'] = total_data
+
+                    total_data.append((key, single_data))
+
+                paginator = MyPagination()
+                invoices_per_page = paginator.paginate_queryset(total_data, request)
+                
+                a = paginator.get_paginated_response(invoices_per_page).data
+                before_data = a['results']
+                final_data = {k[0]:k[1] for k in before_data}
+                
+                a['message'] = final_data
+                a.pop("results")
+                a.pop("count")
+
+                context = {**a}
                 return Response(context, status=status.HTTP_200_OK)
 
             else:
@@ -21414,12 +25917,14 @@ def delivery_report(request):
                         single_invoice['delivery_number'] = invoice['dn_number']
                         single_invoice['delivery_date'] = invoice['dn_date']
                         single_invoice['status'] = invoice['status']
-                        single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                        single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                         single_invoice['id'] = invoice['id']
 
                         single_data.append(single_invoice)
                     # context[key] = invoice_ser.data
                     context['message'] = {key: single_data}
+                    context['next'] = None
+                    context['previous'] = None
 
                     return Response(context, status=status.HTTP_200_OK)
 
@@ -21448,13 +25953,15 @@ def delivery_report(request):
                     single_invoice['delivery_number'] = invoice['dn_number']
                     single_invoice['delivery_date'] = invoice['dn_date']
                     single_invoice['status'] = invoice['status']
-                    single_invoice['date_created'] = invoice['date_created'].strftime("%d-%m-%Y")
+                    single_invoice['date_created'] = invoice['date_created'].split('T')[0] + " " + invoice['date_created'].split('T')[1].split('.')[0][:-3]
                     single_invoice['id'] = invoice['id']
 
                     single_data.append(single_invoice)
 
                 # context[key] = invoice_ser.data
                 context['message'] = {key: single_data}
+                context['next'] = None
+                context['previous'] = None
 
                 return Response(context, status=status.HTTP_200_OK)
 
@@ -21480,6 +25987,10 @@ def item_report(request):
     start_date = request.query_params.get("start_date", None)
     end_date = request.query_params.get("end_date", None)
 
+    if not start_date or not end_date:
+        context['message'] = "You need to select start date and end date"
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
     if measure:
         measure = measure.lower()
     else:
@@ -21499,16 +26010,24 @@ def item_report(request):
             for item in item_ser.data:
                 single_item = {}
                 single_item['id'] = item['id']
-                single_item['name'] = item['dn_number']
-                single_item['sku'] = item['dn_date']
-                single_item['date_created'] = item['date_created'].strftime("%d-%m-%Y")
+                single_item['name'] = item['name']
+                single_item['sku'] = item['sku']
+                single_item['date_created'] = item['date_created'].split('T')[0] + " " + item['date_created'].split('T')[1].split('.')[0][:-3]
                 single_item['cost_price'] = item['cost_price']
                 single_item['sales_price'] = item['sales_price']
                 single_item['sales_tax'] = item['sales_tax']
 
                 single_data.append(single_item)
 
-            context['message'] = single_data
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
             
             return Response(context, status=status.HTTP_200_OK)
         else:
@@ -21528,7 +26047,15 @@ def item_report(request):
         if len(items) > 0:
             item_ser = ItemSerializer(items, many=True, fields=("id", "name", "sku", "cost_price", "sales_price", "sales_tax"))
             
-            context['message'] = item_ser.data
+            paginator = MyPagination()
+            items_per_page = paginator.paginate_queryset(item_ser.data, request)
+            
+            a = paginator.get_paginated_response(items_per_page).data
+            
+            a['message'] = items_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
             return Response(context, status=status.HTTP_200_OK)
 
         else:
@@ -21549,15 +26076,24 @@ def item_report(request):
             for item in item_ser.data:
                 single_item = {}
                 single_item['id'] = item['id']
-                single_item['name'] = item['dn_number']
-                single_item['sku'] = item['dn_date']
-                single_item['date_created'] = item['date_created'].strftime("%d-%m-%Y")
+                single_item['name'] = item['name']
+                single_item['sku'] = item['sku']
+                single_item['date_created'] = item['date_created'].split('T')[0] + " " + item['date_created'].split('T')[1].split('.')[0][:-3]
                 single_item['cost_price'] = item['cost_price']
                 single_item['sales_price'] = item['sales_price']
                 single_item['sales_tax'] = item['sales_tax']
 
                 single_data.append(single_item)
-            context['message'] = single_data
+
+            paginator = MyPagination()
+            invoices_per_page = paginator.paginate_queryset(single_data, request)
+            
+            a = paginator.get_paginated_response(invoices_per_page).data
+            
+            a['message'] = invoices_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
             return Response(context, status=status.HTTP_200_OK)
 
         else:
@@ -21577,8 +26113,12 @@ def item_report(request):
 
     # 10.5
     elif measure == "item search by sales price":
-        upper_price = request.query_params.get("upper_price")
-        lower_price = request.query_params.get("lower_price")
+        upper_price = request.query_params.get("upper_price", None)
+        lower_price = request.query_params.get("lower_price", None)
+
+        if not upper_price or not lower_price:
+            context['message'] = "You need to pass upper and lower price"
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
         items = Item.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
@@ -21588,7 +26128,16 @@ def item_report(request):
                             .order_by("date_created")
         if len(items) > 0:
             item_ser = ItemSerializer(items, many=True, fields=("id", "name", "cost_price", "sales_price"))
-            context['message'] = item_ser.data
+
+            paginator = MyPagination()
+            items_per_page = paginator.paginate_queryset(item_ser.data, request)
+            
+            a = paginator.get_paginated_response(items_per_page).data
+            
+            a['message'] = items_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
             return Response(context, status=status.HTTP_200_OK)
 
         else:
@@ -21604,6 +26153,10 @@ def item_report(request):
         upper_price = request.query_params.get("upper_price")
         lower_price = request.query_params.get("lower_price")
 
+        if not upper_price or not lower_price:
+            context['message'] = "You need to pass upper and lower price"
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+
         items = Item.objects.filter(vendor=request.user.id)\
                             .filter(date_created__gte=start_date)\
                             .filter(date_created__lte=end_date)\
@@ -21612,7 +26165,16 @@ def item_report(request):
                             .order_by("date_created")
         if len(items) > 0:
             item_ser = ItemSerializer(items, many=True, fields=("id", "name", "cost_price", "sales_price"))
-            context['message'] = item_ser.data
+
+            paginator = MyPagination()
+            items_per_page = paginator.paginate_queryset(item_ser.data, request)
+            
+            a = paginator.get_paginated_response(items_per_page).data
+            
+            a['message'] = items_per_page
+            a.pop("results")
+            a.pop("count")
+            context = {**a}
             return Response(context, status=status.HTTP_200_OK)
 
         else:

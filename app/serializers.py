@@ -1,5 +1,6 @@
 import json
 from rest_framework import serializers
+from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.hashers import check_password
 from drf_tweaks.serializers import ModelSerializer
@@ -222,7 +223,7 @@ class CustomerReportSerializer(DynamicFieldsModelSerializer):
 class ItemSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Item
-        fields = ["id", "name", "description", "cost_price", "sales_price", "sales_tax", "sku"]
+        fields = ["id", "name", "description", "cost_price", "sales_price", "sales_tax", "sku", "date_created"]
 
 
 
@@ -430,6 +431,11 @@ class InvoiceCreate(ModelSerializer):
 
         if len(recurring_data) > 0:
             new_invoice.recurring_data = recurring_data
+
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            new_invoice.recurring_date = recurring_dict['start_date']
             new_invoice.recurring = True
         else:
             new_invoice.recurring = False
@@ -455,7 +461,7 @@ class InvoiceSerializer(DynamicFieldsModelSerializer):
         fields = [ "id", "customer","invoice_number",
             "invoice_date","po_number","due_date","ship_to","shipping_address","bill_to","billing_address","notes", "quantity_list",
             "item_total","tax","add_charges","sub_total","discount_type","discount_amount","grand_total", "status", "item_list", "notes", "terms",
-            "recurring", "recurring_data"]
+            "recurring", "recurring_data", "emailed_date", "date_created", "recurring_date"]
 
 
 
@@ -552,6 +558,10 @@ class InvoiceEditSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             instance.recurring_data = recurring_data
             instance.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            instance.recurring_date = recurring_dict['start_date']
         else:
             instance.recurring = False
 
@@ -697,6 +707,10 @@ class ProformaCreateSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             new_proforma.recurring_data = recurring_data
             new_proforma.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            new_proforma.recurring_date = recurring_dict['start_date']
         else:
             new_proforma.recurring = False
 
@@ -719,7 +733,7 @@ class ProformerInvoiceSerailizer(DynamicFieldsModelSerializer):
                 "id", "customer", 
                     "invoice_number", "invoice_date", "po_number", "due_date", "notes", "item_list", "quantity_list",
                     "item_total", "tax", "add_charges", "grand_total", "status", "terms", "recurring", "recurring_data",
-                    "bill_to", "billing_address", "ship_to", "shipping_address"]
+                    "bill_to", "billing_address", "ship_to", "shipping_address", "date_created"]
 
 
 
@@ -807,6 +821,10 @@ class ProformaEditSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             instance.recurring_data = recurring_data
             instance.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            instance.recurring_date = recurring_dict['start_date']
         else:
             instance.recurring = False
 
@@ -951,6 +969,10 @@ class PurchaseCreateSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             new_purchaseorder.recurring_data = recurring_data
             new_purchaseorder.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            new_purchaseorder.recurring_date = recurring_dict['start_date']
         else:
             new_purchaseorder.recurring = False
 
@@ -970,7 +992,7 @@ class PurchaseOrderSerailizer(DynamicFieldsModelSerializer):
         fields = [
                 "id", "customer", 
                     "po_number", "po_date", "due_date", "ship_to", "notes", "shipping_address", "bill_to", "billing_address",
-                    "item_list", "quantity_list",
+                    "item_list", "quantity_list", "date_created",
                     "item_total", "tax", "add_charges", "grand_total",  "status", "terms", "recurring", "recurring_data"]
 
 
@@ -1057,6 +1079,10 @@ class PurchaseEditSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             instance.recurring_data = recurring_data
             instance.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            instance.recurring_date = recurring_dict['start_date']
         else:
             instance.recurring = False
 
@@ -1194,6 +1220,10 @@ class EstimateCreateSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             new_estimate.recurring_data = recurring_data
             new_estimate.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            new_estimate.recurring_date = recurring_dict['start_date']
         else:
             new_estimate.recurring = False
 
@@ -1216,7 +1246,7 @@ class EstimateSerailizer(DynamicFieldsModelSerializer):
     class Meta:
         model = Estimate
         fields = [
-                "id", "customer", "po_number", "due_date", "recurring", "recurring_data",
+                "id", "customer", "po_number", "due_date", "recurring", "recurring_data", "date_created",
                     "estimate_number", "estimate_date", "ship_to", "shipping_address", "bill_to", "billing_address",
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
         
@@ -1310,6 +1340,10 @@ class EstimateEditSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             instance.recurring_data = recurring_data
             instance.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            instance.recurring_date = recurring_dict['start_date']
         else:
             instance.recurring = False
 
@@ -1449,6 +1483,10 @@ class QuoteCreateSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             new_quote.recurring_data = recurring_data
             new_quote.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            new_quote.recurring_date = recurring_dict['start_date']
         else:
             new_quote.recurring = False
 
@@ -1466,7 +1504,7 @@ class QuoteSerailizer(DynamicFieldsModelSerializer):
     class Meta:
         model = Quote
         fields = [
-                "id", "customer", "recurring", "recurring_data", "due_date",
+                "id", "customer", "recurring", "recurring_data", "due_date", "date_created",
                     "quote_number", "quote_date", "po_number", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
 
@@ -1555,6 +1593,10 @@ class QuoteEditSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             instance.recurring_data = recurring_data
             instance.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            instance.recurring_date = recurring_dict['start_date']
         else:
             instance.recurring = False
 
@@ -1697,6 +1739,10 @@ class CNCreateSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             new_credit.recurring_data = recurring_data
             new_credit.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            new_credit.recurring_date = recurring_dict['start_date']
         else:
             new_credit.recurring = False
 
@@ -1714,7 +1760,7 @@ class CreditNoteSerailizer(DynamicFieldsModelSerializer):
     class Meta:
         model = CreditNote
         fields = [
-                "id", "customer", 
+                "id", "customer", "date_created",
                     "cn_number", "cn_date", "po_number", "due_date", "ship_to", "shipping_address", "notes",  "item_list", "quantity_list", 
                     "item_total", "tax", "add_charges", "grand_total", "status", "terms", "recurring", "recurring_data", 
                     "bill_to", "billing_address"]
@@ -1802,6 +1848,10 @@ class CNEditSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             instance.recurring_data = recurring_data
             instance.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            instance.recurring_date = recurring_dict['start_date']
         else:
             instance.recurring = False
 
@@ -1952,6 +2002,10 @@ class REceiptCreateSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             new_receipt.recurring_data = recurring_data
             new_receipt.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            new_receipt.recurring_date = recurring_dict['start_date']
         else:
             new_receipt.recurring = False
 
@@ -1969,7 +2023,7 @@ class ReceiptSerailizer(DynamicFieldsModelSerializer):
     class Meta:
         model = Receipt
         fields = [
-                "id", "customer", "recurring", "recurring_data",
+                "id", "customer", "recurring", "recurring_data", "date_created",
                     "receipt_number", "receipt_date", "po_number", "due_date", "ship_to", "shipping_address", "bill_to", "billing_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]
 
@@ -2064,6 +2118,10 @@ class ReceiptEditSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             instance.recurring_data = recurring_data
             instance.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            instance.recurring_date = recurring_dict['start_date']
         else:
             instance.recurring = False
 
@@ -2211,6 +2269,10 @@ class DNCreateSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             new_delivery.recurring_data = recurring_data
             new_delivery.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            new_delivery.recurring_date = recurring_dict['start_date']
         else:
             new_delivery.recurring = False
 
@@ -2228,7 +2290,7 @@ class DNSerailizer(DynamicFieldsModelSerializer):
     class Meta:
         model = DeliveryNote
         fields = [
-                "id", "customer", "recurring", "recurring_data", "bill_to", "billing_address",
+                "id", "customer", "recurring", "recurring_data", "bill_to", "billing_address", "date_created",
                     "dn_number", "dn_date", "po_number", "due_date", "ship_to", "shipping_address", 
                     "notes", "item_list", "quantity_list", "item_total", "tax", "add_charges", "grand_total", "status", "terms"]      
 
@@ -2322,6 +2384,10 @@ class DNEditSerializer(ModelSerializer):
         if len(recurring_data) > 0:
             instance.recurring_data = recurring_data
             instance.recurring = True
+            if isinstance(recurring_data, str):
+                recurring_dict = json.loads(recurring_data)
+            
+            instance.recurring_date = recurring_dict['start_date']
         else:
             instance.recurring = False
 
@@ -2553,3 +2619,17 @@ class InbuiltLogoSerializer(serializers.ModelSerializer):
         model = InbuiltLogo
         fields = ['name', 'photo_path', 'category']
     
+
+
+
+
+
+
+
+
+# pagination
+class MyPagination(PageNumberPagination):
+    page_size = 100
+    page_query_param = "page"
+    # page_size_query_param = 'page_size'
+    # max_page_size = 1000
