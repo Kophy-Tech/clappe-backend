@@ -111,7 +111,7 @@ class DynamicFieldsModelSerializer(serializers.ModelSerializer):
 ############################################### customer #############################################################################
 
 
-class CustomerSerializer(serializers.Serializer):
+class CustomerSerializer(ModelSerializer):
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
     business_name = serializers.CharField(required=True)
@@ -120,17 +120,27 @@ class CustomerSerializer(serializers.Serializer):
     phone_number = serializers.CharField(required=True)
     phone_number_type = serializers.CharField(required=True)
     taxable = serializers.BooleanField(required=True)
-    invoice_pref = serializers.CharField(required=False)
-    pdf_template = serializers.CharField(required=False)
+    invoice_pref = serializers.CharField(required=True)
+    pdf_template = serializers.CharField(required=True)
 
-    ship_to = serializers.CharField(required=False)
-    shipping_address = serializers.CharField(required=False)
-    bill_to = serializers.CharField(required=False)
-    billing_address = serializers.CharField(required=False)
+    ship_to = serializers.CharField(required=True)
+    shipping_address = serializers.CharField(required=True)
+    bill_to = serializers.CharField(required=True)
+    billing_address = serializers.CharField(required=True)
     notes = serializers.CharField(required=False)
     terms = serializers.CharField(required=False)
 
     logo = serializers.ImageField(required=False)
+
+
+    required_error = "{fieldname} is required."
+    blank_error = "{fieldname} can not be blank."
+
+    class Meta:
+        model = Customer
+        fields = ["first_name", "last_name", "business_name", "address", "email", "phone_number", "phone_number_type", \
+                    "taxable", "invoice_pref", "pdf_template", "ship_to", "shipping_address", "bill_to", "billing_address", \
+                    "notes", "terms", "logo"]
 
 
     def save(self, request):
