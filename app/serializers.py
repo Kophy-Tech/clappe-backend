@@ -144,7 +144,7 @@ class CustomerSerializer(serializers.Serializer):
         new_customer.phone_number_type = self.validated_data["phone_number_type"]
         new_customer.taxable = self.validated_data["taxable"]
         new_customer.invoice_pref = self.validated_data["invoice_pref"]
-        new_customer.pdf_template = self.validated_data["pdf_template"]
+        new_customer.pdf_template = self.validated_data.get("pdf_template", "Clapbill 1")
         
         new_customer.ship_to = self.validated_data["ship_to"]
         new_customer.shipping_address = self.validated_data["shipping_address"]

@@ -338,6 +338,7 @@ def my_customer(request):
 def customer(request):
 
     if request.method == "POST":
+        print(request.data)
         form = CustomerSerializer(data=request.data)
         context = {}
 
