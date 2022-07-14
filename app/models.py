@@ -61,7 +61,7 @@ class Customer(models.Model):
     taxable = models.BooleanField("Taxable", default=False, null=False, blank=False)
     invoice_pref = models.CharField("Invoice Preference", max_length=15, blank=False, null=False)
     logo = CloudinaryField("Logo photo", null=True, blank=True)
-    pdf_template = models.CharField("PDF Template Number", null=True, blank=True, max_length=64, default="Clapbill 1")
+    pdf_number = models.CharField("PDF Template Number", null=True, blank=True, max_length=64, default="Clapbill 1")
     ship_to = models.CharField("Ship to", max_length=500, null=False, blank=False)
     shipping_address = models.CharField("Shipping Address", max_length=500, null=False, blank=False)
     billing_address = models.CharField("Billing Address", max_length=500, null=False, blank=False)

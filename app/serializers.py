@@ -121,7 +121,7 @@ class CustomerSerializer(ModelSerializer):
     phone_number_type = serializers.CharField(required=True)
     taxable = serializers.BooleanField(required=True)
     invoice_pref = serializers.CharField(required=True)
-    pdf_template = serializers.CharField(required=True)
+    pdf_number = serializers.CharField(required=True)
 
     ship_to = serializers.CharField(required=True)
     shipping_address = serializers.CharField(required=True)
@@ -139,7 +139,7 @@ class CustomerSerializer(ModelSerializer):
     class Meta:
         model = Customer
         fields = ["first_name", "last_name", "business_name", "address", "email", "phone_number", "phone_number_type", \
-                    "taxable", "invoice_pref", "pdf_template", "ship_to", "shipping_address", "bill_to", "billing_address", \
+                    "taxable", "invoice_pref", "pdf_number", "ship_to", "shipping_address", "bill_to", "billing_address", \
                     "notes", "terms", "logo"]
 
 
@@ -154,7 +154,7 @@ class CustomerSerializer(ModelSerializer):
         new_customer.phone_number_type = self.validated_data["phone_number_type"]
         new_customer.taxable = self.validated_data["taxable"]
         new_customer.invoice_pref = self.validated_data["invoice_pref"]
-        new_customer.pdf_template = self.validated_data.get("pdf_template", "Clapbill 1")
+        new_customer.pdf_number = self.validated_data.get("pdf_number", "Clapbill 1")
         
         new_customer.ship_to = self.validated_data["ship_to"]
         new_customer.shipping_address = self.validated_data["shipping_address"]
@@ -186,7 +186,7 @@ class CustomerSerializer(ModelSerializer):
         instance.phone_number_type = validated_data.get("phone_number_type", instance.phone_number_type)
         instance.taxable = validated_data.get("taxable", instance.taxable)
         instance.invoice_pref = validated_data.get("invoice_pref", instance.invoice_pref)
-        instance.pdf_template = validated_data.get("pdf_template", instance.pdf_template)
+        instance.pdf_number = validated_data.get("pdf_number", instance.pdf_template)
         
         instance.ship_to = validated_data.get("ship_to", instance.ship_to)
         instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
@@ -212,7 +212,7 @@ class CustomerDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = ["id", "first_name", "last_name", "business_name", "address", "email", "phone_number", "phone_number_type", 
-                    "taxable", "invoice_pref", "logo", "pdf_template", "ship_to", "shipping_address", "billing_address", 
+                    "taxable", "invoice_pref", "logo", "pdf_number", "ship_to", "shipping_address", "billing_address", 
                     "bill_to", "notes", "terms", "status", "date_created" ]
 
 
@@ -221,7 +221,7 @@ class CustomerReportSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Customer
         fields = ["id", "first_name", "last_name", "business_name", "address", "email", "phone_number", "phone_number_type", 
-                    "taxable", "invoice_pref", "logo", "pdf_template", "ship_to", "shipping_address", "billing_address", 
+                    "taxable", "invoice_pref", "logo", "pdf_number", "ship_to", "shipping_address", "billing_address", 
                     "bill_to", "notes", "terms", "status", "date_created" ]
 
 
