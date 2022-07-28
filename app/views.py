@@ -26196,10 +26196,10 @@ def item_report(request):
 # @parser_classes([FormParser, MultiPartParser])
 def dashboard(request):
 
-print(request.headers)
-print()
-print()
-print(request.META)
+    print(request.headers)
+    print()
+    print()
+    print(request.META)
 
     context = {}
 
