@@ -590,6 +590,7 @@ class PayDeliveryNote(models.Model):
 
 class Item(models.Model):
     name = models.CharField("Name", max_length=1024, blank=False, null=False, unique=False)
+    quantity = models.CharField(max_length=1024, blank=True, null=True, default=True)
     description = models.CharField("Item Description", max_length=2048, blank=True, null=True)
     cost_price = models.FloatField("Cost Price", blank=False, null=False)
     sales_price = models.FloatField("Sales Price", blank=False, null=False)

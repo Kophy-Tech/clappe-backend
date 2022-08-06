@@ -1797,7 +1797,9 @@ def create_item(request):
     if request.method == "POST":
         if not request.user.business_name or not request.user.address or not request.user.phone_number:
             return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
-        data = request.data
+        
+        print(request.data)
+        data = {k:v for k, v in request.data.items()}
         data['user_id'] = request.user.id
         form = CreateItemSerializer(data=data)
         context = {}
@@ -1852,9 +1854,13 @@ def edit_item(request, id):
     elif request.method == 'PUT':
         if not request.user.business_name or not request.user.address or not request.user.phone_number:
             return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
+        
         try:
+            print(request.data)
             item = Item.objects.get(id=id)
-            form = CreateItemSerializer(instance=item, data=request.data)
+            data = {k:v for k, v in request.data.items()}
+            data['user_id'] = request.user.id
+            form = CreateItemSerializer(instance=item, data=data)
             context = {}
 
             if form.is_valid():

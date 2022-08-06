@@ -242,25 +242,33 @@ class ItemSerializer(DynamicFieldsModelSerializer):
 
 
 class CreateItemSerializer(ModelSerializer):
-    user_id = serializers.IntegerField()
-    cost_price = serializers.CharField(required=True)
-    sales_price = serializers.CharField(required=True)
-    sales_tax = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    user_id = serializers.IntegerField(write_only=True)
+    quantity = serializers.CharField(required=True)
+    cost_price = serializers.FloatField(required=True)
+    sales_price = serializers.FloatField(required=True)
+    sales_tax = serializers.FloatField(required=True)
 
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
     class Meta:
         model = Item
-        fields = ["name", "description", "cost_price", "sales_price", "sales_tax", "user_id"]
+        fields = ["name", "description", "cost_price", "sales_price", "sales_tax", "user_id", "quantity"]
 
     
     def validate(self, data):
-        name_count = Item.objects.filter(name=data['name']).filter(vendor__id=data['user_id']).count()
-        if name_count > 0:
-            raise serializers.ValidationError({"name":["Item with this name already exists"]})
+        if self.instance:
+            name_count = Item.objects.filter(name=data['name']).filter(vendor__id=data['user_id']).exclude(id=self.instance.id).count()
+            if name_count > 0:
+                raise serializers.ValidationError({"name":["Item with this name already exists"]})
 
-        return data
+            return data
+        else:
+            name_count = Item.objects.filter(name=data['name']).filter(vendor__id=data['user_id']).count()
+            if name_count > 0:
+                raise serializers.ValidationError({"name":["Item with this name already exists"]})
+
+            return data
 
     def validate_cost_price(self, value):
         try:
@@ -275,18 +283,17 @@ class CreateItemSerializer(ModelSerializer):
             raise serializers.ValidationError("A valid number is required for sales price")
     
     def validate_sales_tax(self, value):
-        if len(value) > 0:
             try:
                 return float(value)
+
             except Exception as e:
                 raise serializers.ValidationError("A valid decimal number is required for sales tax")
-        else:
-            return 0.0
 
     
     def save(self, request):
         new_item = Item()
         new_item.name = self.validated_data['name']
+        new_item.quantity = self.validated_data['quantity']
         new_item.description = self.validated_data.get('description', "")
         new_item.cost_price = self.validated_data['cost_price']
         new_item.sales_price = self.validated_data['sales_price']
