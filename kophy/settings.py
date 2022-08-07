@@ -80,14 +80,23 @@ WSGI_APPLICATION = 'kophy.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+DATABASE_URL = os.environ.get("DATABASE_URL", None)
+
+DB_HOST = DATABASE_URL.split("@")[-1].split(":")[0]
+DB_NAME = DATABASE_URL.split("@")[-1].split("/")[-1]
+DB_USER = DATABASE_URL.split(":")[1].replace("//", '')
+DB_PORT = DATABASE_URL.split("@")[-1].split("/")[0].split(":")[-1]
+DB_PASSWORD = DATABASE_URL.split("@")[0].split(":")[-1]
+
+
 DATABASES = {
     'default': {
         'ENGINE': os.environ.get("DB_ENGINE", 'django.db.backends.postgresql'),
-        'NAME': os.environ.get("DB_NAME"),
-        'USER': os.environ.get("DB_USER"),
-        'PASSWORD': os.environ.get("DB_PASSWORD"),
-        'HOST': os.environ.get("DB_HOST"),
-        'PORT': os.environ.get("DB_PORT"),
+        'NAME': DB_NAME,
+        'USER': DB_USER,
+        'PASSWORD': DB_PASSWORD,
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
     }
 }
 
