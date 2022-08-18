@@ -11,7 +11,7 @@ from .models import CreditNote, Customer, DeliveryNote, Item, MyUsers, Invoice, 
 
 from .forms import set_tasks, set_recurring_task
 from .utils import delete_tasks, get_sku, upload_inbuilt_logo, upload_pdf_template, validate_add_charges, validate_discount_amount,validate_item_list,\
-                    validate_recurring, validate_tax, password_validator, process_picture, get_number
+                    validate_recurring, validate_tax, password_validator, get_number
 import pycountry
 
 
@@ -121,7 +121,7 @@ class CustomerSerializer(ModelSerializer):
     phone_number_type = serializers.CharField(required=True)
     taxable = serializers.BooleanField(required=True)
     invoice_pref = serializers.CharField(required=True)
-    pdf_number = serializers.CharField(required=True)
+    pdf_number = serializers.CharField(required=False)
 
     ship_to = serializers.CharField(required=True)
     shipping_address = serializers.CharField(required=True)
@@ -131,6 +131,8 @@ class CustomerSerializer(ModelSerializer):
     terms = serializers.CharField(required=False)
 
     logo = serializers.ImageField(required=False)
+    logo_image = serializers.ImageField(required=False)
+    logo_image_link = serializers.URLField(required=False)
 
 
     required_error = "{fieldname} is required."
@@ -140,7 +142,7 @@ class CustomerSerializer(ModelSerializer):
         model = Customer
         fields = ["first_name", "last_name", "business_name", "address", "email", "phone_number", "phone_number_type", \
                     "taxable", "invoice_pref", "pdf_number", "ship_to", "shipping_address", "bill_to", "billing_address", \
-                    "notes", "terms", "logo"]
+                    "notes", "terms", "logo", "logo_image", "logo_image_link"]
 
 
     def save(self, request):
@@ -167,10 +169,15 @@ class CustomerSerializer(ModelSerializer):
 
         # upload logo
         if "logo" in self.validated_data:
-            new_customer.logo = process_picture(self.validated_data['logo'], new_customer, "logo")
+            new_customer.logo = self.validated_data['logo']
+
+        if "logo_image_link" in self.validated_data:
+            new_customer.logo = self.validated_data['logo_image_link']
+
+        if "logo_image" in self.validated_data:
+            new_customer.logo = self.validated_data['logo_image']
 
         new_customer.save()
-        
 
         return new_customer
 
@@ -186,7 +193,7 @@ class CustomerSerializer(ModelSerializer):
         instance.phone_number_type = validated_data.get("phone_number_type", instance.phone_number_type)
         instance.taxable = validated_data.get("taxable", instance.taxable)
         instance.invoice_pref = validated_data.get("invoice_pref", instance.invoice_pref)
-        instance.pdf_number = validated_data.get("pdf_number", instance.pdf_template)
+        instance.pdf_number = validated_data.get("pdf_number", instance.pdf_number)
         
         instance.ship_to = validated_data.get("ship_to", instance.ship_to)
         instance.shipping_address = validated_data.get("shipping_address", instance.shipping_address)
@@ -197,8 +204,14 @@ class CustomerSerializer(ModelSerializer):
 
 
         # upload logo
-        if "logo" in validated_data:
-            instance.logo = process_picture(validated_data['logo'], instance, "logo")
+        if "logo" in self.validated_data:
+            instance.logo = self.validated_data['logo']
+
+        if "logo_image_link" in self.validated_data:
+            instance.logo = self.validated_data['logo_image_link']
+
+        if "logo_image" in self.validated_data:
+            instance.logo = self.validated_data['logo_image']
 
         instance.save()
 
@@ -2499,13 +2512,13 @@ class ProfileSerializer(serializers.Serializer):
         instance.tax_rate = validated_data.get('tax_rate', instance.tax_rate)
         
         if "photo_path" in validated_data:
-            instance.photo_path = process_picture(validated_data['photo_path'], instance)
+            instance.photo_path = validated_data['photo_path']
 
         if "logo_path" in validated_data:
-            instance.logo_path = process_picture(validated_data['logo_path'], instance, "logo")
+            instance.logo_path = validated_data['logo_path']
 
         if "signature" in validated_data:
-            instance.signature = process_picture(validated_data['signature'], instance, "signature")
+            instance.signature = validated_data['signature']
 
 
         instance.save()

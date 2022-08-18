@@ -403,6 +403,7 @@ def edit_customer(request, id):
             updated_customer = form.update(customer, form.validated_data)
             updated_customer.save()
             context['message'] = "Customer updated successfully"
+            
             context['customer'] = {"id": updated_customer.id, **CustomerSerializer(instance=updated_customer).data}
 
             return Response(context, status=status.HTTP_200_OK)
