@@ -63,6 +63,7 @@ def signup(request):
         return Response(context, status=status.HTTP_200_OK)
 
     if request.method == 'POST':
+        print(request.data)
         serializer = SignUpSerializer(data=request.data)
         context = {}
         if serializer.is_valid():
@@ -395,6 +396,7 @@ def edit_customer(request, id):
 
 
     if request.method == "PUT":
+        print(request.data)
         customer = Customer.objects.get(id=id)
         form = CustomerSerializer(instance=customer, data=request.data)
         context = {}
@@ -403,7 +405,7 @@ def edit_customer(request, id):
             updated_customer = form.update(customer, form.validated_data)
             updated_customer.save()
             context['message'] = "Customer updated successfully"
-            
+
             context['customer'] = {"id": updated_customer.id, **CustomerSerializer(instance=updated_customer).data}
 
             return Response(context, status=status.HTTP_200_OK)
@@ -578,6 +580,7 @@ def edit_invoice(request, id):
         if not request.user.business_name or not request.user.address or not request.user.phone_number:
             return Response({"message": "You have to set your business name, address and phone number"}, status=status.HTTP_403_FORBIDDEN)
 
+        
         try:
             invoice = Invoice.objects.get(id=id)
             form = InvoiceEditSerializer(instance=invoice, data=request.data)
@@ -677,6 +680,7 @@ def edit_invoice(request, id):
 def pay_invoice(request):
     
     if request.method == "POST":
+        print(request.data)
         form = PayInvoiceSerializer(data=request.data)
         context = {}
 
@@ -961,6 +965,7 @@ def edit_proforma(request, id):
 def pay_proforma(request):
     
     if request.method == "POST":
+        print(request.data)
         form = PayProformaSerializer(data=request.data)
         context = {}
 
@@ -1243,6 +1248,7 @@ def edit_purchaseorder(request, id):
 def pay_purchaseorder(request):
     
     if request.method == "POST":
+        print(request.data)
         form = PayPurchaseSerializer(data=request.data)
         context = {}
 
@@ -1720,6 +1726,7 @@ def edit_estimate(request, id):
 def pay_estimate(request):
     
     if request.method == "POST":
+        print(request.data)
         form = PayEstimateSerializer(data=request.data)
         context = {}
 
@@ -1769,7 +1776,7 @@ def pay_estimate(request):
 
 ################################################ items ##########################################################
 
-@api_view(["GET", "POST"])
+@api_view(["GET"])
 @authentication_classes((MyAuthentication, ))
 @permission_classes((IsAuthenticated, ))
 def all_items(request):
@@ -2154,6 +2161,7 @@ def edit_quote(request, id):
 def pay_quote(request):
     
     if request.method == "POST":
+        print(request.data)
         form = PayQuoteSerializer(data=request.data)
         context = {}
 
@@ -2441,6 +2449,7 @@ def edit_receipt(request, id):
 def pay_receipt(request):
     
     if request.method == "POST":
+        print(request.data)
         form = PayReceiptSerializer(data=request.data)
         context = {}
 
@@ -2730,6 +2739,7 @@ def edit_credit(request, id):
 def pay_credit(request):
     
     if request.method == "POST":
+        print(request.data)
         form = PayCNSerializer(data=request.data)
         context = {}
 
@@ -3015,6 +3025,7 @@ def edit_delivery(request, id):
 def pay_delivery(request):
     
     if request.method == "POST":
+        print(request.data)
         form = PayDNSerializer(data=request.data)
         context = {}
 
@@ -3079,6 +3090,7 @@ def change_profile(request):
         return Response(context, status=status.HTTP_200_OK)
 
     if request.method == "POST":
+        print(request.data)
         context = {}
 
         form = ProfileSerializer(instance=request.user, data=request.data)
@@ -3126,6 +3138,7 @@ def change_password(request):
 
 
     if request.method == "POST":
+        print(request.data)
         context = {}
         # my_profile = PasswordChangeSerializer(instance=request.user)
 
@@ -3174,6 +3187,7 @@ def change_preference(request):
     
 
     if request.method == "POST":
+        print(request.data)
         context = {}
         pref_ser = PreferenceSerializer(instance=my_preference, data=request.data)
 
@@ -3204,43 +3218,6 @@ def change_preference(request):
 
 
 
-# @api_view(["GET", "POST"])
-# @authentication_classes((MyAuthentication, ))
-# @permission_classes((IsAuthenticated, ))
-# def change_payment(request):
-
-#     my_preference = PaymentSerializer(instance=request.user)
-
-
-#     if request.method == "GET":
-#             context = {**my_preference.data}
-#             return Response(context, status=status.HTTP_200_OK)
-    
-
-#     if request.method == "POST":
-#         context = {}
-#         payment_info = PaymentSerializer(instance=my_preference, data=request.data)
-
-#         if payment_info.is_valid():
-#             result = payment_info.update(request)
-
-#             context['message'] = "Payment info Saved successfully"
-#             context['preference'] = {**payment_info.validated_data}
-
-#             return Response(context, status=status.HTTP_200_OK)
-
-#         else:
-
-#             errors = {**payment_info.errors}
-#             new_errors = {key: value[0] for key,value in errors.items()}
-#             errors_list = [k for k in new_errors.values()]
-#             context = {'message': errors_list[0], 'errors': new_errors}
-
-#             return Response(context, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
 
 
 @api_view(["GET", "POST"])
@@ -3250,6 +3227,7 @@ def change_preference(request):
 def get_number(request):
 
     if request.method == "POST":
+        print(request.data)
         num_type = request.data.get("type", None)
 
         context = {}

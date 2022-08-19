@@ -132,11 +132,22 @@ class CustomerSerializer(ModelSerializer):
 
     logo = serializers.ImageField(required=False)
     logo_image = serializers.ImageField(required=False)
-    logo_image_link = serializers.URLField(required=False)
+    logo_image_link = serializers.URLField(required=False, allow_blank=True, allow_null=True)
 
 
     required_error = "{fieldname} is required."
     blank_error = "{fieldname} can not be blank."
+
+    # overriding the validation, 
+    def run_validation(self, data):
+        logo_image_link = data.get("logo_image_link", None)
+        link_name = "res.cloudinary.com/smartkophy/image/upload"
+        if logo_image_link:
+            if not link_name in logo_image_link:
+                data['logo_image_link'] = None
+                
+        validated_data = super().run_validation(data=data)
+        return validated_data
 
     class Meta:
         model = Customer
@@ -169,13 +180,16 @@ class CustomerSerializer(ModelSerializer):
 
         # upload logo
         if "logo" in self.validated_data:
-            new_customer.logo = self.validated_data['logo']
+            if self.validated_data['logo']:
+                new_customer.logo = self.validated_data['logo']
 
         if "logo_image_link" in self.validated_data:
-            new_customer.logo = self.validated_data['logo_image_link']
+            if self.validated_data['logo_image_link']:
+                new_customer.logo = self.validated_data['logo_image_link']
 
         if "logo_image" in self.validated_data:
-            new_customer.logo = self.validated_data['logo_image']
+            if self.validated_data['logo_image']:
+                new_customer.logo = self.validated_data['logo_image']
 
         new_customer.save()
 
@@ -205,13 +219,16 @@ class CustomerSerializer(ModelSerializer):
 
         # upload logo
         if "logo" in self.validated_data:
-            instance.logo = self.validated_data['logo']
+            if self.validated_data['logo']:
+                instance.logo = self.validated_data['logo']
 
         if "logo_image_link" in self.validated_data:
-            instance.logo = self.validated_data['logo_image_link']
+            if self.validated_data['logo_image_link']:
+                instance.logo = self.validated_data['logo_image_link']
 
         if "logo_image" in self.validated_data:
-            instance.logo = self.validated_data['logo_image']
+            if self.validated_data['logo_image']:
+                instance.logo = self.validated_data['logo_image']
 
         instance.save()
 
@@ -222,6 +239,7 @@ class CustomerSerializer(ModelSerializer):
 
 
 class CustomerDetailsSerializer(serializers.ModelSerializer):
+    logo = serializers.ImageField()
     class Meta:
         model = Customer
         fields = ["id", "first_name", "last_name", "business_name", "address", "email", "phone_number", "phone_number_type", 
@@ -231,6 +249,7 @@ class CustomerDetailsSerializer(serializers.ModelSerializer):
 
 
 class CustomerReportSerializer(DynamicFieldsModelSerializer):
+    logo = serializers.ImageField()
     class Meta:
         model = Customer
         fields = ["id", "first_name", "last_name", "business_name", "address", "email", "phone_number", "phone_number_type", 
