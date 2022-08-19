@@ -265,7 +265,7 @@ class CustomerReportSerializer(DynamicFieldsModelSerializer):
 class ItemSerializer(DynamicFieldsModelSerializer):
     class Meta:
         model = Item
-        fields = ["id", "name", "description", "cost_price", "sales_price", "sales_tax", "sku", "date_created"]
+        fields = ["id", "name", "description", "cost_price", "sales_price", "sales_tax", "sku", "date_created", "quantity"]
 
 
 
