@@ -450,8 +450,8 @@ class PayInvoice(models.Model):
     date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
-    def __str__(self):
-        return self.invoice.first_name + self.invoice.last_name
+    # def __str__(self):
+    #     return self.invoice.first_name + self.invoice.last_name
 
 
 
@@ -466,8 +466,8 @@ class PayProforma(models.Model):
     date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
-    def __str__(self):
-        return self.proforma.first_name + self.proforma.last_name
+    # def __str__(self):
+    #     return self.proforma.first_name + self.proforma.last_name
 
 
 
@@ -482,8 +482,8 @@ class PayPurchaseOrder(models.Model):
     date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
-    def __str__(self):
-        return self.purchase_order.first_name + self.purchase_order.last_name
+    # def __str__(self):
+    #     return self.purchase_order.first_name + self.purchase_order.last_name
 
 
 
@@ -498,8 +498,8 @@ class PayEstimate(models.Model):
     date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
-    def __str__(self):
-        return self.estimate.first_name + self.estimate.last_name
+    # def __str__(self):
+    #     return self.estimate.first_name + self.estimate.last_name
 
 
 
@@ -517,8 +517,8 @@ class PayQuote(models.Model):
     date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
-    def __str__(self):
-        return self.quote.first_name + self.quote.last_name
+    # def __str__(self):
+    #     return self.quote.first_name + self.quote.last_name
 
 
 
@@ -538,8 +538,8 @@ class PayReceipt(models.Model):
     date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
-    def __str__(self):
-        return self.receipt.first_name + self.receipt.last_name
+    # def __str__(self):
+    #     return self.receipt.first_name + self.receipt.last_name
 
 
 
@@ -558,8 +558,8 @@ class PayCreditNote(models.Model):
     date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
-    def __str__(self):
-        return self.credit_note.first_name + self.credit_note.last_name
+    # def __str__(self):
+    #     return self.credit_note
 
 
 
@@ -577,8 +577,8 @@ class PayDeliveryNote(models.Model):
     date_modified = models.DateTimeField("Date modified", auto_now=True)
 
 
-    def __str__(self):
-        return self.credit_note.first_name + self.credit_note.last_name
+    # def __str__(self):
+    #     return self.credit_note.first_name + self.credit_note.last_name
 
 
 
