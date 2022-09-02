@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
-import venv
 from dateutil.relativedelta import relativedelta
-import os, io, base64, pycountry
+import os, io, base64, pycountry, calendar
 from collections import namedtuple
 from django.contrib.auth import authenticate
 from django.http import HttpResponse
@@ -26403,11 +26402,58 @@ def dashboard(request):
     pending_customer = Customer.objects.filter(vendor=request.user.id).filter(status="Pending").count()
 
     customer_data["data"] = [new_customer, active_customer, total_customer, pending_customer]
+
+
+
+    # graph part
+
+    # bar graph
+    my_customers = Customer.objects.filter(vendor=request.user.id)
+
+    months = []
+    for customer in my_customers:
+        months.append(customer.date_created.date().month)
+    
+    months = list(set(months))
+    months.sort()
+
+    customer_bar = []
+    for month in months:
+        customer_bar.append(my_customers.filter(date_created__month=month).count())
+
+
+    
+    # donut graph
+    
+
+    invoice_count = Invoice.objects.filter(vendor=request.user.id).count()
+    proforma_count = ProformaInvoice.objects.filter(vendor=request.user.id).count()
+    purchase_count = PurchaseOrder.objects.filter(vendor=request.user.id).count()
+    estimate_count = Estimate.objects.filter(vendor=request.user.id).count()
+    quote_count = Quote.objects.filter(vendor=request.user.id).count()
+    receipt_count = Receipt.objects.filter(vendor=request.user.id).count()
+    credit_count = CreditNote.objects.filter(vendor=request.user.id).count()
+    delivery_count = DeliveryNote.objects.filter(vendor=request.user.id).count()
+
+    docs = ["Invoices", "Proforma Invoice", "Purchase Order", "Estimate", "Quote", "Receipts", "Credit Note", "Delivery Note"]
+    counts = [invoice_count, proforma_count, purchase_count, estimate_count, quote_count, receipt_count, credit_count, delivery_count]
+
+
+
+
     
 
     context = {}
     context["message"] = [invoice_data, proforma_data, purchase_data, estimate_data, quote_data, receipt_data, credit_data, 
                             delivery_data, item_data, customer_data]
+
+    context["graph"] = {
+        "Month": [calendar.month_name[month] for month in months],
+        "ValuesPerMonth": customer_bar,
+
+        "docs": docs,
+        "counts": counts
+    }
 
     return Response(context, status=status.HTTP_200_OK)
 
