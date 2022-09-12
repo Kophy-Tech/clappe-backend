@@ -57,6 +57,6 @@ def send_my_email(receiver_email, body, subject, filename=None, body_type = "pla
     # Log in to server using secure context and send email
     context = ssl.create_default_context()
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+    with smtplib.SMTP_SSL("smtp.clapbill.com", 465, context=context) as server:
         server.login(SENDER_MAIL, PASSWORD)
         server.sendmail(SENDER_MAIL, receiver_email, text)
